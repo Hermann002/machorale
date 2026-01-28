@@ -1,40 +1,183 @@
 {% load static %}
 <header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-solid border-[#e7ebf3] dark:border-[#2d3648] px-6 lg:px-40 py-4">
-<div class="max-w-[1200px] mx-auto flex items-center justify-between">
-    <div class="flex items-center gap-3">
-        <div class="col-md-3 mb-2 mb-md-0">
-            <a href="/" class="inline-flex text-inherit no-underline">
-                <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
-            </a>
+    <div class="max-w-[1200px] mx-auto">
+        <!-- Desktop Layout : Logo à gauche, Navbar centrée, Boutons à droite -->
+        <div class="hidden md:flex items-center justify-between">
+            <!-- Logo (à gauche) -->
+            <div class="flex items-center gap-3">
+                <a href="/" class="inline-flex text-inherit no-underline">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
+                </a>
+            </div>
+
+            <!-- Navbar centrée -->
+            <div class="mx-auto">
+                <nav class="flex items-center gap-10">
+                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#features">Fonctionnalités</a>
+                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#pricing">Tarifs</a>
+                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#about">À propos</a>
+                </nav>
+            </div>
+
+            <!-- Boutons (à droite) -->
+            <div class="flex gap-3">
+                {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}">
+                    <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
+                        login
+                    </button>
+                </a>
+                <a href="{% url 'register' %}" class="no-underline">
+                    <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+                        Free trial
+                    </button>
+                </a>
+                {% else %}
+                <a href="{% url 'dashboard' %}">
+                    <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
+                        dashboard
+                    </button>
+                </a>
+                <a href="{% url 'logout' %}">
+                    <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
+                        logout
+                    </button>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Mobile Layout : Logo + Burger Button -->
+        <div class="md:hidden flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="/" class="inline-flex text-inherit no-underline">
+                    <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
+                </a>
+            </div>
+
+            <button id="burger-menu-button" class="material-symbols-outlined text-3xl text-gray-700 dark:text-gray-300 cursor-pointer">
+                menu
+            </button>
         </div>
     </div>
-    {% include "./navbar.html" %}
 
-    <div class="flex gap-3">
-        {% if not user.is_authenticated %}
-        <a href="{% url 'login' %}">
-            <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all" >
-                login
-            </button>
-        </a>
-        <a href="{% url 'register' %}" class="no-underline">
-            <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-                Free trial
-            </button>
-        </a>
-        {% else %}
-        <a href="{% url 'dashboard' %}">
-            <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
-                dashboard
-            </button>
-        </a>
-        <a href="{% url 'logout' %}">
-            <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
-                logout
-            </button>
-        </a>
-        
-        {% endif %}
+    <!-- Menu Mobile (burger menu) -->
+    <div id="mobile-menu" class="hidden md:hidden max-w-[1200px] mx-auto mt-4 px-6 lg:px-40">
+        <div class="bg-background-light dark:bg-background-dark rounded-lg shadow-lg p-6 border border-[#e7ebf3] dark:border-[#2d3648]">
+            <nav class="flex flex-col gap-4 mb-6">
+                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#features">Fonctionnalités</a>
+                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#pricing">Tarifs</a>
+                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#about">À propos</a>
+            </nav>
+
+            <div class="flex flex-col gap-3 pt-4 border-t border-[#e7ebf3] dark:border-[#2d3648]">
+                {% if not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="block">
+                    <button class="w-full flex items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
+                        login
+                    </button>
+                </a>
+                <a href="{% url 'register' %}" class="block no-underline">
+                    <button class="w-full flex items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
+                        Free trial
+                    </button>
+                </a>
+                {% else %}
+                <a href="{% url 'dashboard' %}" class="block">
+                    <button class="w-full flex items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
+                        dashboard
+                    </button>
+                </a>
+                <a href="{% url 'logout' %}" class="block">
+                    <button class="w-full flex items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
+                        logout
+                    </button>
+                </a>
+                {% endif %}
+            </div>
+        </div>
     </div>
-</div>
 </header>
+
+<!-- JavaScript pour le toggle du menu burger -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const burgerButton = document.getElementById('burger-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        let menuOpen = false;
+
+        if (burgerButton && mobileMenu) {
+            burgerButton.addEventListener('click', function() {
+                menuOpen = !menuOpen;
+                
+                if (menuOpen) {
+                    // Ouvrir le menu avec animation
+                    mobileMenu.classList.remove('hidden');
+                    mobileMenu.classList.add('animate-fade-in-down');
+                    
+                    // Changer l'icône en "close"
+                    burgerButton.innerHTML = 'close';
+                    burgerButton.classList.add('text-[#e0ad53]');
+                } else {
+                    // Fermer le menu avec animation
+                    mobileMenu.classList.add('animate-fade-out-up');
+                    
+                    // Changer l'icône en "menu"
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenu.classList.remove('animate-fade-out-up');
+                        burgerButton.innerHTML = 'menu';
+                        burgerButton.classList.remove('text-[#e0ad53]');
+                    }, 300);
+                }
+            });
+
+            // Fermer le menu si on clique en dehors
+            document.addEventListener('click', function(event) {
+                if (menuOpen && !mobileMenu.contains(event.target) && !burgerButton.contains(event.target)) {
+                    menuOpen = false;
+                    mobileMenu.classList.add('animate-fade-out-up');
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenu.classList.remove('animate-fade-out-up');
+                        burgerButton.innerHTML = 'menu';
+                        burgerButton.classList.remove('text-[#e0ad53]');
+                    }, 300);
+                }
+            });
+        }
+    });
+</script>
+
+<!-- CSS pour les animations -->
+<style>
+    @keyframes fade-in-down {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fade-out-up {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+
+    .animate-fade-in-down {
+        animation: fade-in-down 0.3s ease-out forwards;
+    }
+
+    .animate-fade-out-up {
+        animation: fade-out-up 0.3s ease-out forwards;
+    }
+</style>
