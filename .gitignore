@@ -1,5 +1,5 @@
-env
+env/
 /env
 .env
-/migrations
-/__pycache__
+migrations/
+__pycache__/
