@@ -1,0 +1,9 @@
+{% extends "../base/base.html" %}
+{% load static %}
+
+{% block content %}
+{% include "../components/dashboard-header.html" %}
+<div class="div-dashboard px-4 py-4">
+    {% include "../components/cards/stats.html" %}
+</div>
+{% endblock %}

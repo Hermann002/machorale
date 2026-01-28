@@ -1,0 +1,88 @@
+.bg-custom-primary {
+    background-color: #e5a026 !important;
+}
+
+.nav-link:hover{
+    color: white !important;
+}
+
+.nav-link{
+    padding: 5px 40px;
+}
+
+body, html{
+    height: 100%;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.navbar{
+    position: fixed;
+    width: 20%;
+    height: 100%;
+}
+
+.nav-block {
+    height: 90%;
+    width: 100%;
+}
+
+.nav-logo{
+    display: inline-block;
+    height: 20%;
+    padding: 40px;
+}
+
+.main-dashboard{
+    height: 100% !important;
+    width: 80%;
+    align-self: flex-end;
+}
+
+.div-dashboard{
+    height: 100%;
+}
+
+.title-page p{
+    font-size: 18px;
+    margin: 0;
+}
+
+.search-bar{
+    width: 60%;
+    border-radius: 20px;
+    padding-left: 20px;
+}
+
+.title-page{
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-items: center;
+}
+
+.stat-card{
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    justify-content: space-between;
+    background-color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 200px;
+}
+
+.stat-info{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.stat-title{
+    font-size: 14px;
+    color: gray;
+    margin: 0;
+}

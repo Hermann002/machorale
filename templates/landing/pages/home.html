@@ -1,0 +1,66 @@
+{% extends "../base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- heroes section -->
+ {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+      <div class="container col-xxl-8 px-4 py-3">
+        <div class="row flex-lg-row align-items-center g-5 py-1">
+          <div class="col-lg-6">
+            <h1 class="display-5 fw-bold text-body-emphasis lh-1 mb-3">
+              Gérez votre groupe avec une app centralisée
+            </h1>
+            <p class="lead">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. 
+              Aenean mi tellus, dictum quis blandit eu, dictum eget est. 
+              Praesent mattis ligula sit amet felis placerat, non malesuada 
+              ante interdum. Nulla consequat volutpat ante, a eleifend orci 
+              efficitur eu. Donec lacus metus, fermentum at efficitur vel.
+            </p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+              <button type="button" class="btn btn-primary btn-lg px-4 me-md-2">
+                Commencez
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-lg px-4"
+              >
+                En savoir plus
+              </button>
+            </div>
+          </div>
+          <div class="col-10 col-sm-8 col-lg-6">
+            <img
+              src="{% static 'images/african.webp' %}"
+              class="d-block mx-lg-auto img-fluid"
+              alt="Bootstrap Themes"
+              width="700"
+              height="500"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </div>
+
+<!-- separator with logos -->
+
+      <div class="container logo-section">
+        <div class="d-flex justify-content-center py-4">
+          <ul class="nav nav-pills">
+            <li class="px-2">
+                hello
+            </li>
+            <li class="px-2">
+                EEC
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="b-example-divider"></div>
+{% endblock %}

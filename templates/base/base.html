@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include "base/head.html" %}
+</head>
+<body class="bg-gray-50">
+
+    {% include "base/navbar.html" %}
+    <main class="main-dashboard">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% include "base/footer.html" %}
+    {% include "base/scripts.html" %}
+
+</body>
+</html>

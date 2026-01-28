@@ -1,0 +1,46 @@
+{% load static %}
+
+<nav class="navbar bg-custom-primary align-items-start">
+  <div class="nav-block">
+    <!-- Logo -->
+    <a class="nav-logo pb-4" href="/">
+      <img src="{% static 'images/logoBlanc.png' %}" 
+           alt="Logo" 
+           height="32">
+    </a>
+
+    <!-- <button class="" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class=""></span>
+    </button> -->
+
+    <div class="" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Contributions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Événements</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Membres</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Calendrier</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Programme de la semaine</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Sanctions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Plus</a>
+        </li>
+      </ul>
+    </div>
+    <a href="{% url 'logout' %}" class="btn btn-outline-primary me-2">logout</a>
+  </div>
+</nav>
