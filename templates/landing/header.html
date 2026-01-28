@@ -1,24 +1,40 @@
 {% load static %}
-<header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom">
-
-    <div class="col-md-3 mb-2 mb-md-0">
-        <a href="/" class="d-inline-flex link-body-emphasis text-decoration-none">
-            <img src="{% static 'images/logo.png' %}" alt="Logo" width="auto" height="32" class="me-2">
-        </a>
+<header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-solid border-[#e7ebf3] dark:border-[#2d3648] px-6 lg:px-40 py-4">
+<div class="max-w-[1200px] mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <div class="col-md-3 mb-2 mb-md-0">
+            <a href="/" class="inline-flex text-inherit no-underline">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
+            </a>
+        </div>
     </div>
-
-
     {% include "./navbar.html" %}
 
-    <div class="col-md-3 text-end">
+    <div class="flex gap-3">
         {% if not user.is_authenticated %}
-            <a href="{% url 'login' %}" class="btn btn-outline-primary me-2">
-                Login
-            </a>
-            <a href="{% url 'register' %}" class="btn btn-primary">Sign-up</a>
+        <a href="{% url 'login' %}">
+            <button class="hidden sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all" >
+                login
+            </button>
+        </a>
+        <a href="{% url 'register' %}" class="no-underline">
+            <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+                Free trial
+            </button>
+        </a>
         {% else %}
-            <a href="{% url 'dashboard' %}" class="btn btn-primary">Dashboard</a>
-            <a href="{% url 'logout' %}" class="btn btn-outline-primary me-2">Logout</a>
+        <a href="{% url 'dashboard' %}">
+            <button class="hidden sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
+                dashboard
+            </button>
+        </a>
+        <a href="{% url 'logout' %}">
+            <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+                logout
+            </button>
+        </a>
+        
         {% endif %}
     </div>
+</div>
 </header>

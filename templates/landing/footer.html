@@ -1,110 +1,55 @@
 {% load static %}
-    <div class="container">
-      <footer class="py-5">
-        <div class="row">
-          <div class="col-6 col-md-2 mb-3">
-            <h5>Section</h5>
-            <ul class="nav flex-column">
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">Home</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary"
-                  >Features</a
-                >
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">Pricing</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">FAQs</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">About</a>
-              </li>
-            </ul>
-          </div>
-          <div class="col-6 col-md-2 mb-3">
-            <h5>Section</h5>
-            <ul class="nav flex-column">
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">Home</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary"
-                  >Features</a
-                >
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">Pricing</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">FAQs</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">About</a>
-              </li>
-            </ul>
-          </div>
-          <div class="col-6 col-md-2 mb-3">
-            <h5>Section</h5>
-            <ul class="nav flex-column">
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">Home</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary"
-                  >Features</a
-                >
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">Pricing</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">FAQs</a>
-              </li>
-              <li class="nav-item mb-2">
-                <a href="#" class="nav-link p-0 text-body-secondary">About</a>
-              </li>
-            </ul>
-          </div>
-          <div class="col-md-5 offset-md-1 mb-3">
-            <form>
-              <h5>Subscribe to our newsletter</h5>
-              <p>Monthly digest of what's new and exciting from us.</p>
-              <div class="d-flex flex-column flex-sm-row w-100 gap-2">
-                <label for="newsletter1" class="visually-hidden"
-                  >Email address</label
-                >
-                <input
-                  id="newsletter1"
-                  type="email"
-                  class="form-control"
-                  placeholder="Email address"
-                />
-                <button class="btn btn-primary" type="button">Subscribe</button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <div
-          class="d-flex flex-column flex-sm-row justify-content-between py-4 my-4 border-top"
-        >
-          <p>&copy; 2026 Ma Chorale. Tout droits reservés.</p>
-          <ul class="list-unstyled d-flex">
-            <li class="ms-3">
-              <a class="link-body-emphasis" href="#" aria-label="Instagram"
-                ><svg class="bi" width="24" height="24">
-                  <use xlink:href="#instagram"></use></svg>
-            </a>
-            </li>
-            <li class="ms-3">
-              <a class="link-body-emphasis" href="#" aria-label="Facebook"
-                ><svg class="bi" width="24" height="24" aria-hidden="true">
-                  <use xlink:href="#facebook"></use></svg>
-            </a>
-            </li>
-          </ul>
-        </div>
-      </footer>
+<footer class="bg-white dark:bg-[#1a2333] border-t border-[#e7ebf3] dark:border-[#2d3648] px-6 lg:px-40 py-16">
+  <div class="max-w-[1200px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+    <div class="flex flex-col gap-6">
+      <div class="col-md-3 mb-2 mb-md-0">
+        <a href="/" class="inline-flex text-inherit no-underline">
+          <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
+        </a>
+      </div>
+      <p class="text-[#1e1e1e] dark:text-gray-400 text-sm leading-relaxed">
+        La solution dédiée aux groupes chrétiens pour une gestion harmonieuse et simplifiée.
+      </p>
+      <div class="flex gap-4">
+        <a class="w-10 h-10 rounded-full bg-background-light dark:bg-background-dark flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">share</span>
+        </a>
+        <a class="w-10 h-10 rounded-full bg-background-light dark:bg-background-dark flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">mail</span>
+        </a>
+      </div>
     </div>
+    <div>
+      <h3 class="font-bold mb-6">Produit</h3>
+      <ul class="flex flex-col gap-4 text-sm text-[#1e1e1e] dark:text-gray-400">
+        <li><a class="hover:text-primary transition-colors" href="#features">Fonctionnalités</a></li>
+        <li><a class="hover:text-primary transition-colors" href="#pricing">Tarifs</a></li>
+        <li><a class="hover:text-primary transition-colors" href="#">Sécurité</a></li>
+        <li><a class="hover:text-primary transition-colors" href="#">Mises à jour</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-bold mb-6">Société</h3>
+      <ul class="flex flex-col gap-4 text-sm text-[#1e1e1e] dark:text-gray-400">
+        <li><a class="hover:text-primary transition-colors" href="#">À propos</a></li>
+        <li><a class="hover:text-primary transition-colors" href="#">Blog</a></li>
+        <li><a class="hover:text-primary transition-colors" href="#">Témoignages</a></li>
+        <li><a class="hover:text-primary transition-colors" href="#">Contact</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-bold mb-6">Légal</h3>
+      <ul class="flex flex-col gap-4 text-sm text-[#1e1e1e] dark:text-gray-400">
+        <li><a class="hover:text-primary transition-colors" href="#">Conditions d'utilisation</a></li>
+        <li><a class="hover:text-primary transition-colors" href="#">Confidentialité</a></li>
+        <li><a class="hover:text-primary transition-colors" href="#">Mentions légales</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-[1200px] mx-auto mt-16 pt-8 border-t border-[#e7ebf3] dark:border-[#2d3648] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#1e1e1e] dark:text-gray-500 uppercase tracking-widest font-bold">
+    <p>© 2024 ChorusSérénité. Tous droits réservés.</p>
+    <div class="flex gap-6">
+      <span>Français (France)</span>
+    </div>
+  </div>
+</footer>
