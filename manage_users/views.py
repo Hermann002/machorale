@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 from django.contrib.auth import login, logout
 from django.contrib import messages
+from django.urls import reverse
 
 
 class RegisterView(TemplateView):
@@ -18,7 +19,7 @@ class RegisterView(TemplateView):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             form.save()
-            return HttpResponseRedirect("{% url 'login' %}")
+            return HttpResponseRedirect(reverse("login"))
         message = "Registration failed. Please correct the errors below."
         messages.error(request, message)
         return render(request, self.template_name, {"form": form})
@@ -42,7 +43,8 @@ class LoginView(TemplateView):
             user = form.cleaned_data.get("member")
             if user is not None:
                 login(request, user)
-                return HttpResponseRedirect("/a/dashboard")
+                return HttpResponseRedirect(reverse("dashboard"))
+            
             else:
                 messages.error(request, "Invalid credentials. Please try again.")
         else:
