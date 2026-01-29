@@ -1,46 +1,96 @@
-{% extends "../base.html" %}
-{% block content %}
-<div class="container col-xl-10 col-xxl-10 px-1 py-3">
-    <div class="row align-items-center g-lg-5 py-5">
-        <div class="col-lg-7 text-center text-lg-start">
-            <h1 class="display-4 fw-bold lh-1 text-body-emphasis mb-3">
-                Vertically centered hero login form
-            </h1>
-            <p class="col-lg-10 fs-4">
-                Below is an example form built entirely with Bootstrap’s form
-                controls. Each required form group has a validation state that can
-                be triggered by attempting to submit the form without completing
-                it.
-            </p>
-        </div>
-        <div class="col-md-10 mx-auto col-lg-5">
-            <form action="{% url 'login' %}" method="post" class="p-4 p-md-5 border rounded-3 bg-body-tertiary">
-                {% csrf_token %}
-                {% for field in form %}
-                    <div class="form-floating mb-3">
-                        {{ field }}
-                        {{ field.label_tag }}
-                        {% if field.help_text %}
-                            <div class="form-text">{{ field.help_text }}</div>
-                        {% endif %}
-                        {% for error in field.errors %}
-                            <div class="text-danger">{{ error }}</div>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
-                <span class="fst-italic text-danger">{{ message }}</span>
-                <div class="checkbox mb-3">
-                    <label>
-                    <input type="checkbox" value="remember-me" /> Remember me
-                    </label>
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+{% include "../head.html" %}
+    <body class="bg-background-light dark:bg-background-dark font-display text-[#111318] dark:text-white min-h-screen flex flex-col">
+        <!-- Top Navigation Bar -->
+        <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f0f2f4] dark:border-b-slate-800 px-10 py-3 bg-white dark:bg-background-dark">
+            <div class="flex items-center gap-4 text-[#111318] dark:text-white">
+                <div class="flex items-center gap-3">
+                    <a href="/" class="inline-flex text-inherit no-underline">
+                        <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
+                    </a>
                 </div>
-                <input type="submit" value="Login" class="w-100 btn btn-lg btn-primary">
-                <hr class="my-4" />
-                <small class="text-body-secondary">
-                    By clicking Sign up, you agree to the terms of use.
-                </small>
-            </form>
-        </div>
-    </div>
-</div>
-{% endblock %}
+            </div>
+            <div class="flex flex-1 justify-end gap-8">
+                <div class="flex items-center gap-9">
+                    <a class="text-[#111318] dark:text-white text-sm font-medium leading-normal hover:text-[#e0ad53] transition-colors" href="#">Contact Support</a>
+                </div>
+            </div>
+        </header>
+
+
+        <main class="flex-1 flex items-center justify-center p-6 sm:p-12">
+            <!-- Main Card Container -->
+            <div class="max-w-[1000px] w-full flex flex-col md:flex-row bg-white dark:bg-slate-900 rounded-xl shadow-2xl overflow-hidden min-h-[600px]">
+                <!-- Left Side: Visual Motif -->
+                <div class="hidden md:flex md:w-1/2 relative bg-[#e0ad53] items-center justify-center p-12 overflow-hidden">
+                    <div class="absolute inset-0 z-0 bg-cover bg-center opacity-60 mix-blend-multiply" data-alt="Peaceful choir singing in a church background" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCz5QYdJ_1-MAtNqzne371lBgA9E5FGfEkhLF_klVLz2bHL6GbiZFOESPyF1sGnIhSlrQkFDmFHEJ3YqKmBIFp8P_OJ6xoQGsw7SRZv1Yu7KL9wUXQTWLsHvmwsWHpmAh3mJwJ8Dqi8tlPGOn7681ubjCe8TZrXkSKzYAHtWSdxjVQ_MnKbYDoD-JUD3cA-Xcr4OHNxY4aICiuH1TqX_rxmwkmvN-9QvM9SPbdZyETpgyGxlwR9_gRKZamNekYeDLPeSoEDBNDG-GA");'>
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-br from-[#e0ad53]/80 to-[#e0ad53]/40 z-10"></div>
+                    <div class="relative z-20 text-white text-center">
+                        <div class="mb-6 flex justify-center">
+                            <span class="material-symbols-outlined text-6xl">music_note</span>
+                        </div>
+                        <h2 class="text-3xl font-bold mb-4">Harmonie</h2>
+                        <p class="text-lg font-light text-white/90 leading-relaxed max-w-sm">
+                                                Gérez les activités, les finances et la fréquentation de votre chorale de manière fluide dans une seule plateforme unifiée.
+                                            </p>
+                    </div>
+                    <div class="absolute bottom-8 left-8 z-20">
+                        <p class="text-xs text-white/60 tracking-widest uppercase font-bold">ma chorale Pro v1</p>
+                    </div>
+                </div>
+                <!-- Right Side: Login Form -->
+                <div class="w-full md:w-1/2 flex flex-col justify-center p-8 lg:p-16">
+                    <div class="mb-10 text-center md:text-left">
+                        <h1 class="text-[#111318] dark:text-white tracking-light text-[32px] font-bold leading-tight pb-2">Se connecter</h1>
+                        <p class="text-[#616f89] dark:text-slate-400 text-base font-normal leading-normal">Bienvenue ! Veuillez entrer vos identifiants.</p>
+                    </div>
+                    <form action="{% url 'login' %}" method="post" class="flex flex-col gap-6">
+                        {% csrf_token %}
+                        {% for field in form %}
+                        <div class="flex flex-col gap-1.5">
+                            {{ field.label_tag }}
+                            {{ field }}
+                        </div>
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endfor %}
+                        {% if messages %}
+                            {% for message in messages %}
+                            <div class="text-red-600 bg-red-50 px-3 py-2 rounded-md text-sm font-medium">
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                        <div class="flex items-center gap-2">
+                            <input class="w-5 h-5 rounded border-[#dbdfe6] text-[#e0ad53] focus:ring-[#e0ad53] focus:ring-offset-0 transition-all cursor-pointer" id="remember" type="checkbox"/>
+                            <label class="text-sm font-medium text-[#616f89] dark:text-slate-400 cursor-pointer select-none" for="remember">Se souvenir de moi</label>
+                        </div>
+                        <!-- Submit Button -->
+                        <button class="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-[#e0ad53] text-white text-base font-bold leading-normal hover:bg-[#e0ad53]/90 transition-all shadow-lg shadow-[#e0ad53]/20" type="submit">
+                            <span class="truncate">Se connecter</span>
+                        </button>
+                    </form>
+                    <div class="mt-8 text-center">
+                        <p class="text-[#616f89] dark:text-slate-400 text-sm">Nouveau ici ? 
+                            <a class="text-[#e0ad53] font-bold hover:underline ml-1" href="{% url 'register' %}">Créer un compte</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="py-6 px-10 border-t border-[#f0f2f4] dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-background-dark">
+            <p class="text-[#616f89] text-xs">© 2026 machorale. Tous droits réservés.</p>
+            <div class="flex gap-6">
+                <a class="text-[#616f89] text-xs hover:text-[#e0ad53] transition-colors" href="#">Confidentialité</a>
+                <a class="text-[#616f89] text-xs hover:text-[#e0ad53] transition-colors" href="#">Conditions d'utilisation</a>
+            </div>
+        </footer>
+    </body>
+</html>
