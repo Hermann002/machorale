@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth import login, logout
 from django.contrib import messages
 from django.urls import reverse
+from django.contrib.auth.hashers import make_password
 
 
 class RegisterView(TemplateView):
@@ -18,7 +19,10 @@ class RegisterView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save(commit=False) 
+            user.set_password(form.cleaned_data["password"])
+            user.save()
+            messages.success(request, "Account created successfully! Please log in.")
             return HttpResponseRedirect(reverse("login"))
         message = "Registration failed. Please correct the errors below."
         messages.error(request, message)

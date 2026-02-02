@@ -2,6 +2,8 @@ from django import forms
 from django.utils.translation import gettext as _
 from .models import Member
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 input_class = "form-input flex w-full min-w-0 flex-1 rounded-lg text-[#111318] dark:text-white dark:bg-slate-800 border border-[#dbdfe6] dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-[#e0ad53]/20 focus:border-[#e0ad53] h-14 placeholder:text-[#616f89] px-4 text-base font-normal leading-normal"
 input_class_2 = "form-input w-full rounded-xl border-slate-200 dark:border-slate-700 dark:bg-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary h-14 px-4 text-base transition-all outline-none"
@@ -15,7 +17,7 @@ class UserRegisterForm(forms.ModelForm):
 
     class Meta:
         model = Member
-        fields = ["username", "email", "password", "confirm_password"]
+        fields = ["username", "email"]
     
     def clean(self):
         cleaned_data = super().clean()
@@ -26,6 +28,14 @@ class UserRegisterForm(forms.ModelForm):
             self.add_error("confirm_password", _("Passwords do not match."))
 
         return cleaned_data
+    
+    def clean_password(self):
+        password = self.cleaned_data.get("password")
+        try:
+            validate_password(password, self.instance)
+        except ValidationError as e:
+            raise forms.ValidationError(e.messages)
+        return password
 
 class UserLoginForm(forms.Form):
     username = forms.CharField(max_length=100, widget=forms.TextInput(attrs={"class": f"{input_class}", "placeholder": "Username"}), label=_("Username"))
