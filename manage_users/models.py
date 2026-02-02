@@ -61,6 +61,14 @@ class Member(User):
     class Meta:
         verbose_name = "Member"
         verbose_name_plural = "Members"
+    
+    def save(self, *args, **kwargs):
+        # Normalise username et email en minuscules avant sauvegarde
+        if self.username:
+            self.username = self.username.lower()
+        if self.email:
+            self.email = self.email.lower()
+        super().save(*args, **kwargs)
 
 class SuperadminChorale(User):
     class Meta:

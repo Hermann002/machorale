@@ -24,8 +24,8 @@ class RegisterView(TemplateView):
             user.save()
             messages.success(request, "Account created successfully! Please log in.")
             return HttpResponseRedirect(reverse("login"))
-        message = "Registration failed. Please correct the errors below."
-        messages.error(request, message)
+        # message = "Registration failed. Please correct the errors below."
+        # messages.error(request, message)
         return render(request, self.template_name, {"form": form})
 
 class LoginView(TemplateView):

@@ -11,23 +11,41 @@ input_class_password = "form-input w-full rounded-xl border-slate-200 dark:borde
 
 class UserRegisterForm(forms.ModelForm):
     confirm_password = forms.CharField(max_length=100, widget=forms.PasswordInput(attrs={"class": f"{input_class_password}", "placeholder": "••••••••"}), label=_("Confirm Password"))
-    username = forms.CharField(max_length=100, widget=forms.TextInput(attrs={"class": f"{input_class_2}", "placeholder": "Ex: Tagne Théophile"}), label=_("Username"))
-    email = forms.EmailField(widget=forms.EmailInput(attrs={"class": f"{input_class_2}", "placeholder": "exemple@email.com"}), label=_("Email"))
-    password = forms.CharField(max_length=100, widget=forms.PasswordInput(attrs={"class": f"{input_class_password}", "placeholder": "••••••••"}), label=_("Password"))
-
+    
     class Meta:
         model = Member
-        fields = ["username", "email"]
+        fields = ["username", "email", "password"]
+        widgets = {
+            "username": forms.TextInput(attrs={
+                "class": "w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition",
+                "placeholder": "Ex: Tagne Théophile"
+            }),
+            "email": forms.EmailInput(attrs={
+                "class": "w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition",
+                "placeholder": "exemple@email.com"
+            }),
+            "password": forms.PasswordInput(attrs={
+                "class": "w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition pr-12",
+                "placeholder": "••••••••"
+            }),
+        }
+        labels = {
+            "username": _("Nom d'utilisateur"),
+            "email": _("Email"),
+            "password": _("Mot de passe"),
+        }
     
-    def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        confirm_password = cleaned_data.get("confirm_password")
+    def clean_username(self):
+        username = self.cleaned_data.get("username")
+        if username and Member.objects.filter(username=username.lower()).exists():
+            raise forms.ValidationError("Ce nom d'utilisateur est déjà utilisé.")
+        return username.lower()
 
-        if password and confirm_password and password != confirm_password:
-            self.add_error("confirm_password", _("Passwords do not match."))
-
-        return cleaned_data
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email and Member.objects.filter(email=email.lower()).exists():
+            raise forms.ValidationError("Cet email est déjà utilisé.")
+        return email.lower()
     
     def clean_password(self):
         password = self.cleaned_data.get("password")
@@ -36,6 +54,16 @@ class UserRegisterForm(forms.ModelForm):
         except ValidationError as e:
             raise forms.ValidationError(e.messages)
         return password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if password and confirm_password and password != confirm_password:
+            self.add_error("confirm_password", _("Les mots de passe ne correspondent pas."))
+        
+        return cleaned_data
 
 class UserLoginForm(forms.Form):
     username = forms.CharField(max_length=100, widget=forms.TextInput(attrs={"class": f"{input_class}", "placeholder": "Username"}), label=_("Username"))
