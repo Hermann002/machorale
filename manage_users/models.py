@@ -3,6 +3,10 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 import re
 from django.utils.translation import gettext as _
+from django.utils import timezone
+
+import random
+import re
 
 
 def validate_international_phone(value):
@@ -61,6 +65,21 @@ class Member(User):
     class Meta:
         verbose_name = "Member"
         verbose_name_plural = "Members"
+
+class SuperadminChorale(User):
+    _is_verify = models.BooleanField(default=False)
+
+    @property
+    def is_verify(self):
+        return self._is_verify
+    
+    @is_verify.setter
+    def is_verify(self, value):
+        self._is_verify = value
+
+    class Meta:
+        verbose_name = "Superadmin Chorale"
+        verbose_name_plural = "Superadmins Chorale"
     
     def save(self, *args, **kwargs):
         # Normalise username et email en minuscules avant sauvegarde
@@ -70,10 +89,44 @@ class Member(User):
             self.email = self.email.lower()
         super().save(*args, **kwargs)
 
-class SuperadminChorale(User):
-    class Meta:
-        verbose_name = "Superadmin Chorale"
-        verbose_name_plural = "Superadmins Chorale"
+class OtpCode(models.Model):
+    super_admin_chorale = models.OneToOneField(SuperadminChorale, on_delete=models.CASCADE)
+    otp_code = models.CharField(max_length=6, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expired_at = models.DateTimeField(blank=True, null=True)
+    used = models.BooleanField(default=False)
+
+    def generate_new_code(self):
+        new_code = ""
+        for _ in range(5):
+            new_code += str(random.randint(1, 9))
+        self.otp_code = new_code
+        self.created_at = timezone.now()
+        self.expired_at = timezone.now() + timezone.timedelta(minutes=10)
+        self.save()
+        return self.otp_code
+    
+    def verify_code(self, code):
+        if self.used:
+            return False
+        if timezone.now() > self.expired_at:
+            return False
+        
+        is_valid = self.otp_code == code
+        if is_valid:
+            self.used = True
+            self.save()
+        return is_valid
+
+    def otp_expired(self):
+        return timezone.now() - self.created_at > timezone.timedelta(minutes=10)
+
+    def regenerate_code(self):
+        if self.used or self.otp_expired():
+            self.generate_new_code()
+
+    def __str__(self) -> str:
+        return f"{self.super_admin_chorale.first_name}-passcode"
 
 # class AdminChorale(Member):
 #     pass

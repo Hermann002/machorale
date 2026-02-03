@@ -1,6 +1,6 @@
 from django import forms
 from django.utils.translation import gettext as _
-from .models import Member
+from .models import SuperadminChorale, OtpCode
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -13,7 +13,7 @@ class UserRegisterForm(forms.ModelForm):
     confirm_password = forms.CharField(max_length=100, widget=forms.PasswordInput(attrs={"class": f"{input_class_password}", "placeholder": "••••••••"}), label=_("Confirm Password"))
     
     class Meta:
-        model = Member
+        model = SuperadminChorale
         fields = ["username", "email", "password"]
         widgets = {
             "username": forms.TextInput(attrs={
@@ -37,13 +37,13 @@ class UserRegisterForm(forms.ModelForm):
     
     def clean_username(self):
         username = self.cleaned_data.get("username")
-        if username and Member.objects.filter(username=username.lower()).exists():
+        if username and SuperadminChorale.objects.filter(username=username.lower()).exists():
             raise forms.ValidationError("Ce nom d'utilisateur est déjà utilisé.")
         return username.lower()
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
-        if email and Member.objects.filter(email=email.lower()).exists():
+        if email and SuperadminChorale.objects.filter(email=email.lower()).exists():
             raise forms.ValidationError("Cet email est déjà utilisé.")
         return email.lower()
     
@@ -69,7 +69,7 @@ class UserLoginForm(forms.Form):
     username = forms.CharField(max_length=100, widget=forms.TextInput(attrs={"class": f"{input_class}", "placeholder": "Username"}), label=_("Username"))
     password = forms.CharField(max_length=100, widget=forms.PasswordInput(attrs={"class": f"{input_class}", "placeholder": "Password"}), label=_("Password"))
     class Meta:
-        Model = Member
+        Model = SuperadminChorale
         fields = ["username", "password"]
 
     def clean(self):
@@ -77,10 +77,18 @@ class UserLoginForm(forms.Form):
         username = cleaned_data.get("username")
         password = cleaned_data.get("password")
 
-        member = authenticate(username=username, password=password)
-        if not member:
+        SuperadminChorale = authenticate(username=username, password=password)
+        if not SuperadminChorale:
             raise forms.ValidationError(_("Invalid username or password."))
         
-        cleaned_data["member"] = member
+        cleaned_data["SuperadminChorale"] = SuperadminChorale
 
         return cleaned_data
+    
+class VerifyEmailForm(forms.Form):
+    input_class_ver = ""
+    otp_code = forms.CharField(max_length=6, widget=forms.TextInput(attrs={"placeholder": "Enter OTP Code"}), label=_("OTP Code"))
+
+    class Meta:
+        model = OtpCode
+        fields = ["otp_code"]

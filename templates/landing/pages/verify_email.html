@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+{% include "landing/head.html" %}
+    <body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col">
+        <div class="relative flex h-full grow flex-col group/design-root overflow-x-hidden">
+            <div class="layout-container flex h-full grow flex-col">
+                <!-- Navigation Bar -->
+                <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 px-6 md:px-10 py-3 bg-white dark:bg-background-dark/50 backdrop-blur-sm sticky top-0 z-50">
+                    <div class="flex items-center gap-3">
+                        <a href="/" class="inline-flex text-inherit no-underline">
+                            <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
+                        </a>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-primary/10 text-primary hover:bg-primary/20 transition-colors gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-3">
+                            <span class="material-symbols-outlined text-[20px]">help_outline</span>
+                        </button>
+                        <button class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-primary/10 text-primary hover:bg-primary/20 transition-colors gap-2 text-sm font-bold leading-normal tracking-[0.015em] min-w-0 px-3">
+                            <span class="material-symbols-outlined text-[20px]">person</span>
+                        </button>
+                    </div>
+                </header>
+                <!-- Main Content Area -->
+                <main class="flex-1 flex items-center justify-center p-4">
+                    <div class="max-w-[480px] w-full bg-white dark:bg-[#1a2133] p-8 md:p-12 rounded-xl shadow-sm border border-primary/5">
+                        <!-- Icon/Branding -->
+                        <div class="flex justify-center mb-6">
+                            <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary text-4xl">mark_email_unread</span>
+                            </div>
+                        </div>
+                        <!-- Headline -->
+                        <h1 class="text-[#0d121b] dark:text-white tracking-light text-[28px] md:text-[32px] font-bold leading-tight text-center pb-3">
+                                                Vérifiez votre adresse email
+                                            </h1>
+                        <!-- Body Text -->
+                        <p class="text-[#4f6b8e] dark:text-slate-400 text-base font-normal leading-relaxed text-center pb-8">
+                                                Un code de vérification à 6 chiffres a été envoyé à l'adresse associée à votre compte. Veuillez le saisir ci-dessous.
+                                            </p>
+                        <!-- Code Inputs -->
+                        <form action="{% url 'verify_email' %}" method="post">
+                            {% csrf_token %}
+                            <div class="flex justify-between gap-2">
+                                <input 
+                                    type="text" 
+                                    class="single-digit-input w-12 h-12 text-center text-xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    maxlength="1"
+                                    inputmode="numeric"
+                                    pattern="[0-9]"
+                                    data-index="0"
+                                >
+                                <input 
+                                    type="text" 
+                                    class="single-digit-input w-12 h-12 text-center text-xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    maxlength="1"
+                                    inputmode="numeric"
+                                    pattern="[0-9]"
+                                    data-index="1"
+                                >
+                                <input 
+                                    type="text" 
+                                    class="single-digit-input w-12 h-12 text-center text-xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    maxlength="1"
+                                    inputmode="numeric"
+                                    pattern="[0-9]"
+                                    data-index="2"
+                                >
+                                <input 
+                                    type="text" 
+                                    class="single-digit-input w-12 h-12 text-center text-xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    maxlength="1"
+                                    inputmode="numeric"
+                                    pattern="[0-9]"
+                                    data-index="3"
+                                >
+                                <input 
+                                    type="text" 
+                                    class="single-digit-input w-12 h-12 text-center text-xl border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    maxlength="1"
+                                    inputmode="numeric"
+                                    pattern="[0-9]"
+                                    data-index="4"
+                                >
+                            </div>
+                            <input type="hidden" name="otp_code" id="otp-hidden">
+                            <!-- Confirm Button -->
+                            <div class="flex justify-center mb-6 mt-8">
+                                <button class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-5 bg-primary hover:bg-primary/90 text-white text-lg font-bold transition-all shadow-md shadow-primary/20" type="submit">
+                                    <span class="truncate">Confirmer</span>
+                                </button>
+                            </div>
+                        </form>
+                        <!-- Footer Options -->
+                        <div class="text-center">
+                            <p class="text-sm text-[#4f6b8e] dark:text-slate-400">
+                                                        Vous n'avez pas reçu de code ? 
+                                                        <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="#">
+                                                            Renvoyer le code
+                                                        </a>
+                            </p>
+                        </div>
+                    </div>
+                </main>
+                <!-- Footer Decorative -->
+                <footer class="p-6 text-center text-xs text-[#4f6b8e]/50 dark:text-slate-500 uppercase tracking-widest">
+                               ma chorale © 2026 •
+                </footer>
+            </div>
+        </div>
+        <!-- Small UI Mockup Background Decoration -->
+        <div class="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none opacity-20 overflow-hidden">
+            <div class="absolute -top-[10%] -left-[5%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[100px]"></div>
+            <div class="absolute -bottom-[10%] -right-[5%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[100px]"></div>
+        </div>
+
+        <script src="{% static 'js/form_verify.js' %}"></script>
+    </body>
+</html>
