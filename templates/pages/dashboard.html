@@ -2,6 +2,17 @@
 {% load static %}
 
 {% block content %}
+{% for message in messages %}
+    {% if message.tags == "error" %}
+        <div class="p-4 mb-4 text-sm text-fg-danger-strong rounded-base bg-danger-soft" role="alert">
+            <span class="font-medium">Error !</span> {{ message }}
+        </div>
+    {% elif message.tags == "success" %}
+        <div class="p-4 mb-4 text-sm text-fg-success-strong rounded-base bg-success-soft" role="alert">
+            <span class="font-medium">Success !</span> {{ message }}
+        </div>
+    {% endif %}
+{% endfor %}
 {% include "../components/dashboard-header.html" %}
 <div class="div-dashboard px-4 py-4">
     {% include "../components/cards/stats.html" %}

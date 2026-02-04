@@ -77,12 +77,11 @@ class UserLoginForm(forms.Form):
         username = cleaned_data.get("username")
         password = cleaned_data.get("password")
 
-        SuperadminChorale = authenticate(username=username, password=password)
-        if not SuperadminChorale:
+        super_admin_chorale = authenticate(username=username, password=password)
+        if not super_admin_chorale:
             raise forms.ValidationError(_("Invalid username or password."))
         
-        cleaned_data["SuperadminChorale"] = SuperadminChorale
-
+        cleaned_data["super_admin_chorale"] = super_admin_chorale
         return cleaned_data
     
 class VerifyEmailForm(forms.Form):

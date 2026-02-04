@@ -21,8 +21,23 @@
                         </button>
                     </div>
                 </header>
+
                 <!-- Main Content Area -->
                 <main class="flex-1 flex items-center justify-center p-4">
+
+                    <!-- display the message of successfull create account -->
+                    {% for message in messages %}
+                        {% if message.tags == "error" %}
+                            <div class="p-4 mb-4 text-sm text-fg-danger-strong rounded-base bg-danger-soft" role="alert">
+                                <span class="font-medium">Error !</span> {{ message }}
+                            </div>
+                        {% elif message.tags == "success" %}
+                            <div class="p-4 mb-4 text-sm text-fg-success-strong rounded-base bg-success-soft" role="alert">
+                                <span class="font-medium">Success !</span> {{ message }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
                     <div class="max-w-[480px] w-full bg-white dark:bg-[#1a2133] p-8 md:p-12 rounded-xl shadow-sm border border-primary/5">
                         <!-- Icon/Branding -->
                         <div class="flex justify-center mb-6">

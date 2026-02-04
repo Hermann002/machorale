@@ -54,11 +54,10 @@ class LoginView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = UserLoginForm(request.POST)
         if form.is_valid():
-            user = form.cleaned_data.get("member")
+            user = form.cleaned_data.get("super_admin_chorale")
             if user is not None:
                 login(request, user)
                 return HttpResponseRedirect(reverse("dashboard"))
-            
             else:
                 messages.error(request, "Invalid credentials. Please try again.")
         else:
@@ -87,7 +86,7 @@ class VerifyEmailView(TemplateView):
                 otp_record.save()
                 login(request, super_admin_chorale)
                 messages.success(request, "Email verified successfully!")
-                return HttpResponseRedirect(reverse("dashboard"))
+                return HttpResponseRedirect(reverse("create_chorale"))
             else:
                 messages.info(request, "Email is already verified. Please log in.")
                 return HttpResponseRedirect(reverse("login"))
