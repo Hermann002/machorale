@@ -12,7 +12,6 @@ from manage_users.models import OtpCode
 
 class RegisterView(TemplateView):
     template_name = "landing/pages/register.html"
-    message = ""
 
     def get(self, request, *args, **kwargs):
         form = UserRegisterForm()
@@ -25,7 +24,7 @@ class RegisterView(TemplateView):
             user = form.save(commit=False) 
             user.set_password(form.cleaned_data["password"])
             user.save()
-            otp_record, created = OtpCode.objects.get_or_create(super_admin_chorale=user)
+            otp_record, created = OtpCode.objects.get_or_create(user=user)
             code = otp_record.generate_new_code()
             try:
                 send_code_to_user(email=user.email, code=code)
@@ -34,8 +33,6 @@ class RegisterView(TemplateView):
                 raise(e)
             messages.success(request, "Account created successfully! Please verify your email.")
             return HttpResponseRedirect(reverse("verify_email"))
-        # message = "Registration failed. Please correct the errors below."
-        # messages.error(request, message)
         return render(request, self.template_name, {"form": form})
 
 class LoginView(TemplateView):
@@ -54,7 +51,7 @@ class LoginView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = UserLoginForm(request.POST)
         if form.is_valid():
-            user = form.cleaned_data.get("super_admin_chorale")
+            user = form.cleaned_data.get("user")
             if user is not None:
                 login(request, user)
                 return HttpResponseRedirect(reverse("dashboard"))
@@ -74,17 +71,17 @@ class VerifyEmailView(TemplateView):
         code = request.POST.get("otp_code")
         try:
             otp_record = OtpCode.objects.get(otp_code=code)
-            super_admin_chorale = otp_record.super_admin_chorale
+            user = otp_record.user
             if otp_record.otp_expired():
                 messages.error(request, "OTP code has expired. Please request a new code.")
                 return render(request, self.template_name)
 
-            if not super_admin_chorale.is_verify:
-                super_admin_chorale.is_verify = True
-                super_admin_chorale.save()
+            if not user.is_verify:
+                user.is_verify = True
+                user.save()
                 otp_record.used = True
                 otp_record.save()
-                login(request, super_admin_chorale)
+                login(request, user)
                 messages.success(request, "Email verified successfully!")
                 return HttpResponseRedirect(reverse("create_chorale"))
             else:

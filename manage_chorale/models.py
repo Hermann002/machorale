@@ -1,5 +1,5 @@
 from django.db import models
-from manage_users.models import SuperadminChorale
+from manage_users.models import CustomUser
 
 class Chorale(models.Model):
     name = models.CharField(max_length=100)
@@ -17,9 +17,12 @@ class Chorale(models.Model):
     )
 
     type_c = models.CharField(max_length=20, choices=TYPE_CHOICES, default='chorale')
-    admin = models.ForeignKey(SuperadminChorale, on_delete=models.CASCADE)
+    admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="Managed_group")
+    members = models.ManyToManyField(CustomUser, related_name="chorales", blank=True)
     logo = models.ImageField(upload_to='chorale_logos/', blank=True, null=True)
     slogan = models.CharField(max_length=255, blank=True)
+    meeting_frequency = models.CharField(max_length=20, blank=True, null=True)
+
 
 class Contribution(models.Model):
     title = models.CharField(max_length=100)
@@ -51,3 +54,7 @@ class MeetingReport(models.Model):
     attendees = models.TextField()
     report = models.FileField(upload_to='meeting_reports/', blank=True, null=True)
 
+class Commission(models.Model):
+    name = models.CharField(max_length=100)
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE)
+    lead = models.CharField(max_length=255, null=True, blank=True)

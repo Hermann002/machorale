@@ -2,15 +2,25 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from .models import Chorale
 
-class CreateChoraleForm(forms.Form):
+class CreateChoraleForm(forms.ModelForm):
     name = forms.CharField(
         max_length=150,
-        label=_("Nom de la chorale"),
+        label=_("Nom du groupe"),
         widget=forms.TextInput(attrs={
-            "class": "w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition",
+            "class": "form-input flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#4c669a] dark:placeholder:text-slate-500 p-4 text-base font-normal leading-normal",
             "placeholder": _("Ex: Chorale Harmonie")
         })
     )
+
+    type_c = forms.ChoiceField(
+        choices=Chorale.TYPE_CHOICES,
+        label=_("Type de groupe"),
+        widget=forms.Select(attrs={
+            "class": "form-select flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 p-4 text-base font-normal leading-normal",
+            "placeholder": _("Sélectionner le type de groupe"),
+        }),  
+    )
+
     description = forms.CharField(
         required=False,
         label=_("Description"),
@@ -33,14 +43,21 @@ class CreateChoraleForm(forms.Form):
         max_length=255,
         label=_("Lieu"),
         widget=forms.TextInput(attrs={
-            "class": "w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition",
+            "class": "form-input flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#4c669a] dark:placeholder:text-slate-500 pl-12 pr-4 text-base font-normal leading-normal",
             "placeholder": _("Ex: Paris, France ")
+        })
+    )
+    logo = forms.ImageField(
+        required=False,
+        label=_("Logo de la chorale"),
+        widget=forms.ClearableFileInput(attrs={
+            "class": "w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition"
         })
     )
 
     class Meta:
         model = Chorale
-        fields = ["name", "description", "established_date", "location"]
+        fields = ["name", "type_c", "description", "established_date", "location"]
     
     def clean_name(self):
         name = self.cleaned_data.get("name")

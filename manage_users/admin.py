@@ -1,8 +1,7 @@
 from django.contrib import admin
-from .models import Member, SuperadminChorale, OtpCode, Censor, Secretary, Treasurer
+from .models import CustomUser, OtpCode, Censor, Secretary, Treasurer
 
-admin.site.register(Member)
-admin.site.register(SuperadminChorale)
+admin.site.register(CustomUser)
 admin.site.register(OtpCode)
 admin.site.register(Censor)
 admin.site.register(Secretary)

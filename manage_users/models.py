@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 import re
 from django.utils.translation import gettext as _
@@ -59,30 +59,24 @@ class Profile(models.Model):
             return self.profession_o
         return dict(self.PROFESSION_CHOICES).get(self.profession_c, '')
 
-class Member(User):
-    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True, blank=True)
-
-    class Meta:
-        verbose_name = "Member"
-        verbose_name_plural = "Members"
-
-class SuperadminChorale(User):
-    _is_verify = models.BooleanField(default=False)
-
-    @property
-    def is_verify(self):
-        return self._is_verify
+class CustomUser(AbstractUser):
+    ROLE_MEMBER = 'member'
+    ROLE_SUPERADMIN_CHORALE = 'super_admin_chorale'
     
-    @is_verify.setter
-    def is_verify(self, value):
-        self._is_verify = value
+    ROLE_CHOICES = [
+        (ROLE_MEMBER, 'Membre'),
+        (ROLE_SUPERADMIN_CHORALE, 'Super admin Chorale'),
+    ]
+    
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default=ROLE_MEMBER)
+    is_verify = models.BooleanField(default=False)
 
-    class Meta:
-        verbose_name = "Superadmin Chorale"
-        verbose_name_plural = "Superadmins Chorale"
+    profile = models.OneToOneField('Profile', on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.username} ({self.get_role_display()})"
     
     def save(self, *args, **kwargs):
-        # Normalise username et email en minuscules avant sauvegarde
         if self.username:
             self.username = self.username.lower()
         if self.email:
@@ -90,7 +84,7 @@ class SuperadminChorale(User):
         super().save(*args, **kwargs)
 
 class OtpCode(models.Model):
-    super_admin_chorale = models.OneToOneField(SuperadminChorale, on_delete=models.CASCADE)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     otp_code = models.CharField(max_length=6, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expired_at = models.DateTimeField(blank=True, null=True)
@@ -126,13 +120,13 @@ class OtpCode(models.Model):
             self.generate_new_code()
 
     def __str__(self) -> str:
-        return f"{self.super_admin_chorale.first_name}-passcode"
+        return f"{self.user.first_name}-passcode"
 
 # class AdminChorale(Member):
 #     pass
 
 class Secretary(models.Model):
-    member= models.OneToOneField(Member, on_delete=models.CASCADE)
+    user= models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     level = models.CharField(max_length=20, choices=LEVEL_CHOICE, default='general')
 
     class Meta:
@@ -140,14 +134,14 @@ class Secretary(models.Model):
         verbose_name_plural = "Secretaires"
 
 class Treasurer(models.Model):
-    member= models.OneToOneField(Member, on_delete=models.CASCADE)
+    user= models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     
     class Meta:
         verbose_name = "Tresorier"
         verbose_name_plural = "Tresoriers"
 
 class Censor(models.Model):
-    member= models.OneToOneField(Member, on_delete=models.CASCADE)
+    user= models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     level = models.CharField(max_length=20, choices=LEVEL_CHOICE, default='general')
 
     class Meta:
@@ -155,15 +149,15 @@ class Censor(models.Model):
         verbose_name_plural = "Censeurs"
 
 class MemberContribution(models.Model):
-    member= models.ForeignKey(Member, on_delete=models.CASCADE)
+    user= models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date_contributed = models.DateField(auto_now_add=True)
     contribution_ref = models.CharField(max_length=100, default='contibution mensuelle')
 
-class Saction(models.Model):
-    member= models.ForeignKey(Member, on_delete=models.CASCADE)
-    reason = models.TextField()
+class Sanction(models.Model):
+    user= models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date_sanctioned = models.DateField(auto_now_add=True)
     is_paid = models.BooleanField(default=False)
     time_limit = models.DateField()
+    sanction_ref = models.CharField(max_length=100, default='sanction pour retard de paiement')

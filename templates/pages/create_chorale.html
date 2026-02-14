@@ -49,7 +49,8 @@
                 </div>
                 <!-- Form Card -->
                 <div class="bg-white dark:bg-slate-900 border border-[#cfd7e7] dark:border-slate-800 rounded-xl shadow-sm p-6 md:p-10">
-                    <form class="flex flex-col gap-6">
+                    <form class="flex flex-col gap-6" action="{% url 'create_chorale' %}" method="post">
+                        {% csrf_token %}
                         <!-- Logo Upload Field (Custom Generated) -->
                         <div class="flex flex-col gap-3">
                             <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal">Logo de la Chorale (Optionnel)</p>
@@ -59,43 +60,48 @@
                                 </div>
                                 <div class="flex flex-col gap-2">
                                     <button class="px-4 py-2 bg-primary/10 text-primary text-sm font-bold rounded-lg hover:bg-primary/20 transition-colors" type="button">
-                                                                        Choisir un fichier
-                                                                    </button>
+                                        Choisir un fichier
+                                    </button>
+                                    <input type="file">
                                     <p class="text-[#4c669a] dark:text-slate-500 text-xs">JPG, PNG ou GIF. Max 5MB.</p>
                                 </div>
                             </div>
                         </div>
                         <!-- TextField: Nom de la Chorale -->
                         <div class="flex flex-col gap-2">
-                            <label class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">Nom de la Chorale</p>
-                                <input class="form-input flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#4c669a] dark:placeholder:text-slate-500 p-4 text-base font-normal leading-normal" placeholder="Ex: Chœur de Saint-Paul"/>
+                            <label for="{{ form.name.id_for_label }}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.name.label}}</p>
                             </label>
+                            {{form.name}}
                         </div>
                         <!-- Select: Dénomination -->
                         <div class="flex flex-col gap-2">
-                            <label class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">Dénomination</p>
-                                <select class="form-select flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 p-4 text-base font-normal leading-normal">
-                                    <option disabled="" selected="" value="">Sélectionner le type de groupe</option>
-                                    <option value="catholique">Catholique</option>
-                                    <option value="evangelique">Évangélique</option>
-                                    <option value="protestante">Protestante</option>
-                                    <option value="orthodoxe">Orthodoxe</option>
-                                    <option value="oecumenique">Œcuménique</option>
-                                    <option value="autre">Autre</option>
-                                </select>
+                            <label for="{{ form.type_c.id_for_label}}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.type_c.label}}</p>
+                                {{form.type_c}}
                             </label>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="{{form.description.id_for_label}}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.description.label}}</p>
+                            </label>
+                            {{form.description}}
                         </div>
                         <!-- TextField: Ville -->
                         <div class="flex flex-col gap-2">
-                            <label class="flex flex-col w-full">
+                            <label for="{{form.location.id_for_label}}" class="flex flex-col w-full">
                                 <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">Ville</p>
                                 <div class="relative">
                                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#4c669a]">location_on</span>
-                                    <input class="form-input flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#4c669a] dark:placeholder:text-slate-500 pl-12 pr-4 text-base font-normal leading-normal" placeholder="Entrez votre ville"/>
+                                    {{form.location}}
                                 </div>
                             </label>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="{{form.established_date.id_for_label}}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.established_date.label}}</p>
+                            </label>
+                            {{form.established_date}}
                         </div>
                         <!-- Form Footer Actions -->
                         <div class="pt-6 flex flex-col gap-3">
