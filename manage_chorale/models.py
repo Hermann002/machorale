@@ -22,6 +22,7 @@ class Chorale(models.Model):
     logo = models.ImageField(upload_to='chorale_logos/', blank=True, null=True)
     slogan = models.CharField(max_length=255, blank=True)
     meeting_frequency = models.CharField(max_length=20, blank=True, null=True)
+    description = models.TextField(blank=True)
 
 
 class Contribution(models.Model):

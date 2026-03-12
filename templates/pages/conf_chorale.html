@@ -53,53 +53,73 @@
                 </div>
                 <!-- Form Card -->
                 <div class="bg-white dark:bg-slate-900 border border-[#cfd7e7] dark:border-slate-800 rounded-xl shadow-sm p-6 md:p-10">
-                    <form class="flex flex-col gap-6" action="{% url 'create_chorale' %}" method="POST" enctype="multipart/form-data">
+                    <form class="flex flex-col gap-6" enctype="multipart/form-data" action="{% url 'create_chorale' %}" method="POST">
                         {% csrf_token %}
-                        {{ wizard.management_form}}
-                        
+                        {{ wizard.management_form }}
+                        {% if wizard.form.errors %}
+                            <div class="p-4 mb-6 text-sm text-red-700 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                                <strong class="font-bold">Erreurs de validation :</strong>
+                                <ul class="mt-2 list-disc pl-5">
+                                    {% for field, errors in wizard.form.errors.items %}
+                                        {% for error in errors %}
+                                            <li><strong>{{ field }}:</strong> {{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
                         <!-- slogan de la chorale -->
                         <div class="flex flex-col gap-2">
                             <label for="{{ form.slogan.id_for_label }}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.slogan.label}}</p>
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{ form.slogan.label }}</p>
                             </label>
-                            {{form.slogan}}
+                            {{ form.slogan }}
                         </div>
 
                         <!-- contact -->
                         <div class="flex flex-col gap-2">
-                            <label for="{{ form.contact_email.id_for_label}}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.contact_email.label}}</p>
-                                {{form.contact_email}}
-                            </label>
-                        </div>
-                        <div class="flex flex-col gap-2">
-                            <label for="{{form.contact_phone.id_for_label}}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.contact_phone.label}}</p>
-                            </label>
-                            {{form.contact_phone}}
-                        </div>
-
-                        <!-- frequence de réunions -->
-                        <div class="flex flex-col gap-2">
-                            <label for="{{form.meeting_frequency.id_for_label}}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.meeting_frequency.label}}</p>
-                                {{form.meeting_frequency}}
+                            <label for="{{ form.contact_email.id_for_label }}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{ form.contact_email.label }}</p>
+                                {{ form.contact_email }}
                             </label>
                         </div>
                         
+                        <div class="flex flex-col gap-2">
+                            <label for="{{ form.contact_phone.id_for_label }}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{ form.contact_phone.label }}</p>
+                            </label>
+                            {{ form.contact_phone }}
+                        </div>
 
+                        <!-- fréquence de réunions -->
+                        <div class="flex flex-col gap-2">
+                            <label for="{{ form.meeting_frequency.id_for_label }}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{ form.meeting_frequency.label }}</p>
+                                {{ form.meeting_frequency }}
+                            </label>
+                        </div>
+                        
                         <!-- Form Footer Actions -->
-
                         <div class="pt-6 flex flex-col gap-3">
                             {% if wizard.steps.prev %}
-                            <button name="wizard_goto_step" class="w-full h-14 bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg rounded-lg shadow-lg shadow-gray-500/20 flex items-center justify-center gap-2 transition-all" type="submit" value="{{ wizard.steps.prev }}">
-                                                        {% translate "Précédent" %}
-                                                        <span class="material-symbols-outlined">arrow_back</span>
+                            <button 
+                                name="wizard_goto_step" 
+                                type="submit" 
+                                value="{{ wizard.steps.prev }}" 
+                                class="w-full h-14 bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg rounded-lg shadow-lg shadow-gray-500/20 flex items-center justify-center gap-2 transition-all"
+                            >
+                                {% translate "Précédent" %}
+                                <span class="material-symbols-outlined">arrow_back</span>
                             </button>
                             {% endif %}
-                            <button class="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg rounded-lg shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all" type="submit" value="submit">
-                                                        {% translate "Terminer la configuration" %}
-                                                        <span class="material-symbols-outlined">check</span>
+                            
+                            <!-- ✅ Bouton final CORRIGÉ -->
+                            <button 
+                                type="submit" 
+                                class="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg rounded-lg shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all"
+                            >
+                                {% translate "Terminer la configuration" %}
+                                <span class="material-symbols-outlined">check</span>
                             </button>
                         </div>
                     </form>
