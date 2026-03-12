@@ -1,0 +1,116 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="en">
+    {% include "base/head.html" %}
+    {% block head %}
+        {{ wizard.form.media }}
+    {% endblock %}
+    <body>
+        <header class="w-full border-b border-[#cfd7e7] dark:border-slate-800 bg-white dark:bg-slate-900">
+            <div class="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+                        <span class="material-symbols-outlined text-white text-xl">music_note</span>
+                    </div>
+                    <span class="text-xl font-black tracking-tight text-primary">ChorusFlow</span>
+                </div>
+                <div class="hidden md:flex items-center gap-4">
+                    <span class="text-sm text-[#4c669a] dark:text-slate-400">Besoin d'aide?</span>
+                    <button class="text-sm font-semibold text-primary hover:underline">Consulter le guide</button>
+                </div>
+            </div>
+        </header>
+        {% for message in messages %}
+            {% if message.tags == "error" %}
+                <div class="p-4 mb-4 text-sm text-fg-danger-strong rounded-base bg-danger-soft" role="alert">
+                    <span class="font-medium">Error !</span> {{ message }}
+                </div>
+            {% elif message.tags == "success" %}
+                <div class="p-4 mb-4 text-sm text-fg-success-strong rounded-base bg-success-soft" role="alert">
+                    <span class="font-medium">Success !</span> {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+        <main class="flex flex-col items-center py-10 px-4 md:py-16">
+            <div class="w-full max-w-[640px] flex flex-col gap-8">
+                <!-- Progress Bar Section -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex gap-6 justify-between items-end">
+                        <p class="text-[#0d121b] dark:text-slate-200 text-sm font-medium leading-normal uppercase tracking-wider">{% translate "Étape 3 sur 3" %}</p>
+                        <p class="text-primary text-sm font-bold leading-normal">100% complété</p>
+                    </div>
+                    <div class="h-2 w-full rounded-full bg-[#cfd7e7] dark:bg-slate-700 overflow-hidden">
+                        <div class="h-full bg-primary" style="width: 100%;"></div>
+                    </div>
+                </div>
+                <!-- Page Heading -->
+                <div class="flex flex-col gap-3">
+                    <h1 class="text-[#0d121b] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">{% translate "Configurez votre chorale" %}</h1>
+                    <p class="text-[#4c669a] dark:text-slate-400 text-lg font-normal leading-normal">
+                                        {% translate "Ajoutez les informations supplémentaires pour personnaliser le profil de votre chorale." %}
+                                    </p>
+                </div>
+                <!-- Form Card -->
+                <div class="bg-white dark:bg-slate-900 border border-[#cfd7e7] dark:border-slate-800 rounded-xl shadow-sm p-6 md:p-10">
+                    <form class="flex flex-col gap-6" action="{% url 'create_chorale' %}" method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ wizard.management_form}}
+                        
+                        <!-- slogan de la chorale -->
+                        <div class="flex flex-col gap-2">
+                            <label for="{{ form.slogan.id_for_label }}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.slogan.label}}</p>
+                            </label>
+                            {{form.slogan}}
+                        </div>
+
+                        <!-- contact -->
+                        <div class="flex flex-col gap-2">
+                            <label for="{{ form.contact_email.id_for_label}}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.contact_email.label}}</p>
+                                {{form.contact_email}}
+                            </label>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="{{form.contact_phone.id_for_label}}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.contact_phone.label}}</p>
+                            </label>
+                            {{form.contact_phone}}
+                        </div>
+
+                        <!-- frequence de réunions -->
+                        <div class="flex flex-col gap-2">
+                            <label for="{{form.meeting_frequency.id_for_label}}" class="flex flex-col w-full">
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.meeting_frequency.label}}</p>
+                                {{form.meeting_frequency}}
+                            </label>
+                        </div>
+                        
+
+                        <!-- Form Footer Actions -->
+
+                        <div class="pt-6 flex flex-col gap-3">
+                            {% if wizard.steps.prev %}
+                            <button name="wizard_goto_step" class="w-full h-14 bg-gray-500 hover:bg-gray-600 text-white font-bold text-lg rounded-lg shadow-lg shadow-gray-500/20 flex items-center justify-center gap-2 transition-all" type="submit" value="{{ wizard.steps.prev }}">
+                                                        {% translate "Précédent" %}
+                                                        <span class="material-symbols-outlined">arrow_back</span>
+                            </button>
+                            {% endif %}
+                            <button class="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg rounded-lg shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all" type="submit" value="submit">
+                                                        {% translate "Terminer la configuration" %}
+                                                        <span class="material-symbols-outlined">check</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <!-- Footer Small Print -->
+                <footer class="mt-8 text-center">
+                <p class="text-[#4c669a] dark:text-slate-500 text-sm">
+                                    {% translate "En continuant, vous acceptez nos" %} <a class="text-primary hover:underline" href="#">{% translate "Conditions d'Utilisation" %}</a>.
+                                </p>
+                </footer>
+            </div>
+        </main>
+    </body>
+</html>

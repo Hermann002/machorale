@@ -74,3 +74,50 @@ class CreateChoraleForm(forms.ModelForm):
     def clean_location(self):
         location = self.cleaned_data.get("location")
         return location
+
+class ConfChoraleForm(CreateChoraleForm):
+
+    contact_email = forms.EmailField(
+        required=False,
+        label=_("Email de contact"),
+        widget=forms.EmailInput(attrs={
+            "class": "form-input flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#4c669a] dark:placeholder:text-slate-500 pl-12 pr-4 text-base font-normal leading-normal",
+            })
+    )
+
+    contact_phone = forms.CharField(
+        required=False,
+        max_length=20,
+        label=_("Téléphone de contact"),
+        widget=forms.TextInput(attrs={
+            "class": "form-input flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#4c669a] dark:placeholder:text-slate-500 pl-12 pr-4 text-base font-normal leading-normal",
+            })
+    )
+
+    slogan = forms.CharField(
+        required=False,
+        max_length=255,
+        label=_("Slogan"),
+        widget=forms.TextInput(attrs={
+            "class": "form-input flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 placeholder:text-[#4c669a] dark:placeholder:text-slate-500 pl-12 pr-4 text-base font-normal leading-normal",
+            })
+    )
+
+    meeting_frequency = forms.ChoiceField(
+        required=False,
+        label=_("Fréquence des réunions"),
+        choices=[
+            ("weekly", _("Hebdomadaire")),
+            ("biweekly", _("Bihebdomadaire")),
+            ("monthly", _("Mensuelle")),
+            ("yearly", _("Annuelle")),
+        ],
+        widget=forms.Select(attrs={
+            "class": "form-select flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 p-4 text-base font-normal leading-normal",
+            "placeholder": _("Sélectionner le type de groupe"),
+        }),
+    )
+
+    class Meta:
+        model = Chorale
+        fields = ["contact_email", "contact_phone", "slogan", "meeting_frequency"]

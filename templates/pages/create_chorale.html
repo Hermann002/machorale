@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
 <html lang="en">
     {% include "base/head.html" %}
@@ -33,27 +34,28 @@
                 <!-- Progress Bar Section -->
                 <div class="flex flex-col gap-3">
                     <div class="flex gap-6 justify-between items-end">
-                        <p class="text-[#0d121b] dark:text-slate-200 text-sm font-medium leading-normal uppercase tracking-wider">Étape 1 sur 3</p>
-                        <p class="text-primary text-sm font-bold leading-normal">33% complété</p>
+                        <p class="text-[#0d121b] dark:text-slate-200 text-sm font-medium leading-normal uppercase tracking-wider">{% translate "Étape 2 sur 3" %}</p>
+                        <p class="text-primary text-sm font-bold leading-normal">66% complété</p>
                     </div>
                     <div class="h-2 w-full rounded-full bg-[#cfd7e7] dark:bg-slate-700 overflow-hidden">
-                        <div class="h-full bg-primary" style="width: 33%;"></div>
+                        <div class="h-full bg-primary" style="width: 66%;"></div>
                     </div>
                 </div>
                 <!-- Page Heading -->
                 <div class="flex flex-col gap-3">
-                    <h1 class="text-[#0d121b] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Créer le profil de votre chorale</h1>
+                    <h1 class="text-[#0d121b] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">{% translate "Créer le profil de votre chorale" %}</h1>
                     <p class="text-[#4c669a] dark:text-slate-400 text-lg font-normal leading-normal">
-                                        Commençons par les informations de base de votre groupe musical. Vous pourrez les modifier plus tard.
+                                        {% translate "Commençons par les informations de base de votre groupe musical. Vous pourrez les modifier plus tard." %}
                                     </p>
                 </div>
                 <!-- Form Card -->
                 <div class="bg-white dark:bg-slate-900 border border-[#cfd7e7] dark:border-slate-800 rounded-xl shadow-sm p-6 md:p-10">
-                    <form class="flex flex-col gap-6" action="{% url 'create_chorale' %}" method="post">
+                    <form class="flex flex-col gap-6" action="" method="post">
                         {% csrf_token %}
+                        {{ wizard.management_form}}
                         <!-- Logo Upload Field (Custom Generated) -->
                         <div class="flex flex-col gap-3">
-                            <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal">Logo de la Chorale (Optionnel)</p>
+                            <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal">{% translate "Logo de la Chorale (Optionnel)" %}</p>
                             <div class="flex items-center gap-6">
                                 <div class="w-24 h-24 rounded-full bg-background-light dark:bg-slate-800 border-2 border-dashed border-[#cfd7e7] dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden">
                                     <span class="material-symbols-outlined text-[#4c669a] text-3xl">add_a_photo</span>
@@ -62,7 +64,7 @@
                                     <button class="px-4 py-2 bg-primary/10 text-primary text-sm font-bold rounded-lg hover:bg-primary/20 transition-colors" type="button">
                                         Choisir un fichier
                                     </button>
-                                    <input type="file">
+                                    {{form.logo}}
                                     <p class="text-[#4c669a] dark:text-slate-500 text-xs">JPG, PNG ou GIF. Max 5MB.</p>
                                 </div>
                             </div>
@@ -104,13 +106,14 @@
                             {{form.established_date}}
                         </div>
                         <!-- Form Footer Actions -->
+
                         <div class="pt-6 flex flex-col gap-3">
                             <button class="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold text-lg rounded-lg shadow-lg shadow-primary/20 flex items-center justify-center gap-2 transition-all" type="submit">
-                                                        Continuer la configuration
+                                                        {% translate "Continuer la configuration" %}
                                                         <span class="material-symbols-outlined">arrow_forward</span>
                             </button>
                             <p class="text-center text-[#4c669a] dark:text-slate-500 text-sm">
-                                                        Vous pourrez ajouter des membres à l'étape suivante.
+                                                        {% translate "Vous pourrez ajouter des membres à l'étape suivante." %}
                                                     </p>
                         </div>
                     </form>
@@ -118,7 +121,7 @@
                 <!-- Footer Small Print -->
                 <footer class="mt-8 text-center">
                 <p class="text-[#4c669a] dark:text-slate-500 text-sm">
-                                    En continuant, vous acceptez nos <a class="text-primary hover:underline" href="#">Conditions d'Utilisation</a>.
+                                    {% translate "En continuant, vous acceptez nos" %} <a class="text-primary hover:underline" href="#">{% translate "Conditions d'Utilisation" %}</a>.
                                 </p>
                 </footer>
             </div>
