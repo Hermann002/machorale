@@ -14,6 +14,27 @@ from .models import Chorale
 
 class DashboardView(TemplateView):
     template_name = "pages/dashboard.html"
+    total_members = 0
+    last_meeting_date = None
+    current_balance = 0.0
+    pending_sanctions = 0
+
+    increase_members = 0
+    number_absentees = 0
+    increase_balance = 0.0
+    increase_sanctions = 0
+
+    recent_activities = [
+        {
+            "type": "payment",
+            "activity_name":"",
+            "user":"",
+            "destination":"",
+            "amount": "",
+            "date":"",
+            "hour":""
+        }
+    ]
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, context={"page_title": "Tableau de bord"})

@@ -1,5 +1,8 @@
 {% extends "../base/base.html" %}
 {% load static %}
+{% load i18n %}
+
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
 {% for message in messages %}
@@ -13,8 +16,178 @@
         </div>
     {% endif %}
 {% endfor %}
-{% include "../components/dashboard-header.html" %}
-<div class="div-dashboard px-4 py-4">
-    {% include "../components/cards/stats.html" %}
+<div class="p-8">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold tracking-tight">{% translate "Vue d'ensemble" %}</h2>
+        <p class="text-[#4c669a] text-sm">Content de te revoir. Ce qui s'est passé aujourdh'hui avec la chorale.</p>
+    </div>
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+                <div class="p-2 bg-primary/10 rounded-lg">
+                    <span class="material-symbols-outlined text-primary">groups</span>
+                </div>
+            <span class="text-[#07883b] text-xs font-bold">+2%</span>
+            </div>
+            <p class="text-[#4c669a] text-sm font-medium">Total Membres</p>
+            <p class="text-2xl font-bold mt-1">42 Actif(s)</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+                <div class="p-2 bg-amber-100 rounded-lg">
+                    <span class="material-symbols-outlined text-amber-600">calendar_today</span>
+                </div>
+            <span class="text-[#e73908] text-xs font-bold">-5% att.</span>
+            </div>
+            <p class="text-[#4c669a] text-sm font-medium">Last Meeting Date</p>
+            <p class="text-2xl font-bold mt-1">Oct 24, 2023</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+                <div class="p-2 bg-emerald-100 rounded-lg">
+                <span class="material-symbols-outlined text-emerald-600">payments</span>
+                </div>
+            <span class="text-[#07883b] text-xs font-bold">+10%</span>
+            </div>
+            <p class="text-[#4c669a] text-sm font-medium">Current Balance</p>
+            <p class="text-2xl font-bold mt-1">$2,450.00</p>
+        </div>
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
+            <div class="flex justify-between items-start mb-4">
+                <div class="p-2 bg-rose-100 rounded-lg">
+                    <span class="material-symbols-outlined text-rose-600">priority_high</span>
+                </div>
+                <span class="text-[#07883b] text-xs font-bold">+1 new</span>
+            </div>
+            <p class="text-[#4c669a] text-sm font-medium">Pending Sanctions</p>
+            <p class="text-2xl font-bold mt-1">5 Members</p>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Activity Feed -->
+        <div class="lg:col-span-2">
+            <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-[#e7ebf3] dark:border-gray-800 flex justify-between items-center">
+                    <h3 class="font-bold">Recent Activity</h3>
+                    <button class="text-primary text-sm font-bold hover:underline">View All</button>
+                </div>
+                <div class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
+                    <!-- Activity Item 1 -->
+                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+                        <div class="size-10 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 shrink-0">
+                            <span class="material-symbols-outlined">upload_file</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold">Monthly Report - Oct</p>
+                            <p class="text-xs text-[#4c669a]">Uploaded by Jane Doe • 2 hours ago</p>
+                        </div>
+                        <div class="text-xs text-[#4c669a]">10:30 AM</div>
+                    </div>
+                    <!-- Activity Item 2 -->
+                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+                        <div class="size-10 flex items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 shrink-0">
+                            <span class="material-symbols-outlined">paid</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold">Financial Entry: Donation</p>
+                        <p class="text-xs text-[#4c669a]">Added to General Fund • $50.00</p>
+                        </div>
+                        <div class="text-xs text-[#4c669a]">Yesterday</div>
+                    </div>
+                    <!-- Activity Item 3 -->
+                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+                        <div class="size-10 flex items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 shrink-0">
+                            <span class="material-symbols-outlined">assignment_turned_in</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold">Attendance Finalized</p>
+                            <p class="text-xs text-[#4c669a]">Rehearsal Session: Sunday Service Prep</p>
+                        </div>
+                        <div class="text-xs text-[#4c669a]">2 days ago</div>
+                    </div>
+                    <!-- Activity Item 4 -->
+                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+                        <div class="size-10 flex items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 shrink-0">
+                            <span class="material-symbols-outlined">person_add</span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold">New Member Joined</p>
+                            <p class="text-xs text-[#4c669a]">Samuel Green added to Bass section</p>
+                        </div>
+                        <div class="text-xs text-[#4c669a]">3 days ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Side Widgets -->
+        <div class="flex flex-col gap-6">
+            <!-- Calendar Preview -->
+            <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="font-bold">Upcoming Practices</h3>
+                    <span class="material-symbols-outlined text-[#4c669a] cursor-pointer">more_horiz</span>
+                </div>
+                <!-- Mini Calendar Visual -->
+                <div class="mb-6">
+                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                        <span class="text-[10px] font-bold text-[#4c669a]">M</span>
+                        <span class="text-[10px] font-bold text-[#4c669a]">T</span>
+                        <span class="text-[10px] font-bold text-[#4c669a]">W</span>
+                        <span class="text-[10px] font-bold text-[#4c669a]">T</span>
+                        <span class="text-[10px] font-bold text-[#4c669a]">F</span>
+                        <span class="text-[10px] font-bold text-[#4c669a]">S</span>
+                        <span class="text-[10px] font-bold text-[#4c669a]">S</span>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center">
+                        <!-- Simplified 30 day grid for visual impact -->
+                        <span class="text-xs py-1.5 text-gray-300">28</span>
+                        <span class="text-xs py-1.5 text-gray-300">29</span>
+                        <span class="text-xs py-1.5 text-gray-300">30</span>
+                        <span class="text-xs py-1.5 font-medium">1</span>
+                        <span class="text-xs py-1.5 font-medium">2</span>
+                        <span class="text-xs py-1.5 font-medium bg-primary/10 text-primary rounded-full">3</span>
+                        <span class="text-xs py-1.5 font-medium">4</span>
+                        <span class="text-xs py-1.5 font-medium">5</span>
+                        <span class="text-xs py-1.5 font-medium">6</span>
+                        <span class="text-xs py-1.5 font-medium">7</span>
+                        <span class="text-xs py-1.5 font-medium">8</span>
+                        <span class="text-xs py-1.5 font-medium">9</span>
+                        <span class="text-xs py-1.5 font-medium bg-primary text-white rounded-full">10</span>
+                        <span class="text-xs py-1.5 font-medium">11</span>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex gap-4 items-start border-l-2 border-primary pl-3 py-1">
+                        <div>
+                            <p class="text-sm font-bold">Main Rehearsal</p>
+                            <p class="text-xs text-[#4c669a]">Saturday, Nov 10 @ 5:00 PM</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 items-start border-l-2 border-amber-400 pl-3 py-1">
+                        <div>
+                            <p class="text-sm font-bold">Vocal Warmups</p>
+                            <p class="text-xs text-[#4c669a]">Sunday, Nov 11 @ 8:15 AM</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Quick Links -->
+            <div class="bg-primary/5 rounded-xl border border-primary/20 p-6">
+                <h4 class="text-sm font-bold text-primary mb-4">Quick Tasks</h4>
+                <div class="flex flex-col gap-3">
+                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-blue-700">
+                        <span class="material-symbols-outlined text-sm">download</span> Export attendance log
+                    </button>
+                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-blue-700">
+                        <span class="material-symbols-outlined text-sm">mail</span> Email all members
+                    </button>
+                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-blue-700">
+                        <span class="material-symbols-outlined text-sm">print</span> Print choir sheet
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

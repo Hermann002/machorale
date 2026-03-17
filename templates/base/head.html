@@ -1,44 +1,43 @@
 {% load static %}
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Créer le profil de votre chorale</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#e0ad53",
-                        "background-light": "#f6f6f8",
-                        "background-dark": "#101622",
-                    },
-                    fontFamily: {
-                        "display": ["Manrope", "sans-serif"]
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: "class",
+                theme: {
+                    extend: {
+                        colors: {
+                            "primary": "#e0ad53",
+                            "background-light": "#f6f6f8",
+                            "background-dark": "#101622",
+                        },
+                        fontFamily: {
+                            "display": ["Manrope", "sans-serif"]
+                        },
+                        borderRadius: {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                        },
                     },
                 },
-            },
+            }
+        </script>
+    <style>.material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
         }
-    </script>
-<style>.material-symbols-outlined {
-    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
-    }
-select {
-    appearance: none;
-    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBdNo_HrmqAPAfLU2jltLZKUAGWfYrfi1Y7AHrESwuNXjz0qb4H2O49RyIIO3J2xNZOj79YArXtQRR04e8QeWkbsaCoA-RwsRBtgfYGoPnrHviOpDGq0_9sTwDVajiSHqZzZbl6vOBORy6wtv3DVi-uaxIug4I2pX3wUvyaOntnctDjG1GLUGBKTWJa5wI_f-EoenQPDzGFsvzP3CngNh1sDmhJ_1vwCBR-U7kHEhgMjiqKFMSnQpKCPNbfMDhiGIOTUs-bQVTMIbc);
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1.5em
-    }</style>
-    {% block head %}{% endblock %}
+    select {
+        appearance: none;
+        background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBdNo_HrmqAPAfLU2jltLZKUAGWfYrfi1Y7AHrESwuNXjz0qb4H2O49RyIIO3J2xNZOj79YArXtQRR04e8QeWkbsaCoA-RwsRBtgfYGoPnrHviOpDGq0_9sTwDVajiSHqZzZbl6vOBORy6wtv3DVi-uaxIug4I2pX3wUvyaOntnctDjG1GLUGBKTWJa5wI_f-EoenQPDzGFsvzP3CngNh1sDmhJ_1vwCBR-U7kHEhgMjiqKFMSnQpKCPNbfMDhiGIOTUs-bQVTMIbc);
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.5em
+        }</style>
+        {% block head %}{% endblock %}
 </head>

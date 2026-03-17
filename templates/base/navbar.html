@@ -1,46 +1,55 @@
 {% load static %}
 
-<nav class="navbar bg-custom-primary align-items-start">
-  <div class="nav-block">
-    <!-- Logo -->
-    <a class="nav-logo pb-4" href="/">
-      <img src="{% static 'images/logoBlanc.png' %}" 
-           alt="Logo" 
-           height="32">
-    </a>
-
-    <!-- <button class="" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class=""></span>
-    </button> -->
-
-    <div class="" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Contributions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Événements</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Membres</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Calendrier</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Programme de la semaine</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Sanctions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Plus</a>
-        </li>
-      </ul>
+<aside class="w-64 flex-shrink-0 flex flex-col bg-white dark:bg-gray-900 border-r border-[#e7ebf3] dark:border-gray-800">
+  <div class="p-6 flex flex-col h-full justify-between">
+    <div>
+      <div class="flex items-center gap-3 mb-10">
+        <div class="p-2 rounded-lg">
+          <a href="{% url 'dashboard' %}">
+            <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-auto">
+          </a>
+        </div>
+        <p class="text-xs text-[#4c669a] mt-1">Admin Portal</p>
+      </div>
+      <nav class="flex flex-col gap-2">
+        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary text-white shadow-sm transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">dashboard</span>
+          <span class="text-sm font-medium">Dashboard</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">money</span>
+          <span class="text-sm font-medium">Contributions</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">group</span>
+          <span class="text-sm font-medium">Members</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">event</span>
+          <span class="text-sm font-medium">Calendier</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">description</span>
+          <span class="text-sm font-medium">Sanctions</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
+          <span class="text-sm font-medium">Finances</span>
+        </a>
+        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+          <span class="material-symbols-outlined text-xl">festival</span>
+          <span class="text-sm font-medium">Evénements</span>
+        </a>
+      </nav>
     </div>
-    <a href="{% url 'logout' %}" class="btn btn-outline-primary me-2">logout</a>
+    <div class="mt-auto pt-6 border-t border-[#e7ebf3] dark:border-gray-800">
+      <button class="w-full flex items-center justify-center gap-2 bg-blue-700 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:bg-blue-700 transition-colors">
+        <span class="material-symbols-outlined text-sm">person_add</span>
+        Add Member
+      </button>
+      <button class="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:bg-blue-700 transition-colors mt-3">
+        <a href="{% url 'logout' %}" class="btn btn-outline-primary me-2">logout</a>
+      </button>
+    </div>
   </div>
-</nav>
+</aside>
