@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, ListView
 from .forms import CreateChoraleForm
 from django.contrib import messages
 from django.urls import reverse
@@ -10,34 +10,48 @@ from .forms import CreateChoraleForm, ConfChoraleForm
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 import os
-from .models import Chorale
+from .models import Chorale, Event
+from manage_users.models import CustomUser
+from django.db.models import Q
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import formats
+from datetime import datetime
+import json
 
-class DashboardView(TemplateView):
+class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "pages/dashboard.html"
-    total_members = 0
-    last_meeting_date = None
-    current_balance = 0.0
-    pending_sanctions = 0
+    total_members = 42
+    last_meeting_date = formats.date_format(datetime(2024, 5, 20), "M d, Y")
+    current_balance = 1_000_000.00
+    pending_sanctions = 5
 
-    increase_members = 0
-    number_absentees = 0
-    increase_balance = 0.0
-    increase_sanctions = 0
+    increase_members = 3
+    number_absentees = 4
+    increase_balance = 10
+    increase_sanctions = 1
 
-    recent_activities = [
-        {
-            "type": "payment",
-            "activity_name":"",
-            "user":"",
-            "destination":"",
-            "amount": "",
-            "date":"",
-            "hour":""
-        }
-    ]
+    recent_activities = Event.objects.filter(is_important=True)[:5]
+    # for 
+
+    with open("./fake_data.json", "r") as f:
+        fake_data = json.load(f)
+    recent_activities = fake_data["fake_recents_events"]
+
+    context = {
+        "page_title": "Tableau de bord",
+        "total_members": total_members,
+        "last_meeting_date": last_meeting_date,
+        "current_balance": current_balance,
+        "pending_sanctions": pending_sanctions,
+        "increase_members": increase_members,
+        "number_absentees": number_absentees,
+        "increase_balance": increase_balance,
+        "increase_sanctions": increase_sanctions,
+        "recent_activities": recent_activities,
+    }
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, context={"page_title": "Tableau de bord"})
+        return render(request, self.template_name, context=self.context)
     
 
 FORMS = [
@@ -70,6 +84,7 @@ class CreateChoraleView(SessionWizardView):
         return super().get(request, *args, **kwargs)
 
     def done(self, form_list, **kwargs):
+        user = self.request.user
         try:
             # Récupérer toutes les données nettoyées
             data = self.get_all_cleaned_data()
@@ -101,7 +116,10 @@ class CreateChoraleView(SessionWizardView):
                 chorale.logo = data['logo']
             
             chorale.save()
-            
+            chorale.members.add(user)
+            user.role = 'super_admin_chorale'
+            user.save()
+
             messages.success(self.request, "Votre chorale a été créée avec succès !")
             return redirect(reverse('dashboard'))
             
@@ -110,13 +128,27 @@ class CreateChoraleView(SessionWizardView):
             messages.error(self.request, "Une erreur est survenue lors de la création de la chorale.")
             return redirect(reverse('dashboard'))
     
-    # def post(self, request, *args, **kwargs):
-    #     form = CreateChoraleForm(request.POST)
-        
-    #     if form.is_valid():
-    #         chorale = form.save(commit=False)
-    #         chorale.admin = request.user
-    #         chorale.save()
-    #         return render(request, "pages/dashboard.html", context={"page_title": "Tableau de bord", "success_message": "Chorale créée avec succès."})
-    #     return render(request, self.template_name, context={"page_title": "Créer une chorale", "form": form})
+
+class ListMembersView(LoginRequiredMixin, ListView):
+    template_name = "pages/members.html"
+    model = CustomUser
+    context_object_name = "members"
+    paginate_by = 10
+
+    def get_queryset(self):
+        user = self.request.user
+        chorales = user.chorales.all()
+        members = CustomUser.objects.filter(chorales__in=chorales).distinct()
+        return members 
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["page_title"] = "Membres de la chorale"
+        return context
+
+class ContributionView(LoginRequiredMixin, TemplateView):
+    template_name = "pages/contributions.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
     

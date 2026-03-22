@@ -28,40 +28,40 @@
                 <div class="p-2 bg-primary/10 rounded-lg">
                     <span class="material-symbols-outlined text-primary">groups</span>
                 </div>
-            <span class="text-[#07883b] text-xs font-bold">+2%</span>
+            <span class="text-[#07883b] text-xs font-bold">+{{ increase_members }} new</span>
             </div>
             <p class="text-[#4c669a] text-sm font-medium">Total Membres</p>
-            <p class="text-2xl font-bold mt-1">42 Actif(s)</p>
+            <p class="text-2xl font-bold mt-1">{{ total_members }} Actif(s)</p>
         </div>
         <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-2 bg-amber-100 rounded-lg">
                     <span class="material-symbols-outlined text-amber-600">calendar_today</span>
                 </div>
-            <span class="text-[#e73908] text-xs font-bold">-5% att.</span>
+            <span class="text-[#e73908] text-xs font-bold">-{{ number_absentees }} att.</span>
             </div>
             <p class="text-[#4c669a] text-sm font-medium">Last Meeting Date</p>
-            <p class="text-2xl font-bold mt-1">Oct 24, 2023</p>
+            <p class="text-2xl font-bold mt-1">{{ last_meeting_date }}</p>
         </div>
         <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-2 bg-emerald-100 rounded-lg">
                 <span class="material-symbols-outlined text-emerald-600">payments</span>
                 </div>
-            <span class="text-[#07883b] text-xs font-bold">+10%</span>
+            <span class="text-[#07883b] text-xs font-bold">+{{ increase_balance }}%</span>
             </div>
             <p class="text-[#4c669a] text-sm font-medium">Current Balance</p>
-            <p class="text-2xl font-bold mt-1">$2,450.00</p>
+            <p class="text-2xl font-bold mt-1">xaf {{ current_balance|floatformat:2 }}</p>
         </div>
         <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-2 bg-rose-100 rounded-lg">
                     <span class="material-symbols-outlined text-rose-600">priority_high</span>
                 </div>
-                <span class="text-[#07883b] text-xs font-bold">+1 new</span>
+                <span class="text-[#07883b] text-xs font-bold">+{{ increase_sanctions }} new</span>
             </div>
             <p class="text-[#4c669a] text-sm font-medium">Pending Sanctions</p>
-            <p class="text-2xl font-bold mt-1">5 Members</p>
+            <p class="text-2xl font-bold mt-1">{{ pending_sanctions }} Sanctions</p>
         </div>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -69,54 +69,36 @@
         <div class="lg:col-span-2">
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-[#e7ebf3] dark:border-gray-800 flex justify-between items-center">
-                    <h3 class="font-bold">Recent Activity</h3>
-                    <button class="text-primary text-sm font-bold hover:underline">View All</button>
+                    <h3 class="font-bold">Activités récentes</h3>
+                    <button class="text-primary text-sm font-bold hover:underline">voir plus</button>
                 </div>
                 <div class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
-                    <!-- Activity Item 1 -->
-                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-                        <div class="size-10 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 shrink-0">
-                            <span class="material-symbols-outlined">upload_file</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold">Monthly Report - Oct</p>
-                            <p class="text-xs text-[#4c669a]">Uploaded by Jane Doe • 2 hours ago</p>
-                        </div>
-                        <div class="text-xs text-[#4c669a]">10:30 AM</div>
-                    </div>
-                    <!-- Activity Item 2 -->
-                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-                        <div class="size-10 flex items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 shrink-0">
-                            <span class="material-symbols-outlined">paid</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold">Financial Entry: Donation</p>
-                        <p class="text-xs text-[#4c669a]">Added to General Fund • $50.00</p>
-                        </div>
-                        <div class="text-xs text-[#4c669a]">Yesterday</div>
-                    </div>
-                    <!-- Activity Item 3 -->
-                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-                        <div class="size-10 flex items-center justify-center rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 shrink-0">
-                            <span class="material-symbols-outlined">assignment_turned_in</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold">Attendance Finalized</p>
-                            <p class="text-xs text-[#4c669a]">Rehearsal Session: Sunday Service Prep</p>
-                        </div>
-                        <div class="text-xs text-[#4c669a]">2 days ago</div>
-                    </div>
-                    <!-- Activity Item 4 -->
-                    <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-                        <div class="size-10 flex items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 shrink-0">
-                            <span class="material-symbols-outlined">person_add</span>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-semibold">New Member Joined</p>
-                            <p class="text-xs text-[#4c669a]">Samuel Green added to Bass section</p>
-                        </div>
-                        <div class="text-xs text-[#4c669a]">3 days ago</div>
-                    </div>
+
+                    {% for event in recent_activities %}
+                        {% if event.event_type == "payment" %}
+                            <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+                                <div class="size-10 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 shrink-0">
+                                    <span class="material-symbols-outlined">payment</span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold">{{ event.description }}</p>
+                                <p class="text-xs text-[#4c669a]">Added to General Fund • xaf {{ event.amount|floatformat:2 }}</p>
+                                </div>
+                                <div class="text-xs text-[#4c669a]"> {{ event.date }} </div>
+                            </div>
+                        {% else %}
+                            <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+                                <div class="size-10 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 shrink-0">
+                                    <span class="material-symbols-outlined"> {{event.event_type}} </span>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold">{{ event.short_description }}</p>
+                                    <p class="text-xs text-[#4c669a]"> {{ event.description}} </p>
+                                </div>
+                                <div class="text-xs text-[#4c669a]"> {{ event.date }} </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </div>
         </div>

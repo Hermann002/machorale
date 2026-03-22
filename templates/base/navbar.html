@@ -12,34 +12,60 @@
         <p class="text-xs text-[#4c669a] mt-1">Admin Portal</p>
       </div>
       <nav class="flex flex-col gap-2">
-        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-primary text-white shadow-sm transition-all" href="#">
+        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg
+
+        {% if request.resolver_match.url_name == 'dashboard' %}
+          bg-primary text-white
+        {% else %}
+          text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
+        {% endif %}
+        
+        transition-all" hx-boost="true" href="{% url 'dashboard' %}">
           <span class="material-symbols-outlined text-xl">dashboard</span>
           <span class="text-sm font-medium">Dashboard</span>
         </a>
-        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
+        disabled>
           <span class="material-symbols-outlined text-xl">money</span>
           <span class="text-sm font-medium">Contributions</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+        </button>
+        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg
+
+        {% if request.resolver_match.url_name == 'members' %}
+          bg-primary text-white
+        {% else %}
+          text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
+        {% endif %}
+        
+        transition-all" hx-get="{% url 'members' %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
           <span class="material-symbols-outlined text-xl">group</span>
           <span class="text-sm font-medium">Members</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+        </button>
+        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
+        disabled>
           <span class="material-symbols-outlined text-xl">event</span>
-          <span class="text-sm font-medium">Calendier</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+          <span class="text-sm font-medium">Calendrier</span>
+        </button>
+        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
+        disabled>
           <span class="material-symbols-outlined text-xl">description</span>
           <span class="text-sm font-medium">Sanctions</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+        </button>
+        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
+        disabled>
           <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
           <span class="text-sm font-medium">Finances</span>
-        </a>
-        <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-all" href="#">
+        </button>
+        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
+        disabled>
           <span class="material-symbols-outlined text-xl">festival</span>
           <span class="text-sm font-medium">Evénements</span>
-        </a>
+        </button>
+        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
+        disabled>
+          <span class="material-symbols-outlined text-xl">source_notes</span>
+          <span class="text-sm font-medium">Activités</span>
+        </button>
       </nav>
     </div>
     <div class="mt-auto pt-6 border-t border-[#e7ebf3] dark:border-gray-800">

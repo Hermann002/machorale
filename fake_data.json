@@ -1,0 +1,34 @@
+{
+    "fake_recents_events": [
+        {
+            "event_type": "payment",
+            "description": "Paiement de John Doe pour la cotisation mensuelle",
+            "short_description": "Contribution financière",
+            "amount": 5000,
+            "date": "10h30",
+            "user_agent": "Joelle Tchitchui"
+        },
+        {
+            "event_type": "warning",
+            "description": "Sanction pour absence non justifiée de Mark Johnson",
+            "short_description": "Sanction pour absence non justifiée",
+            "date": "hier",
+            "user_agent": "Mark Johnson"
+        },
+        {
+            "event_type": "person_add",
+            "description": "un nouveau membre nous a rejoint",
+            "short_description": "Nouveau membre ajouté",
+            "date": "Il y a 2 jours",
+            "user_agent": "Jean Dupont",
+            "new_member_name": "Alice Smith"
+        },
+        {
+            "event_type":"upload_file",
+            "description": "nouveau rapport - Nov",
+            "short_description": "Rapport téléversé",
+            "date": "Il y a 3 jours",
+            "user_agent": "Joelle Tchitchui"
+        }
+    ]
+}

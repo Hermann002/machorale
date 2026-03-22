@@ -9,7 +9,9 @@
         {% include "base/navbar.html" %}
         <main class="flex-1 flex flex-col overflow-y-auto">
             {% include "base/header.html" %}
-            {% block content %}{% endblock %}
+            <main id="main-content">
+                {% block content %}{% endblock %}
+            </main>
         </main>
         {% include "base/footer.html" %}
         {% include "base/scripts.html" %}
