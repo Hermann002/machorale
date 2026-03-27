@@ -130,7 +130,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-CSRF_TRUSTED_ORIGINS = ['https://machorale-production.up.railway.app', 'http://localhost', 'http://127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://machorale.up.railway.app', 'http://localhost', 'http://127.0.0.1']
 
 SESSION_COOKIE_AGE = 3600
 SESSION_COOKIE_HTTPONLY = True
