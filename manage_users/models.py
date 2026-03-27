@@ -24,6 +24,7 @@ LEVEL_CHOICE = (
 
 
 class Profile(models.Model):
+    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
     _contact = models.CharField(max_length=15, blank=True, null=True, validators=[validate_international_phone])
 
     MARITAL_STATUS_CHOICE = (
@@ -71,8 +72,6 @@ class CustomUser(AbstractUser):
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default=ROLE_MEMBER)
     is_verify = models.BooleanField(default=False)
 
-    profile = models.OneToOneField('Profile', on_delete=models.SET_NULL, null=True, blank=True)
-
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
     
@@ -82,6 +81,9 @@ class CustomUser(AbstractUser):
         if self.email:
             self.email = self.email.lower()
         super().save(*args, **kwargs)
+    
+    class Meta:
+        ordering = ['date_joined']
 
 class OtpCode(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)

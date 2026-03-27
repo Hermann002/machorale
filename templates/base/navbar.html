@@ -69,7 +69,13 @@
       </nav>
     </div>
     <div class="mt-auto pt-6 border-t border-[#e7ebf3] dark:border-gray-800">
-      <button class="w-full flex items-center justify-center gap-2 bg-blue-700 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:bg-blue-700 transition-colors">
+      <button
+        hx-get="{% url 'member_popup' %}" 
+        hx-target="body" 
+        hx-swap="beforeend"
+        hx-trigger="click" 
+        class="w-full flex items-center justify-center gap-2 bg-blue-700 text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:bg-blue-700 transition-colors"
+        >
         <span class="material-symbols-outlined text-sm">person_add</span>
         Add Member
       </button>

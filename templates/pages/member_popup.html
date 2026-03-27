@@ -1,0 +1,77 @@
+
+<div id="popup" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <!-- Modal Content -->
+    <div class="relative bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <!-- Modal Header -->
+        <div class="px-8 py-6 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+            <div>
+                <h2 class="text-2xl font-extrabold text-on-surface tracking-tight font-headline">Ajouter un nouveau membre</h2>
+                <p class="text-sm text-secondary mt-1">Remplissez les détails pour enregistrer le profil.</p>
+            </div>
+                <button
+                    hx-get="{% url 'close_popup' %}" 
+                    hx-target="#popup" 
+                    hx-swap="outerHTML"
+                    class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+                >
+                    <span class="material-symbols-outlined text-slate-400">close</span>
+                </button>
+        </div>
+        <!-- Modal Body (Form) -->
+        <form
+            hx-post="{% url 'member_popup' %}" 
+            hx-target="#popup" 
+            hx-swap="outerHTML"
+            class="p-8 space-y-5"
+        >
+        {% csrf_token %}
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label for="{{ form.last_name.id_for_last_name}}" class="text-xs font-black text-slate-500 uppercase tracking-widest px-1">Nom</label>
+                    {{ form.last_name }}
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-black text-slate-500 uppercase tracking-widest px-1">Prénom</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-black text-slate-500 uppercase tracking-widest px-1">Email</label>
+                    {{form.email}}
+                </div>
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs font-black text-slate-500 uppercase tracking-widest px-1">Numéro de téléphone</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg">call</span>
+                    {{form.contact_phone}}
+                </div>
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs font-black text-slate-500 uppercase tracking-widest px-1">Rôle dans la chorale</label>
+                {{form.role}}
+            </div>
+            <!-- Footer Buttons -->
+            <div class="pt-6 flex gap-4">
+            <button
+                class="flex-1 py-3.5 px-6 rounded-xl font-bold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 active:scale-95 transition-all"
+                type="button"
+                hx-get="{% url 'close_popup' %}" 
+                hx-target="#popup" 
+                hx-swap="outerHTML"
+            >
+                Annuler
+            </button>
+            <button
+                class="flex-[2] py-3.5 px-6 rounded-xl font-bold text-white bg-primary shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 active:scale-95 transition-all"
+                type="submit"
+                
+            >
+                Enregistrer
+            </button>
+            </div>
+        </form>
+    </div>
+</div>

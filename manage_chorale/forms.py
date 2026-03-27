@@ -1,9 +1,9 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from .models import Chorale  # Pour accéder aux TYPE_CHOICES et au modèle
+from .models import Chorale
+from manage_users.models import CustomUser
 
-# ========== ÉTAPE 1 : Formulaire INDÉPENDANT avec validations ==========
 class CreateChoraleForm(forms.Form):
     """Collecte les données de base - PAS un ModelForm"""
     
@@ -234,3 +234,85 @@ class ConfChoraleForm(forms.Form):
             raise ValidationError(_("Fréquence de réunion invalide."))
         
         return frequency
+
+class AddMemberForm(forms.Form):
+    """Formulaire pour ajouter un membre à la chorale"""
+    
+    email = forms.EmailField(
+        required=True,
+        label=_("Email du membre"),
+        widget=forms.EmailInput(attrs={
+            "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-300",
+            "placeholder": _("Entrez l'email du membre à ajouter")
+        })
+    )
+    first_name = forms.CharField(
+        required=True,
+        max_length=150,
+        label=_("Nom du membre"),
+        widget=forms.TextInput(attrs={
+            "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-300",
+            "placeholder": _("Ex: Jean Dupont")
+        })
+    )
+    last_name = forms.CharField(
+        required=False,
+        max_length=150,
+        label=_("Prénom du membre"),
+        widget=forms.TextInput(attrs={
+            "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-300",
+            "placeholder": _("Ex: Jean Dupont")
+        })
+    )
+    contact_phone = forms.CharField(
+        required=False,
+        max_length=20,
+        label=_("Numéro de téléphone"),
+        widget=forms.TextInput(attrs={
+            "class": "w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium placeholder:text-slate-300",
+            "placeholder": _("Ex: 01 23 45 67 89")
+        })
+    )
+    
+    role = forms.ChoiceField(
+        required=True,
+        label=_("Rôle dans la chorale"),
+        choices=CustomUser.ROLE_CHOICES,
+        widget=forms.Select(attrs={
+            "class": "w-full appearance-none px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium text-on-surface cursor-pointer",
+        }),
+    )
+
+    def clean_email(self):
+        """Valide l'email de contact"""
+        email = self.cleaned_data.get("semail")
+        
+        if email:
+            email = email.strip()
+            
+            # Vérifier le format email (déjà fait par EmailField, mais on peut ajouter des règles)
+            if len(email) > 254:
+                raise ValidationError(_("L'adresse email est trop longue."))
+        
+        return email
+    
+    def clean_contact_phone(self):
+        """Valide et nettoie le numéro de téléphone"""
+        phone = self.cleaned_data.get("contact_phone")
+        
+        if phone:
+            # Supprimer les espaces, parenthèses, tirets
+            cleaned_phone = ''.join(c for c in phone if c.isdigit() or c == '+')
+            
+            # Vérifier la longueur minimale (au moins 7 chiffres)
+            digits_only = ''.join(c for c in cleaned_phone if c.isdigit())
+            
+            if len(digits_only) < 7:
+                raise ValidationError(_("Le numéro de téléphone doit contenir au moins 7 chiffres."))
+            
+            if len(digits_only) > 15:
+                raise ValidationError(_("Le numéro de téléphone est trop long."))
+            
+            phone = cleaned_phone
+        
+        return phone

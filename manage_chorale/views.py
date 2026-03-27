@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView, ListView
-from .forms import CreateChoraleForm
+from .forms import CreateChoraleForm, AddMemberForm
 from django.contrib import messages
 from django.urls import reverse
 from django.shortcuts import redirect
@@ -11,7 +11,9 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 import os
 from .models import Chorale, Event
-from manage_users.models import CustomUser
+from manage_users.models import CustomUser, Profile
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import formats
@@ -133,7 +135,9 @@ class ListMembersView(LoginRequiredMixin, ListView):
     template_name = "pages/members.html"
     model = CustomUser
     context_object_name = "members"
-    paginate_by = 10
+    paginate_by = 5
+    
+    # filter to be implemented later
 
     def get_queryset(self):
         user = self.request.user
@@ -143,7 +147,9 @@ class ListMembersView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        total_members = self.get_queryset().count()
         context["page_title"] = "Membres de la chorale"
+        context["total_members"] = total_members
         return context
 
 class ContributionView(LoginRequiredMixin, TemplateView):
@@ -152,3 +158,50 @@ class ContributionView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
     
+class MemberPopupView(LoginRequiredMixin, TemplateView):
+    template_name = "pages/member_popup.html"
+    form_class = AddMemberForm
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, {"form": self.form_class()})
+    
+    def post(self, request, *args, **kwargs):
+        form = AddMemberForm(request.POST)
+        chorale = request.user.managed_group
+        print(f"Chorale: {chorale.name} this is chorale")
+        if form.is_valid():
+            email = form['email'].value()
+            first_name = form['first_name'].value()
+            last_name = form['last_name'].value()
+            contact_phone = form['contact_phone'].value()
+            role = form['role'].value()
+            print(f"{email} this is email")
+            try:
+                member = CustomUser.objects.create(
+                    username=email.split('@')[0],
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    role=role,
+                )
+                member.set_password(make_password("defaultpassword123"))
+                member.save()
+                Profile.objects.create(user=member, _contact=contact_phone)
+                chorale.members.add(member)
+                print(member.chorales.all())
+
+                # Envoyer un email d'invitation ici (à implémenter)
+
+                messages.success(request, f"{member.get_full_name()} a été ajouté en tant que {member.get_role_display()} avec succès !")
+                return redirect(reverse('members'))
+            except Exception as e:
+                print(f"Erreur lors de la création du membre: {e}")
+                messages.error(request, "Une erreur est survenue lors de l'ajout du membre.")
+                return redirect(reverse('members'))
+
+
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def close_popup(request):
+    return render(request, "pages/close_popup.html")
