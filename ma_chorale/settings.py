@@ -118,15 +118,17 @@ USE_I18N = True
 USE_TZ = True
 
 
+CSRF_TRUSTED_ORIGINS = ['https://machorale-production.up.railway.app', 'http://localhost', 'http://127.0.0.1']
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 # URL utilisée dans les templates (ex: {% static 'js/main.js' %}
-STATIC_URL = '/static/'
+STATIC_URL = '/staticfiles/'
 
 # Dossiers où Django cherche les fichiers statiques (en plus de static/ dans chaque app)
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # ou os.path.join(BASE_DIR, 'static')
+    BASE_DIR / "staticfiles",  # ou os.path.join(BASE_DIR, 'static')
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"  # ou os.path.join(BASE_DIR, 'staticfiles')
