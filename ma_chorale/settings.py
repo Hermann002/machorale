@@ -124,11 +124,11 @@ CSRF_TRUSTED_ORIGINS = ['https://machorale-production.up.railway.app', 'http://l
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 # URL utilisée dans les templates (ex: {% static 'js/main.js' %}
-STATIC_URL = '/staticfiles/'
+STATIC_URL = '/static/'
 
 # Dossiers où Django cherche les fichiers statiques (en plus de static/ dans chaque app)
 STATICFILES_DIRS = [
-    BASE_DIR / "staticfiles",  # ou os.path.join(BASE_DIR, 'static')
+    BASE_DIR / "static",  # ou os.path.join(BASE_DIR, 'static')
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"  # ou os.path.join(BASE_DIR, 'staticfiles')
