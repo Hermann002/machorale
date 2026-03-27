@@ -9,14 +9,16 @@ from django.contrib.auth.hashers import make_password
 from .utils import send_code_to_user
 from manage_users.models import OtpCode
 
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
+@method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='dispatch')
 class RegisterView(TemplateView):
     template_name = "landing/pages/register.html"
 
     def get(self, request, *args, **kwargs):
         form = UserRegisterForm()
         return render(request, self.template_name, {"form": form})
-
 
     def post(self, request, *args, **kwargs):
         form = UserRegisterForm(request.POST)
@@ -35,6 +37,7 @@ class RegisterView(TemplateView):
             return HttpResponseRedirect(reverse("verify_email"))
         return render(request, self.template_name, {"form": form})
 
+@method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='dispatch')
 class LoginView(TemplateView):
     template_name = "landing/pages/login.html"
 
@@ -47,7 +50,7 @@ class LoginView(TemplateView):
             return HttpResponseRedirect("/")
         form = UserLoginForm()
         return render(request, self.template_name, {"form": form})
-
+    
     def post(self, request, *args, **kwargs):
         form = UserLoginForm(request.POST)
         if form.is_valid():
