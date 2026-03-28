@@ -171,8 +171,8 @@ MEDIA_ROOT = BASE_DIR / "media"  # ou os.path.join(BASE_DIR, '
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('email-host')
-EMAIL_PORT = config('email-port')
-EMAIL_USE_TLS = config('email-use-tls', default=True)
-EMAIL_HOST_USER = config('email-user')
-EMAIL_HOST_PASSWORD = config('email-password')
+EMAIL_HOST = config('emailhost')
+EMAIL_PORT = config('emailport')
+EMAIL_USE_TLS = config('emailusetls', default=True)
+EMAIL_HOST_USER = config('emailuser')
+EMAIL_HOST_PASSWORD = config('emailpassword')
