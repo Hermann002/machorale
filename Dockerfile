@@ -53,7 +53,8 @@ RUN chown -R ${APP_UID}:${APP_GID} /opt/venv
 
 COPY --chown=${APP_UID}:${APP_GID} . .
 
-RUN mkdir -p /app/media /app/logs && \
+RUN chmod +x /app/entrypoint.sh && \
+    mkdir -p /app/media /app/logs && \
     chown -R ${APP_UID}:${APP_GID} /app/media /app/logs && \
     chmod -R 755 /app
 
@@ -61,4 +62,5 @@ USER ${APP_UID}:${APP_GID}
 
 EXPOSE 8000
 
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "ma_chorale.wsgi:application", "--bind", "0.0.0.0:8000"]
