@@ -1,15 +1,22 @@
 {% load static %}
 
-<aside class="w-64 flex-shrink-0 flex flex-col bg-white dark:bg-gray-900 border-r border-[#e7ebf3] dark:border-gray-800">
-  <div class="p-6 flex flex-col h-full justify-between">
-    <div>
-      <div class="flex items-center gap-3 mb-10">
-        <div class="p-2 rounded-lg">
-          <a href="{% url 'dashboard' %}">
-            <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-auto">
-          </a>
+<div id="sidebar-container">
+  <div id="sidebar-backdrop" class="fixed inset-0 z-30 bg-black/40 md:hidden {% if not sidebar_open %}hidden{% endif %}"></div>
+  <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 shadow-xl md:static md:translate-x-0 md:shadow-none md:flex md:w-64 flex-shrink-0 flex flex-col bg-white dark:bg-gray-900 border-r border-[#e7ebf3] dark:border-gray-800 {% if sidebar_open %}translate-x-0{% else %}-translate-x-full{% endif %}">
+    <div class="p-6 flex flex-col h-full justify-between">
+      <div>
+        <div class="flex items-center justify-between gap-3 mb-10">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-lg">
+            <a href="{% url 'dashboard' %}">
+              <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-auto">
+            </a>
+          </div>
+          <p class="text-xs text-[#4c669a] mt-1">Admin Portal</p>
         </div>
-        <p class="text-xs text-[#4c669a] mt-1">Admin Portal</p>
+        <button hx-get="{% url 'sidebar_toggle' %}?open=0" hx-target="#sidebar-container" hx-swap="outerHTML" class="md:hidden p-2 rounded-lg text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
       <nav class="flex flex-col gap-2">
         <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg
@@ -85,3 +92,4 @@
     </div>
   </div>
 </aside>
+</div>

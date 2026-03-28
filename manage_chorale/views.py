@@ -205,3 +205,8 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def close_popup(request):
     return render(request, "pages/close_popup.html")
+
+@login_required
+def sidebar_toggle(request):
+    sidebar_open = request.GET.get('open') == '1'
+    return render(request, "base/navbar.html", {"sidebar_open": sidebar_open})
