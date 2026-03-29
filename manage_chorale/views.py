@@ -19,41 +19,39 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils import formats
 from datetime import datetime
 import json
+from .tasks import calcul_stats_dashboard
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "pages/dashboard.html"
-    total_members = 42
-    last_meeting_date = formats.date_format(datetime(2024, 5, 20), "M d, Y")
-    current_balance = 1_000_000.00
-    pending_sanctions = 5
-
-    increase_members = 3
-    number_absentees = 4
-    increase_balance = 10
-    increase_sanctions = 1
-
-    recent_activities = Event.objects.filter(is_important=True)[:5]
-    # for 
-
-    with open("./fake_data.json", "r") as f:
-        fake_data = json.load(f)
-    recent_activities = fake_data["fake_recents_events"]
-
-    context = {
-        "page_title": "Tableau de bord",
-        "total_members": total_members,
-        "last_meeting_date": last_meeting_date,
-        "current_balance": current_balance,
-        "pending_sanctions": pending_sanctions,
-        "increase_members": increase_members,
-        "number_absentees": number_absentees,
-        "increase_balance": increase_balance,
-        "increase_sanctions": increase_sanctions,
-        "recent_activities": recent_activities,
-    }
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, context=self.context)
+        chorale = request.user.managed_group
+        stats = calcul_stats_dashboard(chorale.id)
+        total_members = stats.get("total_members", 0)
+        last_meeting_date = formats.date_format(datetime(2024, 5, 20), "M d, Y")
+        current_balance = 1_000_000.00
+        pending_sanctions = 5
+
+        increase_members = 2
+        number_absentees = 4
+        increase_balance = 10
+        increase_sanctions = 1
+
+        recent_activities = Event.objects.filter(is_important=True)[:5]
+
+        context = {
+            "page_title": "Tableau de bord",
+            "total_members": total_members,
+            "last_meeting_date": last_meeting_date,
+            "current_balance": current_balance,
+            "pending_sanctions": pending_sanctions,
+            "increase_members": increase_members,
+            "number_absentees": number_absentees,
+            "increase_balance": increase_balance,
+            "increase_sanctions": increase_sanctions,
+            "recent_activities": recent_activities,
+        }
+        return render(request, self.template_name, context=context)
     
 
 FORMS = [
