@@ -92,7 +92,7 @@
                                                 Déjà membre ? <a class="text-primary font-semibold hover:underline" href="{% url 'login' %}">Connectez-vous ici</a>
                         </p>
                     </div>
-                        <form class="space-y-5" method="post" action="{% url 'register' %}">
+                        <form id="registerForm" class="space-y-5" method="post" action="{% url 'register' %}">
                             {% csrf_token %}
 
                             <!-- Username -->
@@ -193,11 +193,11 @@
                             </div>
 
                             <!-- Submit Button -->
-                            <button type="submit" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold h-14 rounded-xl transition-all shadow-lg shadow-primary/20 mt-4">
+                            <button id="submitBtn" type="submit" class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-bold h-14 rounded-xl transition-all shadow-lg shadow-primary/20 mt-4">
                                 Créer mon compte
                                 <span class="material-symbols-outlined">arrow_forward</span>
                             </button>
-                            </form>
+                        </form>
                     <!-- Help Link -->
                     <p class="mt-8 text-center text-sm text-slate-500 dark:text-slate-500">
                                         Besoin d'aide pour configurer votre chorale ? <br/>
@@ -212,18 +212,43 @@
             </footer>
 
         <script>
-        document.addEventListener('DOMContentLoaded', () => {
-        const firstError = document.querySelector('.text-red-600, .text-red-400');
-        if (firstError) {
-            // Trouve le champ associé : généralement le <input> juste avant l'erreur
-            const field = firstError.previousElementSibling?.querySelector?.('input, textarea, select')
-                        || firstError.parentElement?.querySelector?.('input, textarea, select');
-            
-            if (field) {
-            field.focus();
+            document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const btn = document.getElementById('submitBtn');
+                // Empêche les soumissions multiples
+                if (btn.disabled) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Désactive le bouton + état de chargement
+                btn.disabled = true;
+                btn.innerHTML = `
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Création en cours...
+                `;
+                
+                // Optionnel : timeout de sécurité (10s max)
+                setTimeout(() => {
+                    if (btn.disabled) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Créer mon compte';
+                    alert('Le serveur met trop de temps à répondre. Veuillez réessayer.');
+                    }
+                }, 10000);
+                });
+
+
+            document.addEventListener('DOMContentLoaded', () => {
+            const firstError = document.querySelector('.text-red-600, .text-red-400');
+            if (firstError) {
+                // Trouve le champ associé : généralement le <input> juste avant l'erreur
+                const field = firstError.previousElementSibling?.querySelector?.('input, textarea, select')
+                            || firstError.parentElement?.querySelector?.('input, textarea, select');
+                
+                if (field) {
+                field.focus();
+                }
             }
-        }
-        });
+            });
         </script>
     </body>
 </html>
