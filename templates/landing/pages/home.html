@@ -24,8 +24,8 @@
             Une plateforme moderne tout-en-un pour simplifier la gestion de vos membres, le suivi de vos finances et l'organisation de vos répétitions.
           </p>
           <div class="flex flex-col sm:flex-row gap-4">
-            <a href="">
-              <button class="flex items-center justify-center rounded-xl h-14 px-8 bg-[#e0ad53] text-white text-lg font-bold shadow-xl shadow-[#e0ad53]/30 hover:bg-[#e0ad53]/90 transition-all">
+            <a href="{% url 'register' %}">
+              <button class="flex items-center justify-center rounded-xl h-14 px-8 bg-[#e0ad53] text-white text-lg font-bold shadow-xl shadow-[#e0ad53]/30 hover:bg-[#e0ad53]/90 transition-all" hx-get="{% url 'register' %}">
                                                 Commencer Gratuitement
               </button>
             </a>
