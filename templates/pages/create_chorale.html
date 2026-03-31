@@ -50,7 +50,7 @@
                 </div>
                 <!-- Form Card -->
                 <div class="bg-white dark:bg-slate-900 border border-[#cfd7e7] dark:border-slate-800 rounded-xl shadow-sm p-6 md:p-10">
-                    <form class="flex flex-col gap-6" action="" method="post">
+                    <form class="flex flex-col gap-6" action="" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ wizard.management_form}}
                         <!-- Logo Upload Field (Custom Generated) -->
@@ -61,10 +61,17 @@
                                     <span class="material-symbols-outlined text-[#4c669a] text-3xl">add_a_photo</span>
                                 </div>
                                 <div class="flex flex-col gap-2">
-                                    <button class="px-4 py-2 bg-primary/10 text-primary text-sm font-bold rounded-lg hover:bg-primary/20 transition-colors" type="button">
+                                    <label for="{{ form.logo.id_for_label }}" 
+                                        class="px-4 py-2 bg-primary/10 text-primary text-sm font-bold rounded-lg 
+                                                hover:bg-primary/20 transition-colors cursor-pointer text-center">
                                         Choisir un fichier
-                                    </button>
-                                    {{form.logo}}
+                                    </label>
+                                
+                                    <!-- Input file HIDDEN mais fonctionnel -->
+                                    <div class="hidden">
+                                        {{ form.logo }}
+                                    </div>
+                                    <div id="filePreview" class="mt-1 text-sm text-slate-600 dark:text-slate-400 min-h-[1.5rem]"></div>
                                     <p class="text-[#4c669a] dark:text-slate-500 text-xs">JPG, PNG ou GIF. Max 5MB.</p>
                                 </div>
                             </div>
@@ -127,4 +134,21 @@
             </div>
         </main>
     </body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fileInput = document.getElementById('{{ form.logo.id_for_label }}');
+            const preview = document.getElementById('filePreview');
+            
+            if (fileInput && preview) {
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        preview.textContent = `${e.target.files[0].name}`;
+                        preview.classList.add('text-green-600');
+                    } else {
+                        preview.textContent = '';
+                    }
+                });
+            }
+        });
+    </script>
 </html>

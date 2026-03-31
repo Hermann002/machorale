@@ -107,7 +107,7 @@ class CreateChoraleForm(forms.Form):
         
         if logo:
             # Vérifier la taille (max 5MB)
-            if logo.size > 5 * 1024 * 1024:  # 5MB
+            if logo.size > 5 * 1024 * 1024:
                 raise ValidationError(_("Le fichier ne doit pas dépasser 5MB."))
             
             # Vérifier le type de fichier
@@ -120,7 +120,6 @@ class CreateChoraleForm(forms.Form):
         return logo
 
 
-# ========== ÉTAPE 2 : Formulaire INDÉPENDANT avec validations ==========
 class ConfChoraleForm(forms.Form):
     """Collecte les paramètres de configuration - PAS un ModelForm"""
     
