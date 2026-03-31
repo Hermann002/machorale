@@ -133,9 +133,9 @@
                                 <div class="relative">
                                 {{ form.password }}
                                 <span 
-                                    id="toggle-password" 
+                                    id="toggle-{{ form.password.id_for_label }}" 
                                     class="material-symbols-outlined absolute right-4 top-4 text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-200"
-                                    onclick="togglePasswordVisibility()"
+                                    onclick="togglePasswordVisibility('{{ form.password.id_for_label }}')"
                                     style="user-select: none;"
                                 >
                                     visibility
@@ -158,9 +158,9 @@
                                 <div class="relative">
                                 {{ form.confirm_password }}
                                 <span 
-                                    id="toggle-password" 
+                                    id="toggle-{{ form.confirm_password.id_for_label }}" 
                                     class="material-symbols-outlined absolute right-4 top-4 text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-200"
-                                    onclick="togglePasswordVisibility()"
+                                    onclick="togglePasswordVisibility('{{ form.confirm_password.id_for_label }}')"
                                     style="user-select: none;"
                                 >
                                     visibility
@@ -264,9 +264,9 @@
             }
             });
             
-            function togglePasswordVisibility() {
-                const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
-                const toggleIcon = document.getElementById('toggle-password');
+            function togglePasswordVisibility(targetId) {
+                const passwordInput = document.getElementById(targetId);
+                const toggleIcon = document.getElementById(`toggle-${targetId}`);
                 
                 // Animation de l'icône
                 toggleIcon.style.transform = 'scale(1.2)';
