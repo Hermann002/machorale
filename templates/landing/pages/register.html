@@ -132,7 +132,14 @@
                                 </label>
                                 <div class="relative">
                                 {{ form.password }}
-                                <span class="material-symbols-outlined absolute right-4 top-4 text-slate-400 cursor-pointer">visibility</span>
+                                <span 
+                                    id="toggle-password" 
+                                    class="material-symbols-outlined absolute right-4 top-4 text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-200"
+                                    onclick="togglePasswordVisibility()"
+                                    style="user-select: none;"
+                                >
+                                    visibility
+                                </span>
                                 </div>
                                 {% if form.password.errors %}
                                 <ul class="mt-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside" role="alert">
@@ -150,7 +157,14 @@
                                 </label>
                                 <div class="relative">
                                 {{ form.confirm_password }}
-                                <span class="material-symbols-outlined absolute right-4 top-4 text-slate-400 cursor-pointer">visibility</span>
+                                <span 
+                                    id="toggle-password" 
+                                    class="material-symbols-outlined absolute right-4 top-4 text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-all duration-200"
+                                    onclick="togglePasswordVisibility()"
+                                    style="user-select: none;"
+                                >
+                                    visibility
+                                </span>
                                 </div>
                                 {% if form.confirm_password.errors %}
                                 <ul class="mt-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside" role="alert">
@@ -249,6 +263,28 @@
                 }
             }
             });
+            
+            function togglePasswordVisibility() {
+                const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+                const toggleIcon = document.getElementById('toggle-password');
+                
+                // Animation de l'icône
+                toggleIcon.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    toggleIcon.style.transform = 'scale(1)';
+                }, 150);
+                
+                // Toggle du type d'input
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    toggleIcon.textContent = 'visibility_off';
+                    toggleIcon.classList.replace('text-slate-400', 'text-slate-600');
+                } else {
+                    passwordInput.type = 'password';
+                    toggleIcon.textContent = 'visibility';
+                    toggleIcon.classList.replace('text-slate-600', 'text-slate-400');
+                }
+            }
         </script>
     </body>
 </html>
