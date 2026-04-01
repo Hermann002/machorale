@@ -1,33 +1,62 @@
-{% load static %}
+{% load static%}
 
-<header class="h-16 flex items-center justify-between px-8 bg-white dark:bg-gray-900 border-b border-[#e7ebf3] dark:border-gray-800 sticky top-0 z-10">
-    <div class="flex items-center gap-4 flex-1 max-w-xl">
-        <button hx-get="{% url 'sidebar_toggle' %}?open=1" hx-target="#sidebar-container" hx-swap="outerHTML" class="md:hidden p-2 rounded-lg text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800">
-            <span class="material-symbols-outlined">menu</span>
-        </button>
-        <div class="relative w-full">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#4c669a] text-xl">search</span>
-            <input class="w-full pl-10 pr-4 py-2 bg-[#f8f9fc] dark:bg-gray-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20" placeholder="Search activities or members..." type="text"/>
-        </div>
-    </div>
-    <div class="flex items-center gap-6">
-        <div class="flex items-center gap-2">
-            <button class="p-2 text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800 rounded-lg relative">
-                <span class="material-symbols-outlined">notifications</span>
-                <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
+<header class="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900 border-b border-[#e7ebf3] dark:border-gray-800 sticky top-0 z-10 w-full">
+        <!-- ✅ Section gauche : menu + recherche -->
+        <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+            <!-- Bouton menu mobile -->
+            <button 
+                hx-get="{% url 'sidebar_toggle' %}?open=1" 
+                hx-target="#sidebar-container" 
+                hx-swap="outerHTML" 
+                class="md:hidden p-2 rounded-lg text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800 flex-shrink-0"
+            >
+                <span class="material-symbols-outlined">menu</span>
             </button>
-                <button class="p-2 text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800 rounded-lg">
-                <span class="material-symbols-outlined">settings</span>
-            </button>
-        </div>
-        <div class="flex items-center gap-3 pl-6 border-l border-[#e7ebf3] dark:border-gray-800">
-            <div class="text-right">
-                <p class="text-sm font-bold leading-none">{{ request.user.first_name }} {{ request.user.last_name }}</p>
-                <p class="text-[10px] text-[#4c669a] uppercase tracking-wider mt-1">Choir administrator</p>
-            </div>
-            <div class="size-9 rounded-full bg-primary/10 overflow-hidden ring-2 ring-white dark:ring-gray-800">
-                <img class="w-full h-full object-cover" data-alt="User profile avatar placeholder" src="{% static 'icons/cat.png' %}"/>
+            
+            <!-- Barre de recherche responsive -->
+            <div class="relative w-full max-w-md">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#4c669a] text-lg sm:text-xl">
+                    search
+                </span>
+                <input 
+                    class="w-full pl-10 pr-4 py-2 bg-[#f8f9fc] dark:bg-gray-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                    placeholder="Search..." 
+                    type="text"
+                />
             </div>
         </div>
-    </div>
-</header>
+        
+        <!-- ✅ Section droite : notifications + profil -->
+        <div class="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <!-- Notifications -->
+                <button class="p-2 text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800 rounded-lg relative flex-shrink-0">
+                    <span class="material-symbols-outlined text-lg sm:text-xl">notifications</span>
+                    <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
+                </button>
+                
+                <!-- Settings -->
+                <button class="p-2 text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800 rounded-lg flex-shrink-0 hidden sm:block">
+                    <span class="material-symbols-outlined text-lg sm:text-xl">settings</span>
+                </button>
+            </div>
+            
+            <!-- Séparateur vertical -->
+            <div class="w-px h-6 bg-[#e7ebf3] dark:bg-gray-800 hidden sm:block"></div>
+            
+            <!-- Profil utilisateur -->
+            <div class="flex items-center gap-2 sm:gap-3 pl-3 sm:pl-6 border-l border-[#e7ebf3] dark:border-gray-800">
+                <div class="hidden sm:block text-right min-w-0">
+                    <p class="text-sm font-bold leading-none truncate">{{ request.user.first_name }} {{ request.user.last_name }}</p>
+                    <p class="text-[10px] text-[#4c669a] uppercase tracking-wider mt-0.5 hidden sm:block">Choir administrator</p>
+                </div>
+                <div class="size-8 sm:size-9 rounded-full bg-primary/10 overflow-hidden ring-2 ring-white dark:ring-gray-800 flex-shrink-0">
+                    <img 
+                        class="w-full h-full object-cover" 
+                        src="{% static 'icons/cat.png' %}" 
+                        alt="User profile"
+                    />
+                </div>
+            </div>
+        </div>
+    </header>

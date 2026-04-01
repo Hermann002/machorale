@@ -87,7 +87,7 @@ class CreateChoraleView(SessionWizardView):
         user = self.request.user
         try:
             # Récupérer toutes les données nettoyées
-            data = form_list[0].cleaned_data
+            data = self.get_all_cleaned_data()
             print(data)
             
             # Découper le champ "location" en city/country (simplifié pour l'exemple)
@@ -98,9 +98,9 @@ class CreateChoraleView(SessionWizardView):
             
             # Créer la chorale
             chorale = Chorale(
-                logo = data.get('logo'), # if data.get('logo') else None,
-                name=data.get('name'),
-                type_c=data.get('type_c'),
+                logo = data['logo'], # if data.get('logo') else None,
+                name=data['name'],
+                type_c=data['type_c'],
                 description=data.get('description', ''),
                 established_date=data.get('established_date'),
                 country=country,

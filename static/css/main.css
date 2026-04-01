@@ -1,3 +1,22 @@
+html, body {
+    width: 100%;
+    overflow-x: hidden; /* Bloque le débordement horizontal */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling iOS */
+}
+
+/* Évite les débordements cachés */
+* {
+    max-width: 100%;
+    box-sizing: border-box; /* Inclut padding/border dans width */
+}
+
+/* Correction spécifique pour Firefox */
+@-moz-document url-prefix() {
+    html, body {
+        overflow-x: hidden !important;
+    }
+}
+
 .form-control-dark {
   border-color: var(--bs-gray);
 }
