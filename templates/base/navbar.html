@@ -86,9 +86,11 @@
         <span class="material-symbols-outlined text-sm">person_add</span>
         Add Member
       </button>
-      <button class="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:bg-blue-700 transition-colors mt-3">
-        <a href="{% url 'logout' %}" class="btn btn-outline-primary me-2">logout</a>
-      </button>
+      <a href="{% url 'logout' %}" class="btn btn-outline-primary me-2">
+        <button class="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-lg font-bold text-sm shadow-md hover:bg-blue-700 transition-colors mt-3 hover:text-white">
+          logout
+        </button>
+      </a>
     </div>
   </div>
 </aside>
