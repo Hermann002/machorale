@@ -15,7 +15,7 @@
                     </div>
                 </div>
                 <button 
-                    hx-get="{% url 'member_popup' %}" 
+                    hx-get="{% url 'member_popup' slug=slug%}" 
                     hx-target="body" 
                     hx-swap="beforeend"
                     hx-trigger="click" 

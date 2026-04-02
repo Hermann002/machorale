@@ -8,7 +8,7 @@
         <div class="flex items-center justify-between gap-3 mb-10">
         <div class="flex items-center gap-3">
           <div class="p-2 rounded-lg">
-            <a href="{% url 'dashboard' %}">
+            <a href="{% url 'dashboard' slug=slug %}">
               <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-auto">
             </a>
           </div>
@@ -27,7 +27,7 @@
           text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
         {% endif %}
         
-        transition-all" hx-boost="true" href="{% url 'dashboard' %}">
+        transition-all" hx-boost="true" href="{% url 'dashboard' slug=slug %}">
           <span class="material-symbols-outlined text-xl">dashboard</span>
           <span class="text-sm font-medium">Dashboard</span>
         </a>
@@ -44,7 +44,7 @@
           text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
         {% endif %}
         
-        transition-all" hx-get="{% url 'members' %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
+        transition-all" hx-get="{% url 'members' slug=slug %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
           <span class="material-symbols-outlined text-xl">group</span>
           <span class="text-sm font-medium">Members</span>
         </button>
@@ -77,7 +77,7 @@
     </div>
     <div class="mt-auto pt-6 border-t border-[#e7ebf3] dark:border-gray-800">
       <button
-        hx-get="{% url 'member_popup' %}" 
+        hx-get="{% url 'member_popup' slug=slug %}" 
         hx-target="body" 
         hx-swap="beforeend"
         hx-trigger="click" 

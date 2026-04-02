@@ -5,6 +5,8 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.conf import settings
+from django.utils.text import slugify
+
 
 
 class Chorale(models.Model):
@@ -29,6 +31,24 @@ class Chorale(models.Model):
     slogan = models.CharField(max_length=255, blank=True)
     meeting_frequency = models.CharField(max_length=20, blank=True, null=True)
     description = models.TextField(blank=True)
+    slug = models.SlugField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.name}{self.admin.username}"
+    
+    def generate_unique_slug(self):
+        base_slug = slugify(self.name)
+        slug = base_slug
+        num = 1
+        while Chorale.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{num}"
+            num += 1
+        return slug
+    
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self.generate_unique_slug()
+        super().save(*args, **kwargs)
 
 
 class Contribution(models.Model):

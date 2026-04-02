@@ -33,7 +33,7 @@
                     </button>
                 </a>
                 {% else %}
-                <a href="{% url 'dashboard' %}">
+                <a href="{% url 'dashboard' slug=slug %}">
                     <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
                         dashboard
                     </button>
@@ -83,7 +83,7 @@
                     </button>
                 </a>
                 {% else %}
-                <a href="{% url 'dashboard' %}" class="block">
+                <a href="{% url 'dashboard' slug=slug %}" class="block">
                     <button class="w-full flex items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
                         dashboard
                     </button>

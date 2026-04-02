@@ -11,6 +11,7 @@ from manage_users.models import OtpCode
 
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
+from django.core.cache import cache
 
 @method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='dispatch')
 class RegisterView(TemplateView):
@@ -57,7 +58,12 @@ class LoginView(TemplateView):
             user = form.cleaned_data.get("user")
             if user is not None:
                 login(request, user)
-                return HttpResponseRedirect(reverse("dashboard"))
+                try:
+                    slug = user.managed_group.slug if hasattr(user, 'managed_group') else user.chorales.first().slug if user.chorales.exists() else None
+                    cache.set("slug", slug)
+                except Exception as e:
+                    print(f"Error retrieving slug: {e}")
+                return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
             else:
                 messages.error(request, "Invalid credentials. Please try again.")
         else:

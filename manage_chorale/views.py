@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.generic import TemplateView, ListView
 from .forms import CreateChoraleForm, AddMemberForm
 from django.contrib import messages
@@ -20,12 +20,14 @@ from django.utils import formats
 from datetime import datetime
 import json
 from .tasks import calcul_stats_dashboard
+from django.utils.text import slugify
+
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "pages/dashboard.html"
 
-    def get(self, request, *args, **kwargs):
-        chorale = request.user.managed_group
+    def get(self, request, slug, *args, **kwargs):
+        chorale = get_object_or_404(Chorale, slug=slug)
         stats = calcul_stats_dashboard(chorale.id)
         total_members = stats.get("total_members", 0)
         last_meeting_date = formats.date_format(datetime(2024, 5, 20), "M d, Y")
@@ -37,7 +39,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         increase_balance = 10
         increase_sanctions = 1
 
-        recent_activities = Event.objects.filter(is_important=True)[:5]
+        # recent_activities = Event.objects.filter(is_important=True)[:5]
+        with open('fake_data.json') as f:
+            data = json.load(f)
+            recent_activities = data.get("fake_recents_events", [])
 
         context = {
             "page_title": "Tableau de bord",
@@ -51,7 +56,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             "increase_sanctions": increase_sanctions,
             "recent_activities": recent_activities,
         }
-        return render(request, self.template_name, context=context)
+        return render(request, self.template_name, {**context, "slug": slug})
     
 
 FORMS = [
@@ -73,14 +78,15 @@ class CreateChoraleView(SessionWizardView):
     def get_template_names(self):
         return [TEMPLATES[self.steps.current]]
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request, chorale_name, *args, **kwargs):
+        chorale_name = slugify(chorale_name)
         try:
             if not request.user.is_verify:
                 messages.error(request, "You need to verify your email before creating a chorale.")
-                return redirect(reverse('dashboard'))
+                return redirect(reverse('dashboard', kwargs={"chorale_name": chorale_name}))
         except AttributeError:
             messages.error(request, "You need to be logged in to create a chorale.")
-            return redirect(reverse('dashboard'))
+            return redirect(reverse('dashboard', kwargs={"chorale_name": chorale_name}))
         return super().get(request, *args, **kwargs)
 
     def done(self, form_list, **kwargs):
@@ -136,20 +142,22 @@ class ListMembersView(LoginRequiredMixin, ListView):
     model = CustomUser
     context_object_name = "members"
     paginate_by = 5
+    slug_url_kwarg = "slug"
     
     # filter to be implemented later
 
     def get_queryset(self):
-        user = self.request.user
-        chorales = user.chorales.all()
-        members = CustomUser.objects.filter(chorales__in=chorales).distinct()
-        return members 
+        slug = self.kwargs.get(self.slug_url_kwarg)
+        chorale = get_object_or_404(Chorale, slug=slug)
+        members = CustomUser.objects.filter(chorales=chorale)
+        return members
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         total_members = self.get_queryset().count()
         context["page_title"] = "Membres de la chorale"
         context["total_members"] = total_members
+        context["slug"] = self.kwargs.get(self.slug_url_kwarg)
         return context
 
 class ContributionView(LoginRequiredMixin, TemplateView):
@@ -162,12 +170,13 @@ class MemberPopupView(LoginRequiredMixin, TemplateView):
     template_name = "pages/member_popup.html"
     form_class = AddMemberForm
 
-    def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, {"form": self.form_class()})
+
+    def get(self, request, slug,*args, **kwargs):
+        return render(request, self.template_name, {"form": self.form_class(), "slug": slug})
     
-    def post(self, request, *args, **kwargs):
+    def post(self, request, slug, *args, **kwargs):
         form = AddMemberForm(request.POST)
-        chorale = request.user.managed_group
+        chorale = get_object_or_404(Chorale, slug=slug)
         print(f"Chorale: {chorale.name} this is chorale")
         if form.is_valid():
             email = form['email'].value()
@@ -193,11 +202,11 @@ class MemberPopupView(LoginRequiredMixin, TemplateView):
                 # Envoyer un email d'invitation ici (à implémenter)
 
                 messages.success(request, f"{member.get_full_name()} a été ajouté en tant que {member.get_role_display()} avec succès !")
-                return redirect(reverse('members'))
+                return redirect(reverse('members', kwargs={"slug": slug}))
             except Exception as e:
                 print(f"Erreur lors de la création du membre: {e}")
                 messages.error(request, "Une erreur est survenue lors de l'ajout du membre.")
-                return redirect(reverse('members'))
+                return redirect(reverse('members', kwargs={"slug": slug}))
 
 
 from django.contrib.auth.decorators import login_required

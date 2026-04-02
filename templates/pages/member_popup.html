@@ -21,7 +21,7 @@
         </div>
         <!-- Modal Body (Form) -->
         <form
-            hx-post="{% url 'member_popup' %}" 
+            hx-post="{% url 'member_popup' slug=slug %}" 
             hx-target="#popup" 
             hx-swap="outerHTML"
             class="p-8 space-y-5"
