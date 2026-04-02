@@ -14,7 +14,7 @@
           </div>
           <p class="text-xs text-[#4c669a] mt-1">Admin Portal</p>
         </div>
-        <button hx-get="{% url 'sidebar_toggle' %}?open=0" hx-target="#sidebar-container" hx-swap="outerHTML" class="md:hidden p-2 rounded-lg text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800">
+        <button hx-get="{% url 'sidebar_toggle' slug=slug %}?open=0" hx-target="#sidebar-container" hx-swap="outerHTML" class="md:hidden p-2 rounded-lg text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>

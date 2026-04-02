@@ -216,6 +216,6 @@ def close_popup(request):
     return render(request, "pages/close_popup.html")
 
 @login_required
-def sidebar_toggle(request):
+def sidebar_toggle(request, slug):
     sidebar_open = request.GET.get('open') == '1'
-    return render(request, "base/navbar.html", {"sidebar_open": sidebar_open})
+    return render(request, "base/navbar.html", {"sidebar_open": sidebar_open, "slug": slug})
