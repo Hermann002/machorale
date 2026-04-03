@@ -34,6 +34,7 @@ class RegisterView(TemplateView):
             otp_record, created = OtpCode.objects.get_or_create(user=user)
             code = otp_record.generate_new_code()
             try:
+                print("Attempting to send OTP email to {}".format(user.email))
                 send_code_to_user(email=user.email, code=code)
             except Exception as e:
                 print(f"Error sending email: {e}")

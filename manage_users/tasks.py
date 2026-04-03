@@ -27,4 +27,5 @@ def send_code_to_user(self, email, code):
     )
     d_email.content_subtype = "html"
     d_email.send(fail_silently=False)
+    print("Email sent successfully to {}".format(email))
     return {"ok": True}
