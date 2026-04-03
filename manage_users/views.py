@@ -3,15 +3,19 @@ from .forms import UserRegisterForm, UserLoginForm
 from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from .utils import send_code_to_user
 from manage_users.models import OtpCode
+from django.views.generic.edit import UpdateView
 
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from django.core.cache import cache
+from django_ratelimit.exceptions import Ratelimited
 
 @method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='dispatch')
 class RegisterView(TemplateView):
@@ -70,6 +74,7 @@ class LoginView(TemplateView):
             messages.error(request, "Invalid username or password.")
         return render(request, self.template_name, {"form": form})
 
+@method_decorator(ratelimit(key='ip', rate='4/m', method='POST', block=True), name='dispatch')
 class VerifyEmailView(TemplateView):
     template_name = "landing/pages/verify_email.html"
 
@@ -100,8 +105,16 @@ class VerifyEmailView(TemplateView):
             print("No OTP record found for code:", code)
             messages.error(request, "No OTP record found. Please request a new code.")
             return render(request, self.template_name)
+        except Ratelimited:
+            messages.error(request, "You rate a limit, please wait 1 minute and retry !")
 
 class LogoutView(TemplateView):
     def get(self, request, *args, **kwargs):
         logout(request)
         return HttpResponseRedirect("/")
+    
+# @login_required
+# @require_http_methods(['POST'])
+# def resend_otp_views(request):
+#     try:
+#         otp
