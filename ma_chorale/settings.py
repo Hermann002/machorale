@@ -195,3 +195,5 @@ EMAIL_PORT = config('emailport')
 EMAIL_USE_TLS = config('emailusetls', default=True)
 EMAIL_HOST_USER = config('emailuser')
 EMAIL_HOST_PASSWORD = config('emailpassword')
+
+SENDGRID_API_KEY = config('SENDGRID_API_KEY')
