@@ -78,15 +78,14 @@ class CreateChoraleView(SessionWizardView):
     def get_template_names(self):
         return [TEMPLATES[self.steps.current]]
 
-    def get(self, request, chorale_name, *args, **kwargs):
-        chorale_name = slugify(chorale_name)
+    def get(self, request, *args, **kwargs):
         try:
             if not request.user.is_verify:
                 messages.error(request, "You need to verify your email before creating a chorale.")
-                return redirect(reverse('dashboard', kwargs={"chorale_name": chorale_name}))
+                return redirect(reverse('home'))
         except AttributeError:
             messages.error(request, "You need to be logged in to create a chorale.")
-            return redirect(reverse('dashboard', kwargs={"chorale_name": chorale_name}))
+            return redirect(reverse('home'))
         return super().get(request, *args, **kwargs)
 
     def done(self, form_list, **kwargs):
