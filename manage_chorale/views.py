@@ -16,6 +16,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
+from .mixins import ChoraleRequireMixin
 from django.utils import formats
 from datetime import datetime
 import json
@@ -23,7 +24,7 @@ from .tasks import calcul_stats_dashboard
 from django.utils.text import slugify
 
 
-class DashboardView(LoginRequiredMixin, TemplateView):
+class DashboardView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/dashboard.html"
 
     def get(self, request, slug, *args, **kwargs):
@@ -136,7 +137,7 @@ class CreateChoraleView(SessionWizardView):
             return redirect(reverse('dashboard'))
     
 
-class ListMembersView(LoginRequiredMixin, ListView):
+class ListMembersView(ChoraleRequireMixin, ListView):
     template_name = "pages/members.html"
     model = CustomUser
     context_object_name = "members"
@@ -159,13 +160,13 @@ class ListMembersView(LoginRequiredMixin, ListView):
         context["slug"] = self.kwargs.get(self.slug_url_kwarg)
         return context
 
-class ContributionView(LoginRequiredMixin, TemplateView):
+class ContributionView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/contributions.html"
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name)
     
-class MemberPopupView(LoginRequiredMixin, TemplateView):
+class MemberPopupView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/member_popup.html"
     form_class = AddMemberForm
 

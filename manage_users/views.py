@@ -68,6 +68,7 @@ class LoginView(TemplateView):
                     cache.set("slug", slug)
                 except Exception as e:
                     print(f"Error retrieving slug: {e}")
+                print(slug)
                 return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
             else:
                 messages.error(request, "Invalid credentials. Please try again.")
