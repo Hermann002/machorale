@@ -18,17 +18,7 @@
                 </div>
             </div>
         </header>
-        {% for message in messages %}
-            {% if message.tags == "error" %}
-                <div class="p-4 mb-4 text-sm text-fg-danger-strong rounded-base bg-danger-soft" role="alert">
-                    <span class="font-medium">Error !</span> {{ message }}
-                </div>
-            {% elif message.tags == "success" %}
-                <div class="p-4 mb-4 text-sm text-fg-success-strong rounded-base bg-success-soft" role="alert">
-                    <span class="font-medium">Success !</span> {{ message }}
-                </div>
-            {% endif %}
-        {% endfor %}
+        {% include "../components/alert/message.html" %}
         <main class="flex flex-col items-center py-10 px-4 md:py-16">
             <div class="w-full max-w-[640px] flex flex-col gap-8">
                 <!-- Progress Bar Section -->
