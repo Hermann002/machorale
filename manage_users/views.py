@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from .utils import send_code_to_user
-from manage_users.models import OtpCode
+from manage_users.models import OtpCode, CustomUser
 from django.views.generic.edit import UpdateView
 
 from django.utils.decorators import method_decorator
@@ -40,7 +40,7 @@ class RegisterView(TemplateView):
                 print(f"Error sending email: {e}")
                 raise(e)
             messages.success(request, "Account created successfully! Please verify your email.")
-            return HttpResponseRedirect(reverse("verify_email"))
+            return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user.id}))
         return render(request, self.template_name, {"form": form})
 
 @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True), name='dispatch')
@@ -81,14 +81,21 @@ class VerifyEmailView(TemplateView):
     template_name = "landing/pages/verify_email.html"
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
+        try:
+            user_id = kwargs.get("user_id")
+            user = CustomUser.objects.get(id=user_id)
+            return render(request, self.template_name, {"user_id": user.id})
+        except CustomUser.DoesNotExist:
+            messages.error(request, "User not found ! register first")
+            return HttpResponseRedirect(reverse("register"))
 
-    def post(self, request, *args, **kwargs):
+
+    def post(self, request, user_id=None, *args, **kwargs):
         code = request.POST.get("otp_code")
         try:
             otp_record = OtpCode.objects.get(otp_code=code)
             user = otp_record.user
-            if otp_record.otp_expired():
+            if otp_record.otp_expired() or otp_record.used:
                 messages.error(request, "OTP code has expired. Please request a new code.")
                 return render(request, self.template_name)
 
@@ -115,8 +122,18 @@ class LogoutView(TemplateView):
         logout(request)
         return HttpResponseRedirect("/")
     
-# @login_required
-# @require_http_methods(['POST'])
-# def resend_otp_views(request):
-#     try:
-#         otp
+
+def resend_otp_views(request, user_id):
+    try:
+        user = CustomUser.objects.get(id=user_id)
+        user_email = user.email
+        otp = OtpCode.objects.filter(user=user).last()
+        if otp and not otp.otp_expired():
+            otp.used = True
+        otp_record = OtpCode.objects.create(user=user)
+        code = otp_record.generate_new_code()
+        send_code_to_user(email=user_email, code=code)
+        messages.success(request, "OTP code resent successfully! Please check your email.")
+    except CustomUser.DoesNotExist:
+        messages.error(request, "User not found.")
+    return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user_id}))

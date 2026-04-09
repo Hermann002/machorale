@@ -41,7 +41,7 @@
                                                 Un code de vérification à 6 chiffres a été envoyé à l'adresse associée à votre compte. Veuillez le saisir ci-dessous.
                                             </p>
                         <!-- Code Inputs -->
-                        <form action="{% url 'verify_email' %}" method="post">
+                        <form action="{% url 'verify_email' user_id %}" method="post">
                             {% csrf_token %}
                             <div class="flex justify-between gap-2">
                                 <input 
@@ -97,7 +97,7 @@
                         <div class="text-center">
                             <p class="text-sm text-[#4f6b8e] dark:text-slate-400">
                                                         Vous n'avez pas reçu de code ? 
-                                                        <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="#">
+                                                        <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="{% url 'resend_otp' user_id=user_id %}">
                                                             Renvoyer le code
                                                         </a>
                             </p>
