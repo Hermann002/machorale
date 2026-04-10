@@ -129,7 +129,7 @@ class CreateChoraleView(SessionWizardView):
             user.save()
 
             messages.success(self.request, "Votre chorale a été créée avec succès !")
-            return redirect(reverse('dashboard'))
+            return redirect(reverse('dashboard', kwargs={"slug": chorale.slug}))
             
         except Exception as e:
             print(f"Erreur lors de la création de la chorale: {e}")
