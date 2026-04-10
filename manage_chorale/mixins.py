@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 class ChoraleRequireMixin(LoginRequiredMixin):
-    chorale_url_kwargs = 'chorale_slug'
+    chorale_url_kwargs = 'slug'
 
     def dispatch(self, request, *args, **kwargs):
         chorale = None
