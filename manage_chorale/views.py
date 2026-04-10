@@ -84,6 +84,11 @@ class CreateChoraleView(SessionWizardView):
             if not request.user.is_verify:
                 messages.error(request, "You need to verify your email before creating a chorale.")
                 return redirect(reverse('home'))
+            if request.user.manage_chorale.exists():
+                chorale = request.user.manage_chorale.first()
+                slug = chorale.slug
+                messages.info(request, "You already manage a chorale. Redirecting to your dashboard.")
+                return redirect(reverse('dashboard', kwargs={"slug": slug}))
         except AttributeError:
             messages.error(request, "You need to be logged in to create a chorale.")
             return redirect(reverse('home'))
