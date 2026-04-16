@@ -64,3 +64,22 @@ jobs:
         run: |
           echo "✅ Build completed for ${{ steps.meta.outputs.tags }}"
           # Ici tu peux ajouter un webhook Discord/Slack/Telegram
+      
+      # Déploiement automatique sur le VPS via SSH
+      - name: Deploy to VPS
+        if: github.event_name != 'pull_request' && success()
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script: |
+            cd ma_chorale
+            export TAG=${{ steps.meta.outputs.tags }}
+            # Prend le dernier tag généré (ex: sha-abc123 ou latest)
+            DEPLOY_TAG=$(echo "$TAG" | head -n 1)
+            export REGISTRY=machorale.lonem.ca:5000
+            export IMAGE_NAME=${{ github.repository }}
+            export TAG=$DEPLOY_TAG
+            bash deploy.sh
