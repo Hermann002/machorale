@@ -1,0 +1,66 @@
+name: Build & Push Docker Image
+
+on:
+  push:
+    branches:
+      - main          # Build + push sur production
+    tags:
+      - 'v*.*.*'      # Build + push sur release sémantique
+  pull_request:
+    branches:
+      - main          # Build seul pour validation 
+
+env:
+  REGISTRY: machorale.lonem.ca:5000
+  IMAGE_NAME: ${{ github.repository }} 
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write  # Nécessaire si tu utilises aussi GHCR en fallback
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to self-hosted registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}  # Pas de push sur PR
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha  # Cache GitHub Actions
+          cache-to: type=gha,mode=max
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          echo "✅ Build completed for ${{ steps.meta.outputs.tags }}"
+          # Ici tu peux ajouter un webhook Discord/Slack/Telegram
