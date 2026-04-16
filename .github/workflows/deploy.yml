@@ -77,9 +77,14 @@ jobs:
           script: |
             cd ma_chorale
             export TAG=${{ steps.meta.outputs.tags }}
-            # Prend le dernier tag généré (ex: sha-abc123 ou latest)
-            DEPLOY_TAG=$(echo "$TAG" | head -n 1)
-            export REGISTRY=machorale.lonem.ca:5000
-            export IMAGE_NAME=${{ github.repository }}
-            export TAG=$DEPLOY_TAG
+            # Prend le dernier tag généré 
+            DEPLOY_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
+            echo "Déploiement de l'image $DEPLOY_TAG sur le VPS..."
+
+            cat > .env << EOF
+            REGISTRY=machorale.lonem.ca:5000
+            IMAGE_NAME=${{ github.repository }}
+            TAG=${DEPLOY_TAG#*:5000/}
+            EOF
+            
             bash deploy.sh
