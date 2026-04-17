@@ -76,13 +76,9 @@ jobs:
           port: 22
           script: |
             cd ma_chorale
+            export IMAGE_NAME=${{ github.repository }}
             export TAG=${{ steps.meta.outputs.tags }}
             DEPLOY_TAG=$(echo "${TAG}" | tr ',' '\n' | head -n 1)
             export REGISTRY=machorale.lonem.ca:5000
-            export IMAGE_NAME=${{ github.repository }}
             export TAG=$DEPLOY_TAG
-            
-            echo "IMAGE_NAME=$IMAGE_NAME" > .env
-            echo "TAG=$TAG" >> .env
-            echo "REGISTRY=$REGISTRY" >> .env
             bash deploy.sh
