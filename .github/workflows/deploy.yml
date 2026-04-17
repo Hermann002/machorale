@@ -81,4 +81,8 @@ jobs:
             export REGISTRY=machorale.lonem.ca:5000
             export IMAGE_NAME=${{ github.repository }}
             export TAG=$DEPLOY_TAG
+            
+            echo "IMAGE_NAME=$IMAGE_NAME" > .env
+            echo "TAG=$TAG" >> .env
+            echo "REGISTRY=$REGISTRY" >> .env
             bash deploy.sh
