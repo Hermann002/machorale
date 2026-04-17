@@ -76,9 +76,9 @@ jobs:
           port: 22
           script: |
             cd ma_chorale
-            export REGISTRY=machorale.lonem.ca:5000
-            export IMAGE_NAME=${{ github.repository }}
-            export TAG=lastest
+            #export REGISTRY=machorale.lonem.ca:5000
+            #export IMAGE_NAME=${{ github.repository }}
+            #export TAG=lastest
             bash deploy.sh
 
 
