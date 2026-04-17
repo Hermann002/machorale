@@ -44,6 +44,7 @@ RUN groupadd -g ${APP_GID} ${APP_USER} && \
     useradd -u ${APP_UID} -g ${APP_GID} -m -s /bin/bash -d /app ${APP_USER} && \
     apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
