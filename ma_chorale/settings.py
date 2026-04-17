@@ -136,7 +136,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-CSRF_TRUSTED_ORIGINS = ['https://machorale.up.railway.app', 'http://localhost', 'http://127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://machorale.up.railway.app', 'http://localhost', 'http://127.0.0.1', "https://machorale.lonem.ca"]
 
 SESSION_COOKIE_AGE = 3600
 SESSION_COOKIE_HTTPONLY = True
