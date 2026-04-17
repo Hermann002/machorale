@@ -77,7 +77,7 @@ jobs:
           script: |
             cd ma_chorale
             export IMAGE_NAME=${{ github.repository }}
-            export TAG=${{ steps.meta.outputs.tags }}
+            # export TAG=${{ steps.meta.outputs.tags }}
             DEPLOY_TAG=latest
             export REGISTRY=machorale.lonem.ca:5000
             export TAG=$DEPLOY_TAG
