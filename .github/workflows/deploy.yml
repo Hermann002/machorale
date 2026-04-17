@@ -76,8 +76,10 @@ jobs:
           port: 22
           script: |
             cd ma_chorale
-            DEPLOY_TAG=$(echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | head -n 1)
             export REGISTRY=machorale.lonem.ca:5000
             export IMAGE_NAME=${{ github.repository }}
-            export TAG=$DEPLOY_TAG
+            export TAG=lastest
             bash deploy.sh
+
+
+# DEPLOY_TAG=$(echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | head -n 1)
