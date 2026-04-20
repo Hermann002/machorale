@@ -11,10 +11,10 @@ from django.contrib.auth.hashers import make_password
 from .utils import send_code_to_user
 from manage_users.models import OtpCode, CustomUser
 from django.views.generic.edit import UpdateView
+from django.core.exceptions import ObjectDoesNotExist
 
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
-from django.core.cache import cache
 from django_ratelimit.exceptions import Ratelimited
 
 @method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='dispatch')
@@ -63,17 +63,18 @@ class LoginView(TemplateView):
             user = form.cleaned_data.get("user")
             if user is not None:
                 login(request, user)
+                slug = None
                 try:
-                    slug = user.managed_group.slug if hasattr(user, 'managed_group') else user.chorales.first().slug if user.chorales.exists() else None
-                    cache.set("slug", slug)
-                except Exception as e:
-                    print(f"Error retrieving slug: {e}")
+                    slug = user.managed_group.slug
+                except ObjectDoesNotExist:
+                    first_chorale = user.chorales.only('slug').first()
+                    if first_chorale:
+                        slug = first_chorale.slug
+
                 if slug:
                     return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
-                else:
-                    return HttpResponseRedirect(reverse("create_chorale"))
-            else:
-                messages.error(request, "Invalid credentials. Please try again.")
+                return HttpResponseRedirect(reverse("create_chorale"))
+            messages.error(request, "Invalid credentials. Please try again.")
         else:
             messages.error(request, "Invalid username or password.")
         return render(request, self.template_name, {"form": form})

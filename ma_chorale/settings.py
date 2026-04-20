@@ -180,6 +180,9 @@ STATICFILES_DIRS = [
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"  # ou os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+WHITENOISE_MAX_AGE = 31536000
+WHITENOISE_AUTOREFRESH = DEBUG
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / "media"  # ou os.path.join(BASE_DIR, '

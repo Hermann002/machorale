@@ -13,7 +13,7 @@ class ChoraleRequireMixin(LoginRequiredMixin):
         if slug:
             from manage_chorale.models import Chorale
             try:
-                chorale = Chorale.objects.get(slug=slug, admin=request.user)
+                chorale = Chorale.objects.select_related('admin').get(slug=slug, admin=request.user)
             except Chorale.DoesNotExist:
                 messages.error(request, "Cette chorale n'existe pas, Vous devez créer une chorale !")
                 return redirect(reverse('create_chorale'))

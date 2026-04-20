@@ -53,7 +53,7 @@ class Chorale(models.Model):
 
 class Contribution(models.Model):
     title = models.CharField(max_length=100)
-    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE)
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date_contributed = models.DateField(auto_now_add=True)
     description = models.TextField(blank=True)
@@ -68,13 +68,13 @@ class CashFlow(models.Model):
     )
 
     type_cash_flow = models.CharField(max_length=20, choices=TYPE_CHOISE, default='entrée')
-    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE)
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField(auto_now_add=True)
     description = models.TextField(blank=True)
 
 class MeetingReport(models.Model):
-    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE)
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
     date = models.DateField()
     agenda = models.TextField()
     minutes = models.TextField()
@@ -83,7 +83,7 @@ class MeetingReport(models.Model):
 
 class Commission(models.Model):
     name = models.CharField(max_length=100)
-    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE)
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
     lead = models.CharField(max_length=255, null=True, blank=True)
 
 class Event(models.Model):

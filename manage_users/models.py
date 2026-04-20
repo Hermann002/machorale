@@ -84,6 +84,10 @@ class CustomUser(AbstractUser):
     
     class Meta:
         ordering = ['date_joined']
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['username']),
+        ]
 
 class OtpCode(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)

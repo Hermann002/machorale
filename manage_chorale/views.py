@@ -1,35 +1,42 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, ListView
-from .forms import CreateChoraleForm, AddMemberForm
+from .forms import CreateChoraleForm, AddMemberForm, ConfChoraleForm
 from django.contrib import messages
 from django.urls import reverse
-from django.shortcuts import redirect
 from django.http import HttpResponseRedirect
 from formtools.wizard.views import SessionWizardView
-from .forms import CreateChoraleForm, ConfChoraleForm
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
-import os
-from .models import Chorale, Event
-from manage_users.models import CustomUser, Profile
+from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.hashers import make_password
-from django.db.models import Q
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .mixins import ChoraleRequireMixin
 from django.utils import formats
 from datetime import datetime
+from functools import lru_cache
 import json
-from .tasks import calcul_stats_dashboard
-from django.utils.text import slugify
+import os
+from .models import Chorale
+from manage_users.models import CustomUser, Profile
+from django.contrib.auth.mixins import LoginRequiredMixin
+from .mixins import ChoraleRequireMixin
+from .services import get_dashboard_stats
+
+
+@lru_cache(maxsize=1)
+def load_recent_activities():
+    fake_data_path = settings.BASE_DIR / 'fake_data.json'
+    try:
+        with open(fake_data_path, encoding='utf-8') as f:
+            data = json.load(f)
+        return data.get('fake_recents_events', [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
 
 
 class DashboardView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/dashboard.html"
 
     def get(self, request, slug, *args, **kwargs):
-        chorale = get_object_or_404(Chorale, slug=slug)
-        stats = calcul_stats_dashboard(chorale.id)
+        stats = get_dashboard_stats(self.chorale.id)
         total_members = stats.get("total_members", 0)
         last_meeting_date = formats.date_format(datetime(2024, 5, 20), "M d, Y")
         current_balance = 1_000_000.00
@@ -40,10 +47,7 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
         increase_balance = 10
         increase_sanctions = 1
 
-        # recent_activities = Event.objects.filter(is_important=True)[:5]
-        with open('fake_data.json') as f:
-            data = json.load(f)
-            recent_activities = data.get("fake_recents_events", [])
+        recent_activities = load_recent_activities()
 
         context = {
             "page_title": "Tableau de bord",
@@ -57,7 +61,7 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
             "increase_sanctions": increase_sanctions,
             "recent_activities": recent_activities,
         }
-        return render(request, self.template_name, {**context, "slug": slug})
+        return render(request, self.template_name, {**context, "slug": self.chorale.slug})
     
 
 FORMS = [
@@ -80,19 +84,19 @@ class CreateChoraleView(SessionWizardView):
         return [TEMPLATES[self.steps.current]]
 
     def get(self, request, *args, **kwargs):
-        try:
-            if not request.user.is_verify:
-                messages.error(request, "You need to verify your email before creating a chorale.")
-                return redirect(reverse('home'))
-            if hasattr(request.user, 'managed_group'):
-                chorale = request.user.managed_group.first()
-                slug = chorale.slug
-                messages.info(request, "You already manage a chorale. Redirecting to your dashboard.")
-                return redirect(reverse('dashboard', kwargs={"slug": slug}))
-        except AttributeError as e:
-            print(f"Error checking user chorale management: {e}")
-            messages.error(request, "You need to be logged in to create a chorale.")
+        if not getattr(request.user, 'is_verify', False):
+            messages.error(request, "You need to verify your email before creating a chorale.")
             return redirect(reverse('home'))
+
+        try:
+            managed_chorale = request.user.managed_group
+        except ObjectDoesNotExist:
+            managed_chorale = None
+
+        if managed_chorale:
+            messages.info(request, "You already manage a chorale. Redirecting to your dashboard.")
+            return redirect(reverse('dashboard', kwargs={"slug": managed_chorale.slug}))
+
         return super().get(request, *args, **kwargs)
 
     def done(self, form_list, **kwargs):
@@ -153,17 +157,16 @@ class ListMembersView(ChoraleRequireMixin, ListView):
     # filter to be implemented later
 
     def get_queryset(self):
-        slug = self.kwargs.get(self.slug_url_kwarg)
-        chorale = get_object_or_404(Chorale, slug=slug)
-        members = CustomUser.objects.filter(chorales=chorale)
-        return members
+        if not hasattr(self, '_queryset'):
+            self._queryset = CustomUser.objects.filter(chorales=self.chorale).select_related('profile')
+        return self._queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        total_members = self.get_queryset().count()
+        total_members = self.paginator.count if hasattr(self, 'paginator') else len(self.get_queryset())
         context["page_title"] = "Membres de la chorale"
         context["total_members"] = total_members
-        context["slug"] = self.kwargs.get(self.slug_url_kwarg)
+        context["slug"] = self.chorale.slug
         return context
 
 class ContributionView(ChoraleRequireMixin, TemplateView):
@@ -182,40 +185,33 @@ class MemberPopupView(ChoraleRequireMixin, TemplateView):
     
     def post(self, request, slug, *args, **kwargs):
         form = AddMemberForm(request.POST)
-        chorale = get_object_or_404(Chorale, slug=slug)
-        print(f"Chorale: {chorale.name} this is chorale")
+        chorale = self.chorale
+
         if form.is_valid():
             email = form['email'].value()
             first_name = form['first_name'].value()
             last_name = form['last_name'].value()
             contact_phone = form['contact_phone'].value()
             role = form['role'].value()
-            print(f"{email} this is email")
+            username = email.split('@')[0].lower()
             try:
-                member = CustomUser.objects.create(
-                    username=email.split('@')[0],
+                member = CustomUser.objects.create_user(
+                    username=username,
                     email=email,
+                    password="defaultpassword123",
                     first_name=first_name,
                     last_name=last_name,
                     role=role,
                 )
-                member.set_password(make_password("defaultpassword123"))
-                member.save()
                 Profile.objects.create(user=member, _contact=contact_phone)
                 chorale.members.add(member)
-                print(member.chorales.all())
-
-                # Envoyer un email d'invitation ici (à implémenter)
 
                 messages.success(request, f"{member.get_full_name()} a été ajouté en tant que {member.get_role_display()} avec succès !")
                 return redirect(reverse('members', kwargs={"slug": slug}))
             except Exception as e:
-                print(f"Erreur lors de la création du membre: {e}")
                 messages.error(request, "Une erreur est survenue lors de l'ajout du membre.")
                 return redirect(reverse('members', kwargs={"slug": slug}))
 
-
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def close_popup(request):

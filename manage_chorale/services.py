@@ -1,4 +1,5 @@
-from .models import Contribution
+from django.core.cache import cache
+from .models import Contribution, Chorale
 from manage_users.models import MemberContribution
 
 class DjangoContributionRepo:
@@ -24,3 +25,20 @@ class ContributionService:
             contribution_ref=contribution_ref,
             amount=amount
         )
+
+
+def get_dashboard_stats(chorale_id, timeout=60):
+    cache_key = f"dashboard_stats:{chorale_id}"
+    stats = cache.get(cache_key)
+    if stats is not None:
+        return stats
+
+    chorale = Chorale.objects.filter(pk=chorale_id).first()
+    if not chorale:
+        return {"error": "Chorale not found"}
+
+    stats = {
+        "total_members": chorale.members.count(),
+    }
+    cache.set(cache_key, stats, timeout)
+    return stats
