@@ -17,7 +17,7 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit.exceptions import Ratelimited
 
-@method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='dispatch')
+@method_decorator(ratelimit(key='ip', rate='5/h', method='POST', block=True), name='dispatch') #TODO définir un template 
 class RegisterView(TemplateView):
     template_name = "landing/pages/register.html"
 
