@@ -8,8 +8,8 @@ python manage.py migrate --noinput
 
 pytest
 
-if [$? -ne 0 ]; then
-    echo "Test failed, please fix this before pushing. Exiting."
+if [ $? -ne 0 ]; then
+    echo "Tests failed. Exiting."
     exit 1
 fi
 
