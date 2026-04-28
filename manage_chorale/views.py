@@ -135,7 +135,7 @@ class CreateChoraleView(SessionWizardView):
             
             chorale.save()
             chorale.members.add(user)
-            user.role = 'super_admin_chorale'
+            user.role = CustomUser.ROLE_SUPERADMIN_CHORALE
             user.save()
 
             messages.success(self.request, "Votre chorale a été créée avec succès !")
@@ -144,7 +144,7 @@ class CreateChoraleView(SessionWizardView):
         except Exception as e:
             print(f"Erreur lors de la création de la chorale: {e}")
             messages.error(self.request, "Une erreur est survenue lors de la création de la chorale.")
-            return redirect(reverse('dashboard'))
+            return redirect(reverse('home'))
     
 
 class ListMembersView(ChoraleRequireMixin, ListView):
