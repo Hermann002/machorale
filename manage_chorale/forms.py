@@ -92,10 +92,8 @@ class CreateChoraleForm(forms.Form):
         location = self.cleaned_data.get("location")
         
         if location:
-            # Supprimer les espaces en trop
             location = location.strip()
             
-            # Vérification minimale : au moins 2 caractères
             if len(location) < 2:
                 raise ValidationError(_("Le lieu doit contenir au moins 2 caractères."))
         
@@ -162,18 +160,13 @@ class ConfChoraleForm(forms.Form):
             "class": "form-select flex w-full rounded-lg text-[#0d121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#cfd7e7] dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary h-14 p-4 text-base font-normal leading-normal",
         }),
     )
-
-    # ========== VALIDATIONS PERSONNALISÉES ==========
     
     def clean_slogan(self):
         """Valide le slogan"""
         slogan = self.cleaned_data.get("slogan")
         
         if slogan:
-            # Supprimer les espaces en trop
             slogan = slogan.strip()
-            
-            # Limiter à 255 caractères (déjà fait par max_length, mais double vérification)
             if len(slogan) > 255:
                 raise ValidationError(_("Le slogan ne doit pas dépasser 255 caractères."))
         
