@@ -9,11 +9,6 @@ from manage_chorale.models import Chorale
 from datetime import date
 
 @pytest.mark.django_db
-@override_settings(
-    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
-    CELERY_TASK_ALWAYS_EAGER = True,
-    CELERY_TASK_EAGER_PROPAGATES = True
-)
 def test_user_registration_to_chorale_creation_flow():
     """
     Test d'intégration complet :
