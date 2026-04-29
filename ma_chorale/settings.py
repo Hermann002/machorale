@@ -95,6 +95,9 @@ DATABASES = {
         'PASSWORD': config('password'),
         'HOST': config('host'),
         'PORT': config('port', default='5432'),
+        'TEST': {
+            'NAME': 'test_postgres',
+        },
     }
 }
 

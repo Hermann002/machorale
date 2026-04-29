@@ -7,7 +7,7 @@ echo "Applying database migrations..."
 python manage.py migrate --noinput
 
 echo "Running tests..."
-pytest --create-db
+pytest --create-db --ds=ma_chorale.settings --cov=ma_chorale --cov-report=xml --cov-report=html
 
 if [ $? -ne 0 ]; then
     echo "Tests failed. Exiting."
