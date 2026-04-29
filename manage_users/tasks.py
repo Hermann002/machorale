@@ -19,7 +19,7 @@ def send_code_to_user(self, email, code):
             'current_site': current_site
         })
 
-        from_email = settings.EMAIL_HOST_USER
+        from_email = settings.DEFAULT_FROM_EMAIL
         d_email = EmailMessage(
             subject=subject,
             body=email_body,
