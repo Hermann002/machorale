@@ -1,0 +1,28 @@
+from .base import *
+
+DEBUG = False
+
+SESSION_COOKIE_AGE = 3600
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax' 
+
+CACHE_MIDDLEWARE_SECONDS = 60
+CACHE_MIDDLEWARE_KEY_PREFIX = 'ma_chorale'
+CACHE_MIDDLEWARE_ANONYMOUS_ONLY = True
+
+CELERY_BROKER_URL = config('REDIS_URL')
+CELERY_RESULT_BACKEND = config('REDIS_URL')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+WHITENOISE_AUTOREFRESH = DEBUG
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('emailhost')
+EMAIL_PORT = config('emailport')
+EMAIL_USE_TLS = config('emailusetls', default=True)
+EMAIL_HOST_USER = config('emailuser')
+EMAIL_HOST_PASSWORD = config('emailpassword')

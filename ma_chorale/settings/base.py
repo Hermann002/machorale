@@ -15,17 +15,15 @@ from decouple import config
 from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-6lcb@n8e^7098%_^q4pp+=)2q-tzozklo=1szc3ps*@l)k)k5#'
-
+SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
 
@@ -141,21 +139,6 @@ USE_TZ = True
 
 CSRF_TRUSTED_ORIGINS = ['https://machorale.up.railway.app', 'http://localhost', 'http://127.0.0.1', "https://machorale.lonem.ca"]
 
-SESSION_COOKIE_AGE = 3600
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = 'Lax' 
-
-CACHE_MIDDLEWARE_SECONDS = 60
-CACHE_MIDDLEWARE_KEY_PREFIX = 'ma_chorale'
-CACHE_MIDDLEWARE_ANONYMOUS_ONLY = True
-
-CELERY_BROKER_URL = config('REDIS_URL')
-CELERY_RESULT_BACKEND = config('REDIS_URL')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = TIME_ZONE
 
 LOGIN_URL = reverse_lazy('login')
 
@@ -185,7 +168,6 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / "staticfiles"  # ou os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 WHITENOISE_MAX_AGE = 31536000
-WHITENOISE_AUTOREFRESH = DEBUG
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / "media"  # ou os.path.join(BASE_DIR, '
@@ -194,12 +176,4 @@ MEDIA_ROOT = BASE_DIR / "media"  # ou os.path.join(BASE_DIR, '
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('emailhost')
-EMAIL_PORT = config('emailport')
-EMAIL_USE_TLS = config('emailusetls', default=True)
-EMAIL_HOST_USER = config('emailuser')
-EMAIL_HOST_PASSWORD = config('emailpassword')
-
 # SENDGRID_API_KEY = config('SENDGRID_API_KEY')

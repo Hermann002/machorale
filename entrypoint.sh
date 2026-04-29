@@ -6,7 +6,7 @@ echo "Applying database migrations..."
 python manage.py migrate --noinput
 
 echo "Running tests..."
-pytest
+DJANGO_SETTINGS_MODULE=ma_chorale.settings.test pytest
 
 if [ $? -ne 0 ]; then
     echo "Tests failed. Exiting."
