@@ -9,12 +9,11 @@
     <body>
         <header class="w-full border-b border-[#cfd7e7] dark:border-slate-800 bg-white dark:bg-slate-900">
             <div class="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                        <span class="material-symbols-outlined text-white text-xl">music_note</span>
+                <div class="flex items-center gap-3">
+                        <a href="/" class="inline-flex text-inherit no-underline">
+                            <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
+                        </a>
                     </div>
-                    <span class="text-xl font-black tracking-tight text-primary">ChorusFlow</span>
-                </div>
                 <div class="hidden md:flex items-center gap-4">
                     <span class="text-sm text-[#4c669a] dark:text-slate-400">Besoin d'aide?</span>
                     <button class="text-sm font-semibold text-primary hover:underline">Consulter le guide</button>
@@ -79,14 +78,14 @@
                         <!-- contact -->
                         <div class="flex flex-col gap-2">
                             <label for="{{ form.contact_email.id_for_label }}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{ form.contact_email.label }}</p>
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{ form.contact_email.label }}<span class="text-red-500 ml-1">*</span></p>
                                 {{ form.contact_email }}
                             </label>
                         </div>
                         
                         <div class="flex flex-col gap-2">
                             <label for="{{ form.contact_phone.id_for_label }}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{ form.contact_phone.label }}</p>
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{ form.contact_phone.label }}<span class="text-red-500 ml-1">*</span></p>
                             </label>
                             {{ form.contact_phone }}
                         </div>

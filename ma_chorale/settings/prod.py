@@ -2,6 +2,12 @@ from .base import *
 
 DEBUG = False
 
+MIDDLEWARE += [
+    'django.middleware.cache.UpdateCacheMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
+]
+
 SESSION_COOKIE_AGE = 3600
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True

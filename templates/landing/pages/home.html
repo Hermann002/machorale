@@ -3,13 +3,7 @@
 {% block content %}
 
 <!-- heroes section -->
- {% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-{{ message.tags }}">
-      {{ message }}
-    </div>
-  {% endfor %}
-{% endif %}
+{% include "../../components/alert/message.html" %}
 
 <section class="px-6 lg:px-40 py-12 lg:py-24">
   <div class="max-w-[1200px] mx-auto">

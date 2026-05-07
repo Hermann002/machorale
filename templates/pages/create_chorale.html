@@ -6,12 +6,11 @@
     <body>
         <header class="w-full border-b border-[#cfd7e7] dark:border-slate-800 bg-white dark:bg-slate-900">
             <div class="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
-                        <span class="material-symbols-outlined text-white text-xl">music_note</span>
+                <div class="flex items-center gap-3">
+                        <a href="/" class="inline-flex text-inherit no-underline">
+                            <img src="{% static 'images/logo.png' %}" alt="Logo" width="130" height="auto">
+                        </a>
                     </div>
-                    <span class="text-xl font-black tracking-tight text-primary">ChorusFlow</span>
-                </div>
                 <div class="hidden md:flex items-center gap-4">
                     <span class="text-sm text-[#4c669a] dark:text-slate-400">Besoin d'aide?</span>
                     <button class="text-sm font-semibold text-primary hover:underline">Consulter le guide</button>
@@ -76,20 +75,20 @@
                         <!-- Select: Dénomination -->
                         <div class="flex flex-col gap-2">
                             <label for="{{ form.type_c.id_for_label}}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.type_c.label}}</p>
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.type_c.label}}<span class="text-red-500 ml-1">*</span></p>
                                 {{form.type_c}}
                             </label>
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="{{form.description.id_for_label}}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.description.label}}</p>
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.description.label}}<span class="text-red-500 ml-1">*</span></p>
                             </label>
                             {{form.description}}
                         </div>
                         <!-- TextField: Ville -->
                         <div class="flex flex-col gap-2">
                             <label for="{{form.location.id_for_label}}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">Ville</p>
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">Ville<span class="text-red-500 ml-1">*</span></p>
                                 <div class="relative">
                                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#4c669a]">location_on</span>
                                     {{form.location}}
@@ -98,7 +97,7 @@
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="{{form.established_date.id_for_label}}" class="flex flex-col w-full">
-                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.established_date.label}}</p>
+                                <p class="text-[#0d121b] dark:text-slate-200 text-base font-semibold leading-normal pb-2">{{form.established_date.label}}<span class="text-red-500 ml-1">*</span></p>
                             </label>
                             {{form.established_date}}
                         </div>
