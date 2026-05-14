@@ -47,4 +47,4 @@ EMAIL_HOST_USER = config('emailuser')
 EMAIL_HOST_PASSWORD = config('emailpassword')
 DEFAULT_FROM_EMAIL = config('defaultfromemail')
 
-SITE_URL = 'https://machorale.lonem.ca'
+SITE_URL = 'machorale.lonem.ca'
