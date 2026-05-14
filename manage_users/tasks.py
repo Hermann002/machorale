@@ -34,3 +34,24 @@ def send_code_to_user(self, email, code):
         # 🔁 Erreurs réseau → retry automatique
         logger.warning(f"Network error sending email to {email}: {exc}. Retrying...")
         raise self.retry(exc=exc)
+    
+@shared_task(bind=True, max_retries=5, default_retry_delay=60)
+def send_link_to_user(self, email, uuidb64, token):
+    subject = "Password reset link for ma chorale"
+
+    email_body = render_to_string('emails/password_reset.html', {
+        'user_email': email,
+        'current_site': settings.SITE_URL,
+        'uidb64': uuidb64,
+        'token': token,
+    })
+
+    from_email = settings.DEFAULT_FROM_EMAIL
+    d_email = EmailMessage(
+        subject=subject,
+        body=email_body,
+        from_email=from_email,
+        to=[email]
+    )
+    d_email.content_subtype = "html"
+    d_email.send(fail_silently=False)

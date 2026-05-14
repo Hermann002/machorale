@@ -91,3 +91,47 @@ class VerifyEmailForm(forms.Form):
     class Meta:
         model = OtpCode
         fields = ["otp_code"]
+
+class ResetPasswordRequestForm(forms.Form):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={"class": f"{input_class}", "placeholder": "Enter your email"}), label=_("Email"))
+
+    class Meta:
+        model = CustomUser
+        fields = ["email"]
+        widgets = {
+            "email": forms.EmailInput(attrs={
+                "class": "w-full px-4 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition",
+                "placeholder": "exemple@email.com"
+            }),
+        }
+        labels = {
+            "email": _("Email"),
+        }
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get("email")
+        if not CustomUser.objects.filter(email=email.lower()).exists():
+            raise forms.ValidationError(_("No account found with this email."))
+        return cleaned_data
+    
+class SetNewPasswordForm(forms.Form):
+    new_password = forms.CharField(max_length=100, widget=forms.PasswordInput(attrs={"class": f"{input_class_password}", "placeholder": "••••••••"}), label=_("New Password"))
+    confirm_password = forms.CharField(max_length=100, widget=forms.PasswordInput(attrs={"class": f"{input_class_password}", "placeholder": "••••••••"}), label=_("Confirm New Password"))
+
+    def clean_new_password(self):
+        new_password = self.cleaned_data.get("new_password")
+        try:
+            validate_password(new_password)
+        except ValidationError as e:
+            raise forms.ValidationError(e.messages)
+        return new_password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if new_password and confirm_password and new_password != confirm_password:
+            self.add_error("confirm_password", _("The two password fields didn't match."))
+        
+        return cleaned_data

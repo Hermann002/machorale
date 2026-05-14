@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .forms import UserRegisterForm, UserLoginForm
+from .forms import UserRegisterForm, UserLoginForm, SetNewPasswordForm, ResetPasswordRequestForm
 from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 from django.contrib.auth import login, logout
@@ -8,10 +8,14 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
-from .utils import send_code_to_user
+from .utils import send_code_to_user, send_password_reset_link
 from manage_users.models import OtpCode, CustomUser
 from django.views.generic.edit import UpdateView
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.urls import reverse_lazy
 
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
@@ -126,6 +130,7 @@ class LogoutView(TemplateView):
         return HttpResponseRedirect("/")
     
 
+@ratelimit(key='ip', rate='3/m', method='GET', block=True)
 def resend_otp_views(request, user_id):
     try:
         user = CustomUser.objects.get(id=user_id)
@@ -139,4 +144,94 @@ def resend_otp_views(request, user_id):
         messages.success(request, "OTP code resent successfully! Please check your email.")
     except CustomUser.DoesNotExist:
         messages.error(request, "User not found.")
+    except Ratelimited:
+        messages.error(request, "Rate limit exceeded, please wait before trying again.")
     return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user_id}))
+
+class ResetPasswordRequestView(TemplateView):
+    template_name = "landing/pages/reset_password_request.html"
+    form_class = ResetPasswordRequestForm
+
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        form = self.form_class()
+        return render(request, self.template_name, {"form": form})
+    
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data.get("email")
+            try:
+                user = CustomUser.objects.get(email=email)
+                uuidb64 = urlsafe_base64_encode(force_bytes(user.id))
+                token_generator = PasswordResetTokenGenerator()
+                token = token_generator.make_token(user)
+                print(f"Attempting to send password reset email to {email} with uidb64: {uuidb64} and token: {token}")
+                send_password_reset_link(email, uuidb64, token)
+                messages.success(request, "Password reset link sent! Please check your email.")
+                return HttpResponseRedirect(reverse("reset_password_request"))
+            except CustomUser.DoesNotExist:
+                messages.error(request, "No account found with that email address.")
+            except Ratelimited:
+                messages.error(request, "Rate limit exceeded, please wait before trying again.")
+        else:
+            messages.error(request, "Please enter a valid email address.")
+        return render(request, self.template_name, {"form": form})
+    
+class ResetPasswordConfirmView(TemplateView):
+    template_name = "landing/pages/reset_password_confirm.html"
+    form_class = SetNewPasswordForm
+
+    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        uidb64 = kwargs.get("uuidb64")
+        token = kwargs.get("token")
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(id=uid)
+            token_generator = PasswordResetTokenGenerator()
+            if token_generator.check_token(user, token):
+                form = self.form_class()
+                return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})
+            messages.error(request, "Invalid or expired password reset link.")
+            return HttpResponseRedirect(reverse("reset_password_request"))
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            messages.error(request, "Invalid password reset link.")
+            return HttpResponseRedirect(reverse("reset_password_request"))
+
+    def post(self, request, *args, **kwargs):
+        uidb64 = request.POST.get("uidb64") or kwargs.get("uuidb64")
+        token = request.POST.get("token") or kwargs.get("token")
+        form = self.form_class(request.POST)
+
+        if not uidb64 or not token:
+            messages.error(request, "Invalid password reset request.")
+            return HttpResponseRedirect(reverse("reset_password_request"))
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = CustomUser.objects.get(id=uid)
+            token_generator = PasswordResetTokenGenerator()
+            if not token_generator.check_token(user, token):
+                messages.error(request, "Invalid or expired password reset link.")
+                return HttpResponseRedirect(reverse("reset_password_request"))
+        except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+            messages.error(request, "Invalid password reset link.")
+            return HttpResponseRedirect(reverse("reset_password_request"))
+        except Ratelimited:
+            messages.error(request, "Rate limit exceeded, please wait before trying again.")
+            return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})
+
+        if form.is_valid():
+            user.password = make_password(form.cleaned_data.get("new_password"))
+            user.save()
+            messages.success(request, "Your password has been reset successfully! You can now log in.")
+            return HttpResponseRedirect(reverse("login"))
+
+        return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})

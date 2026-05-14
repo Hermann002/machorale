@@ -14,3 +14,5 @@ DEFAULT_FROM_EMAIL = config('defaultfromemail')
 
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_EAGER_PROPAGATES = True
+
+SITE_URL = 'http://localhost:8000'

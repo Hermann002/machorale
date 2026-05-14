@@ -1,7 +1,10 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
-{% include "../head.html" %}
+    <head>
+        {% include "../head.html" %}
+        <title>login</title>
+    </head>
     <body class="bg-background-light dark:bg-background-dark font-display text-[#111318] dark:text-white min-h-screen flex flex-col">
         <!-- Top Navigation Bar -->
         <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#f0f2f4] dark:border-b-slate-800 px-10 py-3 bg-white dark:bg-background-dark">
@@ -63,7 +66,7 @@
                         {% endfor %}
                         {% if messages %}
                             {% for message in messages %}
-                            <div class="bg-red-50 px-3 py-2 rounded-md text-sm font-medium
+                            <div class="px-3 py-2 rounded-md text-sm font-medium
                             {% if message.tags == 'success' %}
                                 bg-green-50 text-green-600
                             {% elif message.tags == 'error' %}
@@ -89,7 +92,10 @@
                             <span class="truncate">Se connecter</span>
                         </button>
                     </form>
-                    <div class="mt-8 text-center">
+                    <p class=" mt-4 text-center text-[#616f89] dark:text-slate-400 text-sm">
+                        <a class="text-[#e0ad53] font-bold hover:underline ml-1" href="{% url 'reset_password_request' %}">mot de passe oublié ?</a>
+                    </p>
+                    <div class="mt-4 text-center">
                         <p class="text-[#616f89] dark:text-slate-400 text-sm">Nouveau ici ? 
                             <a class="text-[#e0ad53] font-bold hover:underline ml-1" href="{% url 'register' %}">Créer un compte</a>
                         </p>
