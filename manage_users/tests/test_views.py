@@ -55,11 +55,12 @@ def test_login_view_already_authenticated(client):
 @pytest.mark.django_db
 def test_rate_limiting(client):
     """Test blocage après trop de tentatives."""
-    cache.clear()  # Nettoie le cache entre tests
-    
-    for _ in range(10):
+    cache.clear()
+
+    # Épuise la limite (5/m) — toutes autorisées, fenêtre pas encore dépassée
+    for _ in range(5):
         client.post(reverse("login"), {"username": "user", "password": "pass"})
-    
-    # 6e tentative → bloquée
+
+    # 6e tentative dans la même fenêtre → bloquée
     response = client.post(reverse("login"), {"username": "user", "password": "pass"})
-    assert response.status_code == 403  # Too Many Requests
+    assert response.status_code == 403
