@@ -13,7 +13,7 @@ def test_login_view_get(client):
 
 @pytest.mark.django_db
 def test_login_view_post_success(client):
-    user = baker.make(CustomUser, username="testuser", is_verify=True)
+    user = baker.make(CustomUser, username="testuser", is_verify=True, role=CustomUser.ROLE_SUPERADMIN_CHORALE)
     user.set_password("secret")
     user.save()
 
