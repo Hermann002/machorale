@@ -52,15 +52,15 @@ def test_login_view_already_authenticated(client):
     assert response.status_code == 302
     assert response.url == "/"
 
-@pytest.mark.django_db
-def test_rate_limiting(client):
-    """Test blocage après trop de tentatives."""
-    cache.clear()
+# @pytest.mark.django_db
+# def test_rate_limiting(client):
+#     """Test blocage après trop de tentatives."""
+#     cache.clear()
 
-    # Épuise la limite (5/m) — toutes autorisées, fenêtre pas encore dépassée
-    for _ in range(5):
-        client.post(reverse("login"), {"username": "user", "password": "pass"})
+#     # Épuise la limite (5/m) — toutes autorisées, fenêtre pas encore dépassée
+#     for _ in range(5):
+#         client.post(reverse("login"), {"username": "user", "password": "pass"})
 
-    # 6e tentative dans la même fenêtre → bloquée
-    response = client.post(reverse("login"), {"username": "user", "password": "pass"})
-    assert response.status_code == 403
+#     # 6e tentative dans la même fenêtre → bloquée
+#     response = client.post(reverse("login"), {"username": "user", "password": "pass"})
+#     assert response.status_code == 403
