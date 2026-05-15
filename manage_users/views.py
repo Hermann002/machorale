@@ -49,7 +49,7 @@ class RegisterView(TemplateView):
             return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user.id}))
         return render(request, self.template_name, {"form": form})
 
-@method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True), name='dispatch')
+@method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True), name='dispatch')
 class LoginView(TemplateView):
     template_name = "landing/pages/login.html"
 
