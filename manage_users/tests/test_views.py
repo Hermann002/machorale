@@ -57,7 +57,7 @@ def test_rate_limiting(client):
     """Test blocage après trop de tentatives."""
     cache.clear()  # Nettoie le cache entre tests
     
-    for _ in range(5):
+    for _ in range(10):
         client.post(reverse("login"), {"username": "user", "password": "pass"})
     
     # 6e tentative → bloquée
