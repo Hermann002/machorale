@@ -3,8 +3,26 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.db import connection
 from django.conf import settings
+from django.core.cache import cache
 
-def home(request, slug=None):
+from manage_users.models import CustomUser
+from django.core.exceptions import ObjectDoesNotExist
+
+def home(request):
+    slug = None
+    if request.user.is_authenticated:
+        user = request.user
+        slug = cache.get("slug")
+        if slug is None:
+            try:
+                slug = user.managed_group.slug
+            except ObjectDoesNotExist:
+                first_chorale = user.chorales.only('slug').first()
+                if first_chorale:
+                    slug = first_chorale.slug
+            # Cache the slug for future requests
+            if slug:
+                cache.set("slug", slug, timeout=3600)  # Cache for 1 hour
     return render(request, 'landing/pages/home.html', {"slug": slug})
 
 def health_check(request):

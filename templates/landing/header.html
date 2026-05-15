@@ -32,8 +32,19 @@
                         Free trial
                     </button>
                 </a>
+                {% elif slug %}
+                <a href="{% url 'dashboard' slug=slug %}">
+                    <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
+                        Dashboard
+                    </button>
+                </a>
+                <a href="{% url 'logout' %}">
+                    <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
+                        logout
+                    </button>
+                </a>
                 {% else %}
-                <a href="{% url 'create_chorale'%}">
+                <a href="{% url 'create_chorale' %}">
                     <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
                         Créer une chorale
                     </button>

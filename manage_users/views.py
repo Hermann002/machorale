@@ -16,6 +16,7 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.urls import reverse_lazy
+from django.core.cache import cache
 
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
@@ -43,6 +44,7 @@ class RegisterView(TemplateView):
             except Exception as e:
                 print(f"Error sending email: {e}")
                 raise(e)
+            cache.set(f"user_id", user.id)
             messages.success(request, "Account created successfully! Please verify your email.")
             return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user.id}))
         return render(request, self.template_name, {"form": form})
@@ -76,6 +78,8 @@ class LoginView(TemplateView):
                         slug = first_chorale.slug
 
                 if slug:
+                    cache.set("slug", slug)
+                    cache.set("user_id", user.id)
                     return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
                 return HttpResponseRedirect(reverse("create_chorale"))
             messages.error(request, "Invalid credentials. Please try again.")
@@ -126,6 +130,7 @@ class VerifyEmailView(TemplateView):
 
 class LogoutView(TemplateView):
     def get(self, request, *args, **kwargs):
+        cache.clear()
         logout(request)
         return HttpResponseRedirect("/")
     
