@@ -7,17 +7,20 @@ from django.views import View
 from django.contrib.auth import login, logout
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 from datetime import timedelta, date
 from uuid import uuid4
 
 from manage_users.models import CustomUser
 from django.core.exceptions import ObjectDoesNotExist
 
+@never_cache
 def home(request):
     slug = None
     if request.user.is_authenticated:
         user = request.user
-        slug = cache.get("slug")
+        cache_key = f"user_slug_{user.id}"
+        slug = cache.get(cache_key)
         if slug is None:
             try:
                 slug = user.managed_group.slug
@@ -25,9 +28,8 @@ def home(request):
                 first_chorale = user.chorales.only('slug').first()
                 if first_chorale:
                     slug = first_chorale.slug
-            # Cache the slug for future requests
             if slug:
-                cache.set("slug", slug, timeout=3600)  # Cache for 1 hour
+                cache.set(cache_key, slug, timeout=3600)
     return render(request, 'landing/pages/home.html', {"slug": slug})
 
 class DemoView(View):
@@ -44,6 +46,7 @@ class DemoView(View):
 
         login(request, demo_user, backend='manage_users.backends.CaseInsensitiveModelBackend')
         request.session['is_demo'] = True
+        cache.set(f"user_slug_{demo_user.id}", chorale.slug, timeout=7200)
 
         return redirect(reverse('dashboard', kwargs={'slug': chorale.slug}))
 

@@ -75,19 +75,17 @@ class LoginView(TemplateView):
                     try:
                         # Vérifier s'il a déjà une chorale
                         slug = user.managed_group.slug
-                        cache.set("slug", slug)
-                        cache.set("user_id", user.id)
+                        cache.set(f"user_slug_{user.id}", slug)
                         return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
                     except ObjectDoesNotExist:
                         # Pas de chorale créée, le rediriger vers la création
                         return HttpResponseRedirect(reverse("create_chorale"))
-                
+
                 # Sinon, c'est un membre/secrétaire/censeur/trésorier
                 first_chorale = user.chorales.only('slug').first()
                 if first_chorale:
                     slug = first_chorale.slug
-                    cache.set("slug", slug)
-                    cache.set("user_id", user.id)
+                    cache.set(f"user_slug_{user.id}", slug)
                     return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
                 
                 # Pas de chorale trouvée (cas très rare)
