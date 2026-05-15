@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'manage_chorale',
     'landing',
     'formtools',
+    'channels',
 ]
 
 MIDDLEWARE = [
