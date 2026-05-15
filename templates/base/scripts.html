@@ -1,4 +1,30 @@
 {% load static %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 <script src="{% static 'js/main.js' %}"></script>
+<script>
+  // ── Barre de progression HTMX globale ──────────────────────────────────────
+  // Un seul point de contrôle pour tous les appels HTMX, au lieu d'instrumenter
+  // chaque élément individuellement (pattern Intercepteur).
+  (function () {
+    const bar = document.getElementById('htmx-progress');
+    if (!bar) return;
+    htmx.on('htmx:beforeRequest', () => { bar.style.opacity = '1'; });
+    htmx.on('htmx:afterRequest',  () => { bar.style.opacity = '0'; });
+  })();
+
+  // ── Loading state sur les formulaires classiques ───────────────────────────
+  // Désactive le bouton submit et affiche un spinner pour éviter les doubles soumissions.
+  // Ajouter data-no-loading au <form> pour exclure un formulaire.
+  document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('form:not([data-no-loading])').forEach(function (form) {
+      form.addEventListener('submit', function () {
+        const btn = form.querySelector('button[type=submit]');
+        if (!btn || btn.disabled) return;
+        btn.disabled = true;
+        btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;margin-right:6px">⟳</span> Enregistrement…';
+      });
+    });
+  });
+</script>
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 {% block extra_js %}{% endblock %}

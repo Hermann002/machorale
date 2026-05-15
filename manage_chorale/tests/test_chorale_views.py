@@ -73,6 +73,49 @@ def test_create_chorale_view_post_success(client, verified_user):
     assert chorale.country == "France"
 
 # @pytest.mark.django_db
+# def test_create_event_view_forbidden_for_non_secretary_or_admin(client, verified_user):
+#     chorale = baker.make(Chorale, admin=baker.make(CustomUser, role=CustomUser.ROLE_SUPERADMIN_CHORALE))
+#     chorale.members.add(verified_user)
+#     client.force_login(verified_user)
+#     response = client.get(reverse('event_create', kwargs={'slug': chorale.slug}))
+#     assert response.status_code == 302
+#     assert response.url == reverse('dashboard', kwargs={'slug': chorale.slug})
+
+# @pytest.mark.django_db
+# def test_create_event_view_allows_secretary(client):
+#     admin = baker.make(CustomUser, role=CustomUser.ROLE_SUPERADMIN_CHORALE)
+#     chorale = baker.make(Chorale, admin=admin)
+#     secretary = baker.make(CustomUser, role='member', chorale_role=CustomUser.CHORALE_ROLE_SECRETARY)
+#     chorale.members.add(secretary)
+#     client.force_login(secretary)
+
+#     response = client.get(reverse('event_create', kwargs={'slug': chorale.slug}))
+#     assert response.status_code == 200
+#     assert 'Créer un événement' in response.content.decode()
+
+#     event_data = {
+#         'title': 'Pratique du week-end',
+#         'description': 'Répétition générale avant le concert.',
+#         'location': 'Salle des fêtes',
+#         'date': '2030-01-05T18:00',
+#         'event_type': 'practice',
+#     }
+#     response = client.post(reverse('event_create', kwargs={'slug': chorale.slug}), event_data)
+#     assert response.status_code == 302
+#     assert response.url == reverse('events', kwargs={'slug': chorale.slug})
+
+# @pytest.mark.django_db
+# def test_event_detail_page_shows_event_information(client):
+#     admin = baker.make(CustomUser, role=CustomUser.ROLE_SUPERADMIN_CHORALE)
+#     chorale = baker.make(Chorale, admin=admin)
+#     event = baker.make('manage_chorale.ChoraleEvent', chorale=chorale, title='Concert de Noël', location='Église centrale', date='2030-12-20 20:00:00')
+#     client.force_login(admin)
+
+#     response = client.get(reverse('event_detail', kwargs={'slug': chorale.slug, 'event_id': event.id}))
+#     assert response.status_code == 200
+#     assert 'Concert de Noël' in response.content.decode()
+
+# @pytest.mark.django_db
 # def test_customuser_has_default_chorale_role():
 #     user = baker.make(CustomUser, username='roler_test')
 #     assert user.chorale_role == CustomUser.CHORALE_ROLE_MEMBER

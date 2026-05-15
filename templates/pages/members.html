@@ -81,11 +81,11 @@
                     <td class="px-6 py-5 text-right">
                     <div class="flex items-center justify-end gap-2">
                     {% if request.user.role == 'super_admin_chorale' %}
-                    <a href="{% url 'member_role_edit' slug=slug user_id=member.id %}" class="p-2 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg">
+                    <a href="{% url 'member_role_edit' slug=slug user_id=member.id %}" class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg active:scale-95 transition-all duration-150">
                     <span class="material-symbols-outlined text-lg">edit</span>
                     </a>
                     {% endif %}
-                    <button class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                    <button class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg active:scale-95 transition-all duration-150">
                     <span class="material-symbols-outlined text-lg">visibility</span>
                     </button>
                     </div>
@@ -104,18 +104,18 @@
                             hx-get="?page={{ page_obj.previous_page_number }}"
                             hx-target="body"
                             hx-swap="innerHTML"
-                            class="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50"
+                            class="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-white dark:hover:bg-slate-800 disabled:opacity-50 active:scale-95 transition-all duration-150"
                         >
                             <span class="material-symbols-outlined">chevron_left</span>
                         </button>
                             {% endif %}
                         <button class="size-8 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center">{{ page_obj.number }}</button>
                         {% if page_obj.has_next %}
-                        <button 
+                        <button
                             hx-get="?page={{ page_obj.next_page_number }}"
                             hx-target="body"
                             hx-swap="innerHTML"
-                            class="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-white dark:hover:bg-slate-800"
+                            class="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-white dark:hover:bg-slate-800 active:scale-95 transition-all duration-150"
                         >
                             <span class="material-symbols-outlined">chevron_right</span>
                         </button>

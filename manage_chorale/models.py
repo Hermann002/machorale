@@ -81,6 +81,42 @@ class MeetingReport(models.Model):
     attendees = models.TextField()
     report = models.FileField(upload_to='meeting_reports/', blank=True, null=True)
 
+class ChoraleEvent(models.Model):
+    EVENT_TYPE_CHOICES = [
+        ('practice', 'Pratique'),
+        ('meeting', 'Réunion'),
+        ('concert', 'Concert'),
+        ('assistance', 'Assistance'),
+        ('other', 'Autre'),
+    ]
+
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, related_name='chorale_events')
+    title = models.CharField(max_length=150)
+    description = models.TextField(blank=True)
+    location = models.CharField(max_length=255)
+    date = models.DateTimeField(db_index=True)
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES, default='practice')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_chorale_events')
+    report_file = models.FileField(upload_to='event_reports/', blank=True, null=True)
+    expenses = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Dépenses (XAF)")
+    income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Entrées (XAF)")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['date']
+        indexes = [
+            models.Index(fields=['chorale', 'date']),
+            models.Index(fields=['created_by', 'date']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} — {self.chorale.name} on {self.date:%Y-%m-%d %H:%M}"
+
+    @property
+    def is_upcoming(self):
+        return self.date >= timezone.now()
+
 class Commission(models.Model):
     name = models.CharField(max_length=100)
     chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
@@ -104,7 +140,7 @@ class Event(models.Model):
         ('upload_file', 'rapport'),
         ('other', 'autre'),
     ]
-
+    IMPORTANT_EVENT_TYPES = ['payment', 'warning', 'person_add', 'person_remove', 'upload_file']
 
     event_type = models.CharField(max_length=50, choices=EVENT_TYPES, help_text="Type d'événement")
     description = models.TextField(help_text="Description détaillée de l'événement")
@@ -143,7 +179,7 @@ class Event(models.Model):
             metadata = {}
         
         ip_address = None
-        user_agent = None
+        user_agent = ''
 
         if request:
             ip_address = cls._get_client_ip(request)

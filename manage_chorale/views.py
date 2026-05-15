@@ -9,12 +9,13 @@ from django.core.files.storage import FileSystemStorage
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.decorators import login_required
-from django.utils import formats
-from datetime import datetime
+from django.utils import formats, timezone
+from datetime import datetime, date, timedelta
 from functools import lru_cache
+import calendar
 import json
 import os
-from .models import Chorale
+from .models import Chorale, Event as ActivityEvent, ChoraleEvent
 from manage_users.models import CustomUser, Profile
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .mixins import ChoraleRequireMixin
@@ -38,7 +39,8 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
     def get(self, request, slug, *args, **kwargs):
         stats = get_dashboard_stats(self.chorale.id)
         total_members = stats.get("total_members", 0)
-        last_meeting_date = formats.date_format(datetime(2024, 5, 20), "M d, Y")
+        upcoming_event_count = stats.get("upcoming_event_count", 0)
+        last_meeting_date = formats.date_format(timezone.now(), "M d, Y")
         current_balance = 1_000_000.00
         pending_sanctions = 5
 
@@ -47,7 +49,18 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
         increase_balance = 10
         increase_sanctions = 1
 
-        recent_activities = load_recent_activities()
+        recent_events = list(ActivityEvent.objects.filter(chorale=self.chorale).order_by('-timestamp')[:5])
+        recent_activities = recent_events if recent_events else load_recent_activities()
+
+        upcoming_practices = ChoraleEvent.objects.filter(
+            chorale=self.chorale,
+            date__gte=timezone.now(),
+            event_type=ChoraleEvent.EVENT_TYPE_CHOICES[0][0],
+        ).order_by('date')[:3]
+        upcoming_events = ChoraleEvent.objects.filter(chorale=self.chorale, date__gte=timezone.now()).order_by('date')[:4]
+
+        if upcoming_events:
+            last_meeting_date = formats.date_format(upcoming_events[0].date, "M d, Y")
 
         context = {
             "page_title": "Tableau de bord",
@@ -60,6 +73,9 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
             "increase_balance": increase_balance,
             "increase_sanctions": increase_sanctions,
             "recent_activities": recent_activities,
+            "upcoming_practices": upcoming_practices,
+            "upcoming_events": upcoming_events,
+            "upcoming_event_count": upcoming_event_count,
         }
         return render(request, self.template_name, {**context, "slug": self.chorale.slug})
     
@@ -203,6 +219,171 @@ class UpdateMemberRoleView(ChoraleRequireMixin, TemplateView):
             "slug": self.chorale.slug,
         })
 
+
+class EventListView(ChoraleRequireMixin, TemplateView):
+    template_name = "pages/events.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        today = timezone.localtime().date()
+        year = int(request.GET.get("year", today.year))
+        month = int(request.GET.get("month", today.month))
+
+        event_queryset = ChoraleEvent.objects.filter(chorale=self.chorale)
+        upcoming_events = event_queryset.filter(date__gte=timezone.now()).order_by('date')[:6]
+        month_events = event_queryset.filter(date__year=year, date__month=month).order_by('date')
+
+        event_calendar = {}
+        for event in month_events:
+            event_date = event.date.date()
+            event_calendar.setdefault(event_date, []).append(event)
+
+        first_weekday, days_in_month = calendar.monthrange(year, month)
+        weeks = []
+        week = []
+        for _ in range(first_weekday):
+            week.append(None)
+
+        for day in range(1, days_in_month + 1):
+            current_date = date(year, month, day)
+            week.append({
+                'day': current_date,
+                'events': event_calendar.get(current_date, []),
+            })
+            if len(week) == 7:
+                weeks.append(week)
+                week = []
+
+        if week:
+            while len(week) < 7:
+                week.append(None)
+            weeks.append(week)
+
+        previous_month = date(year, month, 1) - timedelta(days=1)
+        next_month = date(year, month, days_in_month) + timedelta(days=1)
+
+        context = {
+            "page_title": "Calendrier des événements",
+            "calendar_weeks": weeks,
+            "weekdays": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+            "current_month": calendar.month_name[month],
+            "current_year": year,
+            "previous_month": previous_month,
+            "next_month": next_month,
+            "upcoming_events": upcoming_events,
+            "slug": self.chorale.slug,
+        }
+        return render(request, self.template_name, context)
+
+class CreateEventView(ChoraleRequireMixin, TemplateView):
+    template_name = "pages/event_form.html"
+    form_class = None
+
+    def dispatch(self, request, *args, **kwargs):
+        if not (request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE or request.user.chorale_role == CustomUser.CHORALE_ROLE_SECRETARY):
+            messages.error(request, "Vous n'avez pas la permission de créer un événement.")
+            return redirect(reverse('dashboard', kwargs={"slug": kwargs.get('slug')}))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, slug, *args, **kwargs):
+        from .forms import ChoraleEventForm
+        form = ChoraleEventForm()
+        return render(request, self.template_name, {"form": form, "slug": self.chorale.slug})
+
+    def post(self, request, slug, *args, **kwargs):
+        from .forms import ChoraleEventForm
+        form = ChoraleEventForm(request.POST, request.FILES)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.chorale = self.chorale
+            event.created_by = request.user
+            event.save()
+
+            ActivityEvent.log(
+                chorale=self.chorale,
+                user=request.user,
+                event_type='other',
+                description=f"Événement créé : {event.title}",
+                metadata={"event_id": event.id, "title": event.title},
+                request=request,
+            )
+
+            messages.success(request, "L'événement a été créé avec succès.")
+            return redirect(reverse('events', kwargs={"slug": self.chorale.slug}))
+
+        return render(request, self.template_name, {"form": form, "slug": self.chorale.slug})
+
+class EventDetailView(ChoraleRequireMixin, TemplateView):
+    template_name = "pages/event_detail.html"
+
+    def get(self, request, slug, event_id, *args, **kwargs):
+        event = get_object_or_404(ChoraleEvent, id=event_id, chorale=self.chorale)
+        return render(request, self.template_name, {"event": event, "slug": self.chorale.slug})
+
+class EventTableView(ChoraleRequireMixin, TemplateView):
+    template_name = "pages/events_list.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        events = ChoraleEvent.objects.filter(
+            chorale=self.chorale
+        ).select_related('created_by').order_by('-date')
+        can_create = (
+            request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE
+            or request.user.chorale_role == CustomUser.CHORALE_ROLE_SECRETARY
+        )
+        return render(request, self.template_name, {
+            'events': events,
+            'slug': self.chorale.slug,
+            'can_create': can_create,
+        })
+
+class EventUpdateView(ChoraleRequireMixin, TemplateView):
+    template_name = "pages/event_form.html"
+
+    def _can_edit(self, request):
+        return (
+            request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE
+            or request.user.chorale_role == CustomUser.CHORALE_ROLE_SECRETARY
+        )
+
+    def dispatch(self, request, *args, **kwargs):
+        if not self._can_edit(request):
+            messages.error(request, "Vous n'avez pas la permission de modifier un événement.")
+            return redirect(reverse('events', kwargs={"slug": kwargs.get('slug')}))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, slug, event_id, *args, **kwargs):
+        from .forms import ChoraleEventForm
+        event = get_object_or_404(ChoraleEvent, id=event_id, chorale=self.chorale)
+        form = ChoraleEventForm(instance=event)
+        return render(request, self.template_name, {
+            "form": form,
+            "slug": self.chorale.slug,
+            "event": event,
+            "is_edit": True,
+        })
+
+    def post(self, request, slug, event_id, *args, **kwargs):
+        from .forms import ChoraleEventForm
+        event = get_object_or_404(ChoraleEvent, id=event_id, chorale=self.chorale)
+        form = ChoraleEventForm(request.POST, request.FILES, instance=event)
+        if form.is_valid():
+            form.save()
+            ActivityEvent.log(
+                chorale=self.chorale,
+                user=request.user,
+                event_type='other',
+                description=f"Événement modifié : {event.title}",
+                metadata={"event_id": event.id, "title": event.title},
+                request=request,
+            )
+            messages.success(request, "L'événement a été modifié avec succès.")
+            return redirect(reverse('event_detail', kwargs={"slug": self.chorale.slug, "event_id": event.id}))
+        return render(request, self.template_name, {
+            "form": form,
+            "slug": self.chorale.slug,
+            "event": event,
+            "is_edit": True,
+        })
 
 class ContributionView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/contributions.html"

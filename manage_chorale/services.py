@@ -1,5 +1,6 @@
 from django.core.cache import cache
-from .models import Contribution, Chorale
+from django.utils import timezone
+from .models import Contribution, Chorale, ChoraleEvent
 from manage_users.models import MemberContribution
 
 class DjangoContributionRepo:
@@ -39,6 +40,7 @@ def get_dashboard_stats(chorale_id, timeout=60):
 
     stats = {
         "total_members": chorale.members.count(),
+        "upcoming_event_count": ChoraleEvent.objects.filter(chorale=chorale, date__gte=timezone.now()).count(),
     }
     cache.set(cache_key, stats, timeout)
     return stats

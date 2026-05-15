@@ -1,0 +1,84 @@
+{% extends "../base/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% if is_edit %}Modifier l'événement{% else %}Créer un événement{% endif %}{% endblock %}
+
+{% block content %}
+{% include "../components/alert/message.html" %}
+<div class="p-8 max-w-3xl mx-auto">
+    <div class="mb-8">
+        {% if is_edit %}
+        <a href="{% url 'event_detail' slug=slug event_id=event.id %}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline active:scale-95 transition-all duration-150 mb-3">
+            <span class="material-symbols-outlined">arrow_back</span>Retour à l'événement
+        </a>
+        <h2 class="text-2xl font-bold tracking-tight">Modifier l'événement</h2>
+        <p class="text-[#4c669a] text-sm">Mettez à jour les informations de l'événement.</p>
+        {% else %}
+        <h2 class="text-2xl font-bold tracking-tight">Créer un événement</h2>
+        <p class="text-[#4c669a] text-sm">Planifiez une réunion, une pratique ou un concert pour votre chorale.</p>
+        {% endif %}
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-3xl border border-[#cfd7e7] dark:border-gray-800 p-8 shadow-sm">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Titre</label>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Description</label>
+                {{ form.description }}
+                {{ form.description.errors }}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Lieu</label>
+                    {{ form.location }}
+                    {{ form.location.errors }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Date et heure</label>
+                    {{ form.date }}
+                    {{ form.date.errors }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Type d'événement</label>
+                    {{ form.event_type }}
+                    {{ form.event_type.errors }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Fichier de rapport</label>
+                    {{ form.report_file }}
+                    {{ form.report_file.errors }}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Dépenses prévues (XAF) <span class="text-slate-400 font-normal">— optionnel</span></label>
+                    {{ form.expenses }}
+                    {{ form.expenses.errors }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200">Entrées prévues (XAF) <span class="text-slate-400 font-normal">— optionnel</span></label>
+                    {{ form.income }}
+                    {{ form.income.errors }}
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-60 disabled:cursor-not-allowed disabled:scale-100 transition-all duration-150">Enregistrer l'événement</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

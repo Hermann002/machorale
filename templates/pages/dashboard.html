@@ -1,40 +1,28 @@
 {% extends "../base/base.html" %}
 {% load static %}
 {% load i18n %}
+{% load chorale_tags %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
 {% include "../components/alert/message.html" %}
 <div class="p-8">
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold tracking-tight">{% translate "Vue d'ensemble" %}</h2>
-        <p class="text-[#4c669a] text-sm">Content de te revoir. Ce qui s'est passé aujourdh'hui avec la chorale.</p>
+    <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+            <h2 class="text-2xl font-bold tracking-tight">{% translate "Vue d'ensemble" %}</h2>
+            <p class="text-[#4c669a] text-sm">Content de te revoir. Ce qui s'est passé aujourdh'hui avec la chorale.</p>
+        </div>
+        {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'secretary' %}
+        <a href="{% url 'event_create' slug=slug %}" class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
+            <span class="material-symbols-outlined mr-2">add</span>
+            Créer un événement
+        </a>
+        {% endif %}
     </div>
-    {% if request.user.chorale_role == 'treasurer' %}
-    <div class="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-900">
-        <p class="font-semibold">Espace Trésorier</p>
-        <p class="text-sm">Accès aux rapports financiers et aux contributions affectées.</p>
-    </div>
-    {% elif request.user.chorale_role == 'secretary' %}
-    <div class="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-blue-900">
-        <p class="font-semibold">Espace Secrétaire</p>
-        <p class="text-sm">Accès aux documents, convocations et gestion des communications internes.</p>
-    </div>
-    {% elif request.user.chorale_role == 'censor' %}
-    <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
-        <p class="font-semibold">Espace Censeur</p>
-        <p class="text-sm">Accès aux rapports de présence et aux notes de suivi disciplinaire.</p>
-    </div>
-    {% else %}
-    <div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-slate-900">
-        <p class="font-semibold">Tableau de bord membre</p>
-        <p class="text-sm">Votre espace personnel de chorale. Les options spécifiques seront bientôt disponibles.</p>
-    </div>
-    {% endif %}
     <!-- Stats Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-2 bg-primary/10 rounded-lg">
                     <span class="material-symbols-outlined text-primary">groups</span>
@@ -44,7 +32,7 @@
             <p class="text-[#4c669a] text-sm font-medium">Total Membres</p>
             <p class="text-2xl font-bold mt-1">{{ total_members }} Actif(s)</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-2 bg-amber-100 rounded-lg">
                     <span class="material-symbols-outlined text-amber-600">calendar_today</span>
@@ -54,7 +42,7 @@
             <p class="text-[#4c669a] text-sm font-medium">Last Meeting Date</p>
             <p class="text-2xl font-bold mt-1">{{ last_meeting_date }}</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-2 bg-emerald-100 rounded-lg">
                 <span class="material-symbols-outlined text-emerald-600">payments</span>
@@ -64,7 +52,7 @@
             <p class="text-[#4c669a] text-sm font-medium">Current Balance</p>
             <p class="text-2xl font-bold mt-1">xaf {{ current_balance|floatformat:2 }}</p>
         </div>
-        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm">
+        <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-2 bg-rose-100 rounded-lg">
                     <span class="material-symbols-outlined text-rose-600">priority_high</span>
@@ -81,101 +69,76 @@
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-[#e7ebf3] dark:border-gray-800 flex justify-between items-center">
                     <h3 class="font-bold">Activités récentes</h3>
-                    <button class="text-primary text-sm font-bold hover:underline">voir plus</button>
+                    <button class="text-primary text-sm font-bold hover:underline active:scale-95 transition-all duration-150">voir plus</button>
                 </div>
                 <div class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
-
-                    {% for event in recent_activities %}
-                        {% if event.event_type == "payment" %}
+                    {% if recent_activities %}
+                        {% for event in recent_activities %}
                             <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-                                <div class="size-10 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 shrink-0">
-                                    <span class="material-symbols-outlined">payment</span>
+                                <div class="size-10 flex items-center justify-center rounded-lg {{ event.event_type|activity_icon_color }} shrink-0">
+                                    <span class="material-symbols-outlined">{{ event.event_type|activity_icon }}</span>
                                 </div>
                                 <div class="flex-1">
-                                    <p class="text-sm font-semibold">{{ event.description }}</p>
-                                <p class="text-xs text-[#4c669a]">Added to General Fund • xaf {{ event.amount|floatformat:2 }}</p>
+                                    <p class="text-sm font-semibold">{{ event.short_description|default:event.description }}</p>
+                                    {% if event.event_type == 'payment' and event.amount %}
+                                        <p class="text-xs text-[#4c669a]">Added to General Fund • xaf {{ event.amount|floatformat:2 }}</p>
+                                    {% else %}
+                                        <p class="text-xs text-[#4c669a]">{{ event.description }}</p>
+                                    {% endif %}
                                 </div>
-                                <div class="text-xs text-[#4c669a]"> {{ event.date }} </div>
+                                <div class="text-xs text-[#4c669a]">
+                                    {% if event.timestamp %}
+                                        {{ event.timestamp|date:'M d, Y' }}
+                                    {% else %}
+                                        {{ event.date }}
+                                    {% endif %}
+                                </div>
                             </div>
-                        {% else %}
-                            <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-                                <div class="size-10 flex items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 shrink-0">
-                                    <span class="material-symbols-outlined"> {{event.event_type}} </span>
-                                </div>
-                                <div class="flex-1">
-                                    <p class="text-sm font-semibold">{{ event.short_description }}</p>
-                                    <p class="text-xs text-[#4c669a]"> {{ event.description}} </p>
-                                </div>
-                                <div class="text-xs text-[#4c669a]"> {{ event.date }} </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="px-6 py-8 text-center text-sm text-slate-500">
+                            Aucune activité récente enregistrée.
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         <!-- Side Widgets -->
         <div class="flex flex-col gap-6">
-            <!-- Calendar Preview -->
+            <!-- Upcoming Practices -->
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-6">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="font-bold">Upcoming Practices</h3>
                     <span class="material-symbols-outlined text-[#4c669a] cursor-pointer">more_horiz</span>
                 </div>
-                <!-- Mini Calendar Visual -->
-                <div class="mb-6">
-                    <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                        <span class="text-[10px] font-bold text-[#4c669a]">M</span>
-                        <span class="text-[10px] font-bold text-[#4c669a]">T</span>
-                        <span class="text-[10px] font-bold text-[#4c669a]">W</span>
-                        <span class="text-[10px] font-bold text-[#4c669a]">T</span>
-                        <span class="text-[10px] font-bold text-[#4c669a]">F</span>
-                        <span class="text-[10px] font-bold text-[#4c669a]">S</span>
-                        <span class="text-[10px] font-bold text-[#4c669a]">S</span>
-                    </div>
-                    <div class="grid grid-cols-7 gap-1 text-center">
-                        <!-- Simplified 30 day grid for visual impact -->
-                        <span class="text-xs py-1.5 text-gray-300">28</span>
-                        <span class="text-xs py-1.5 text-gray-300">29</span>
-                        <span class="text-xs py-1.5 text-gray-300">30</span>
-                        <span class="text-xs py-1.5 font-medium">1</span>
-                        <span class="text-xs py-1.5 font-medium">2</span>
-                        <span class="text-xs py-1.5 font-medium bg-primary/10 text-primary rounded-full">3</span>
-                        <span class="text-xs py-1.5 font-medium">4</span>
-                        <span class="text-xs py-1.5 font-medium">5</span>
-                        <span class="text-xs py-1.5 font-medium">6</span>
-                        <span class="text-xs py-1.5 font-medium">7</span>
-                        <span class="text-xs py-1.5 font-medium">8</span>
-                        <span class="text-xs py-1.5 font-medium">9</span>
-                        <span class="text-xs py-1.5 font-medium bg-primary text-white rounded-full">10</span>
-                        <span class="text-xs py-1.5 font-medium">11</span>
-                    </div>
-                </div>
                 <div class="space-y-4">
-                    <div class="flex gap-4 items-start border-l-2 border-primary pl-3 py-1">
-                        <div>
-                            <p class="text-sm font-bold">Main Rehearsal</p>
-                            <p class="text-xs text-[#4c669a]">Saturday, Nov 10 @ 5:00 PM</p>
+                    {% if upcoming_practices %}
+                        {% for practice in upcoming_practices %}
+                            <div class="flex gap-4 items-start border-l-2 border-primary pl-3 py-3">
+                                <div>
+                                    <p class="text-sm font-bold">{{ practice.title }}</p>
+                                    <p class="text-xs text-[#4c669a]">{{ practice.date|date:'D, M j @ H:i' }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-sm text-slate-500">
+                            Aucun événement de pratique à venir pour le moment.
                         </div>
-                    </div>
-                    <div class="flex gap-4 items-start border-l-2 border-amber-400 pl-3 py-1">
-                        <div>
-                            <p class="text-sm font-bold">Vocal Warmups</p>
-                            <p class="text-xs text-[#4c669a]">Sunday, Nov 11 @ 8:15 AM</p>
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
             <!-- Quick Links -->
             <div class="bg-primary/5 rounded-xl border border-primary/20 p-6">
                 <h4 class="text-sm font-bold text-primary mb-4">Quick Tasks</h4>
                 <div class="flex flex-col gap-3">
-                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-blue-700">
+                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 active:scale-95 transition-all duration-150">
                         <span class="material-symbols-outlined text-sm">download</span> Export attendance log
                     </button>
-                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-blue-700">
+                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 active:scale-95 transition-all duration-150">
                         <span class="material-symbols-outlined text-sm">mail</span> Email all members
                     </button>
-                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-blue-700">
+                    <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 active:scale-95 transition-all duration-150">
                         <span class="material-symbols-outlined text-sm">print</span> Print choir sheet
                     </button>
                 </div>

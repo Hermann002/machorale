@@ -1,7 +1,8 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from .models import Chorale
+from django.utils import timezone
+from .models import Chorale, ChoraleEvent
 from manage_users.models import CustomUser
 
 class CreateChoraleForm(forms.Form):
@@ -226,6 +227,71 @@ class ConfChoraleForm(forms.Form):
             raise ValidationError(_("Fréquence de réunion invalide."))
         
         return frequency
+
+class ChoraleEventForm(forms.ModelForm):
+    class Meta:
+        model = ChoraleEvent
+        fields = ["title", "description", "location", "date", "event_type", "expenses", "income", "report_file"]
+        widgets = {
+            "title": forms.TextInput(attrs={
+                "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm",
+                "placeholder": _("Titre de l'événement")
+            }),
+            "description": forms.Textarea(attrs={
+                "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm",
+                "rows": 4,
+                "placeholder": _("Description de l'événement")
+            }),
+            "location": forms.TextInput(attrs={
+                "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm",
+                "placeholder": _("Lieu de l'événement")
+            }),
+            "date": forms.DateTimeInput(attrs={
+                "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm",
+                "type": "datetime-local"
+            }),
+            "event_type": forms.Select(attrs={
+                "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm",
+            }),
+            "expenses": forms.NumberInput(attrs={
+                "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm",
+                "placeholder": "0.00",
+                "step": "0.01",
+                "min": "0",
+            }),
+            "income": forms.NumberInput(attrs={
+                "class": "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm",
+                "placeholder": "0.00",
+                "step": "0.01",
+                "min": "0",
+            }),
+            "report_file": forms.ClearableFileInput(attrs={
+                "class": "w-full text-sm text-slate-500"
+            }),
+        }
+
+    def clean_date(self):
+        event_date = self.cleaned_data.get("date")
+        if event_date and event_date < timezone.now():
+            # En mode édition, on tolère la date actuelle de l'événement (déjà passée)
+            # afin de pouvoir modifier d'autres champs (finances, rapport, etc.)
+            # sans être forcé de reprogrammer l'événement.
+            if self.instance.pk and event_date == self.instance.date:
+                return event_date
+            raise ValidationError(_("La date de l'événement ne peut pas être dans le passé."))
+        return event_date
+
+    def clean_report_file(self):
+        report_file = self.cleaned_data.get("report_file")
+        if report_file:
+            if report_file.size > 10 * 1024 * 1024:
+                raise ValidationError(_("Le fichier doit être inférieur à 10MB."))
+
+            valid_extensions = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png']
+            extension = report_file.name.split('.')[-1].lower()
+            if extension not in valid_extensions:
+                raise ValidationError(_("Format de fichier non autorisé. Formats acceptés : PDF, DOC, DOCX, JPG, PNG."))
+        return report_file
 
 class AddMemberForm(forms.Form):
     """Formulaire pour ajouter un membre à la chorale"""

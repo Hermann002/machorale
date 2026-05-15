@@ -1,0 +1,65 @@
+{% extends "../base/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Détails de l'événement{% endblock %}
+
+{% block content %}
+{% include "../components/alert/message.html" %}
+<div class="p-8 max-w-4xl mx-auto">
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <a href="{% url 'events' slug=slug %}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline active:scale-95 transition-all duration-150">
+                <span class="material-symbols-outlined">arrow_back</span>Retour au calendrier
+            </a>
+            {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'secretary' %}
+            <a href="{% url 'event_edit' slug=slug event_id=event.id %}"
+               class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 transition-all duration-150">
+                <span class="material-symbols-outlined text-base">edit</span>
+                Modifier
+            </a>
+            {% endif %}
+        </div>
+        <h2 class="mt-4 text-2xl font-bold tracking-tight">{{ event.title }}</h2>
+        <p class="text-[#4c669a] text-sm">{{ event.location }} • {{ event.date|date:'D j M Y @ H:i' }}</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-3xl border border-[#cfd7e7] dark:border-gray-800 p-8 shadow-sm space-y-6">
+        <div>
+            <h3 class="text-lg font-semibold">Description</h3>
+            <p class="mt-3 text-sm text-slate-700 dark:text-slate-200">{{ event.description }}</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="rounded-2xl border border-slate-200 p-4 dark:border-gray-800 bg-slate-50 dark:bg-gray-950">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Type</p>
+                <p class="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{{ event.get_event_type_display }}</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 p-4 dark:border-gray-800 bg-slate-50 dark:bg-gray-950">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Créé par</p>
+                <p class="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{% if event.created_by %}{{ event.created_by.get_full_name|default:event.created_by.username }}{% else %}Système{% endif %}</p>
+            </div>
+        </div>
+        {% if event.expenses or event.income %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% if event.expenses %}
+            <div class="rounded-2xl border border-red-100 dark:border-red-900 p-4 bg-red-50 dark:bg-red-950/20">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Dépenses</p>
+                <p class="mt-2 text-sm font-semibold text-red-700 dark:text-red-400">{{ event.expenses|floatformat:2 }} XAF</p>
+            </div>
+            {% endif %}
+            {% if event.income %}
+            <div class="rounded-2xl border border-green-100 dark:border-green-900 p-4 bg-green-50 dark:bg-green-950/20">
+                <p class="text-xs uppercase tracking-wide text-slate-500">Entrées</p>
+                <p class="mt-2 text-sm font-semibold text-green-700 dark:text-green-400">{{ event.income|floatformat:2 }} XAF</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if event.report_file %}
+        <div class="rounded-2xl border border-slate-200 p-4 dark:border-gray-800 bg-slate-50 dark:bg-gray-950">
+            <p class="text-xs uppercase tracking-wide text-slate-500">Rapport</p>
+            <a href="{{ event.report_file.url }}" class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline">Télécharger le rapport</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

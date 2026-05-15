@@ -4,6 +4,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 import socket
 import logging
+import json
 
 logger = logging.getLogger(__name__) 
 
@@ -54,4 +55,18 @@ def send_link_to_user(self, email, uuidb64, token):
         to=[email]
     )
     d_email.content_subtype = "html"
-    d_email.send(fail_silently=False)
+    # SendGrid réécrit tous les <a href> avec ses URLs de tracking par défaut.
+    # Pour un lien de réinitialisation, l'URL doit arriver intacte — on désactive
+    # le click tracking uniquement pour cet email via le header SMTPAPI.
+    d_email.extra_headers = {
+        'X-SMTPAPI': json.dumps({
+            'filters': {
+                'clicktrack': {'settings': {'enable': 0}}
+            }
+        })
+    }
+    try:
+        d_email.send(fail_silently=False)
+    except (socket.gaierror, socket.timeout, OSError) as exc:
+        logger.warning(f"Network error sending reset email to {email}: {exc}. Retrying...")
+        raise self.retry(exc=exc)
