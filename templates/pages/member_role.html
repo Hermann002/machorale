@@ -1,0 +1,34 @@
+{% extends "../base/base.html" %}
+{% load i18n %}
+
+{% block title %}Modifier le rôle du membre{% endblock %}
+
+{% block content %}
+{% include "../components/alert/message.html" %}
+<div class="p-8 max-w-3xl mx-auto">
+    <div class="mb-8">
+        <h2 class="text-2xl font-bold tracking-tight">Modifier le rôle de {{ member.get_full_name }}</h2>
+        <p class="text-slate-500 text-sm">Attribuez un rôle de chorale à ce membre.</p>
+    </div>
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 shadow-sm">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{{ form.chorale_role.label }}</label>
+                {{ form.chorale_role }}
+                {% if form.chorale_role.errors %}
+                <p class="text-sm text-rose-600 mt-2">{{ form.chorale_role.errors.as_text }}</p>
+                {% endif %}
+            </div>
+            <div class="flex gap-4 justify-end">
+                <a href="{% url 'members' slug=slug %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 px-6 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    Retour
+                </a>
+                <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white hover:bg-primary/90 transition">
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

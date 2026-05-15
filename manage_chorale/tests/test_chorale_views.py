@@ -70,4 +70,27 @@ def test_create_chorale_view_post_success(client, verified_user):
     assert response.status_code == 302
     assert Chorale.objects.filter(name="Ma Chorale").exists()
     assert chorale.city == "Lyon"
-    assert chorale.country == "France" 
+    assert chorale.country == "France"
+
+# @pytest.mark.django_db
+# def test_customuser_has_default_chorale_role():
+#     user = baker.make(CustomUser, username='roler_test')
+#     assert user.chorale_role == CustomUser.CHORALE_ROLE_MEMBER
+
+# @pytest.mark.django_db
+# def test_update_member_role_view_updates_role(client, verified_user):
+#     chorale = baker.make(Chorale, admin=verified_user)
+#     member = baker.make(CustomUser, username='member1', email='member1@example.com', chorale_role=CustomUser.CHORALE_ROLE_MEMBER)
+#     chorale.members.add(member)
+#     client.force_login(verified_user)
+
+#     response = client.post(
+#         reverse('member_role_edit', kwargs={'slug': chorale.slug, 'user_id': member.id}),
+#         {'chorale_role': CustomUser.CHORALE_ROLE_TREASURER},
+#     )
+
+#     member.refresh_from_db()
+#     assert member.chorale_role == CustomUser.CHORALE_ROLE_TREASURER
+#     assert response.status_code == 302
+#     assert response.url == reverse('members', kwargs={'slug': chorale.slug})
+ 

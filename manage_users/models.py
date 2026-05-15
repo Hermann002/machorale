@@ -63,13 +63,26 @@ class Profile(models.Model):
 class CustomUser(AbstractUser):
     ROLE_MEMBER = 'member'
     ROLE_SUPERADMIN_CHORALE = 'super_admin_chorale'
-    
+
     ROLE_CHOICES = [
         (ROLE_MEMBER, 'Membre'),
         (ROLE_SUPERADMIN_CHORALE, 'Super admin Chorale'),
     ]
+
+    CHORALE_ROLE_MEMBER = 'member'
+    CHORALE_ROLE_SECRETARY = 'secretary'
+    CHORALE_ROLE_TREASURER = 'treasurer'
+    CHORALE_ROLE_CENSOR = 'censor'
+
+    CHORALE_ROLE_CHOICES = [
+        (CHORALE_ROLE_MEMBER, 'Membre'),
+        (CHORALE_ROLE_SECRETARY, 'Secrétaire'),
+        (CHORALE_ROLE_TREASURER, 'Trésorier'),
+        (CHORALE_ROLE_CENSOR, 'Censeur'),
+    ]
     
     role = models.CharField(max_length=50, choices=ROLE_CHOICES, default=ROLE_MEMBER)
+    chorale_role = models.CharField(max_length=20, choices=CHORALE_ROLE_CHOICES, default=CHORALE_ROLE_MEMBER)
     is_verify = models.BooleanField(default=False)
 
     def __str__(self):

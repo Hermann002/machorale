@@ -69,19 +69,29 @@ class LoginView(TemplateView):
             user = form.cleaned_data.get("user")
             if user is not None:
                 login(request, user)
-                slug = None
-                try:
-                    slug = user.managed_group.slug
-                except ObjectDoesNotExist:
-                    first_chorale = user.chorales.only('slug').first()
-                    if first_chorale:
-                        slug = first_chorale.slug
-
-                if slug:
+                
+                # Si l'utilisateur est admin de chorale (role == ROLE_SUPERADMIN_CHORALE)
+                if user.role == CustomUser.ROLE_SUPERADMIN_CHORALE:
+                    try:
+                        # Vérifier s'il a déjà une chorale
+                        slug = user.managed_group.slug
+                        cache.set("slug", slug)
+                        cache.set("user_id", user.id)
+                        return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
+                    except ObjectDoesNotExist:
+                        # Pas de chorale créée, le rediriger vers la création
+                        return HttpResponseRedirect(reverse("create_chorale"))
+                
+                # Sinon, c'est un membre/secrétaire/censeur/trésorier
+                first_chorale = user.chorales.only('slug').first()
+                if first_chorale:
+                    slug = first_chorale.slug
                     cache.set("slug", slug)
                     cache.set("user_id", user.id)
                     return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
-                return HttpResponseRedirect(reverse("create_chorale"))
+                
+                # Pas de chorale trouvée (cas très rare)
+                return HttpResponseRedirect(reverse("home"))
             messages.error(request, "Invalid credentials. Please try again.")
         else:
             messages.error(request, "Invalid username or password.")

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'manage_users',
     'manage_chorale',
+    'notifications',
     'landing',
     'formtools',
     'channels',
@@ -71,6 +72,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ma_chorale.wsgi.application'
+ASGI_APPLICATION = 'ma_chorale.asgi.application'
 
 
 # Database

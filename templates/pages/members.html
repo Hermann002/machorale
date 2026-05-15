@@ -44,6 +44,7 @@
                     <thead>
                     <tr class="bg-slate-50 dark:bg-slate-900/50 border-bottom border-slate-200 dark:border-slate-800">
                     <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Member Name</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Rôle</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Commission</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
@@ -62,6 +63,11 @@
                     </div>
                     </td>
                     <td class="px-6 py-5">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 ring-1 ring-inset ring-slate-200 dark:ring-slate-700">
+                            {{ member.get_chorale_role_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-5">
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 ring-1 ring-inset ring-blue-600/10">
                                                                 Vocal
                                                             </span>
@@ -74,9 +80,11 @@
                     </td>
                     <td class="px-6 py-5 text-right">
                     <div class="flex items-center justify-end gap-2">
-                    <button class="p-2 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg">
+                    {% if request.user.role == 'super_admin_chorale' %}
+                    <a href="{% url 'member_role_edit' slug=slug user_id=member.id %}" class="p-2 text-slate-400 hover:text-primary transition-colors hover:bg-primary/5 rounded-lg">
                     <span class="material-symbols-outlined text-lg">edit</span>
-                    </button>
+                    </a>
+                    {% endif %}
                     <button class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
                     <span class="material-symbols-outlined text-lg">visibility</span>
                     </button>

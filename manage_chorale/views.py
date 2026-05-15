@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView, ListView
-from .forms import CreateChoraleForm, AddMemberForm, ConfChoraleForm
+from .forms import CreateChoraleForm, AddMemberForm, ConfChoraleForm, MemberRoleForm
 from django.contrib import messages
 from django.urls import reverse
 from django.http import HttpResponseRedirect
@@ -169,6 +169,41 @@ class ListMembersView(ChoraleRequireMixin, ListView):
         context["slug"] = self.chorale.slug
         return context
 
+class UpdateMemberRoleView(ChoraleRequireMixin, TemplateView):
+    template_name = "pages/member_role.html"
+    form_class = MemberRoleForm
+
+    def dispatch(self, request, *args, **kwargs):
+        # Seul l'admin peut modifier les rôles des membres
+        if request.user.role != CustomUser.ROLE_SUPERADMIN_CHORALE:
+            messages.error(request, "Vous n'avez pas la permission de modifier les rôles.")
+            return redirect(reverse('home'))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, slug, user_id, *args, **kwargs):
+        member = get_object_or_404(CustomUser, id=user_id, chorales=self.chorale)
+        form = self.form_class(instance=member)
+        return render(request, self.template_name, {
+            "form": form,
+            "member": member,
+            "slug": self.chorale.slug,
+        })
+
+    def post(self, request, slug, user_id, *args, **kwargs):
+        member = get_object_or_404(CustomUser, id=user_id, chorales=self.chorale)
+        form = self.form_class(request.POST, instance=member)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Le rôle de {member.get_full_name()} a bien été mis à jour.")
+            return redirect(reverse('members', kwargs={"slug": self.chorale.slug}))
+
+        return render(request, self.template_name, {
+            "form": form,
+            "member": member,
+            "slug": self.chorale.slug,
+        })
+
+
 class ContributionView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/contributions.html"
 
@@ -179,20 +214,44 @@ class MemberPopupView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/member_popup.html"
     form_class = AddMemberForm
 
+    def get_role_choices(self, request):
+        """Retourne les choix de rôle selon le rôle de l'utilisateur"""
+        if request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE:
+            # Admin : tous les rôles disponibles
+            return CustomUser.CHORALE_ROLE_CHOICES
+        else:
+            # Non-admin (secrétaire, censeur, trésorier) : seulement "member"
+            return [
+                (CustomUser.CHORALE_ROLE_MEMBER, 'Membre')
+            ]
 
-    def get(self, request, slug,*args, **kwargs):
-        return render(request, self.template_name, {"form": self.form_class(), "slug": slug})
+    def get_form(self, request):
+        """Crée le formulaire et adapte les choix selon le rôle"""
+        form = self.form_class(request.POST) if request.method == 'POST' else self.form_class()
+        form.fields['role'].choices = self.get_role_choices(request)
+        return form
+
+    def get(self, request, slug, *args, **kwargs):
+        form = self.get_form(request)
+        return render(request, self.template_name, {"form": form, "slug": self.chorale.slug})
     
     def post(self, request, slug, *args, **kwargs):
-        form = AddMemberForm(request.POST)
+        form = self.get_form(request)
         chorale = self.chorale
 
         if form.is_valid():
+            # Validation supplémentaire : vérifier que le rôle choisi est autorisé pour l'utilisateur
+            role = form['role'].value()
+            allowed_roles = [choice[0] for choice in self.get_role_choices(request)]
+            
+            if role not in allowed_roles:
+                messages.error(request, "Vous n'êtes pas autorisé à attribuer ce rôle.")
+                return render(request, self.template_name, {"form": form, "slug": chorale.slug})
+            
             email = form['email'].value()
             first_name = form['first_name'].value()
             last_name = form['last_name'].value()
             contact_phone = form['contact_phone'].value()
-            role = form['role'].value()
             username = email.split('@')[0].lower()
             try:
                 member = CustomUser.objects.create_user(
@@ -201,16 +260,16 @@ class MemberPopupView(ChoraleRequireMixin, TemplateView):
                     password="defaultpassword123",
                     first_name=first_name,
                     last_name=last_name,
-                    role=role,
+                    chorale_role=role,
                 )
                 Profile.objects.create(user=member, _contact=contact_phone)
                 chorale.members.add(member)
 
                 messages.success(request, f"{member.get_full_name()} a été ajouté en tant que {member.get_role_display()} avec succès !")
-                return redirect(reverse('members', kwargs={"slug": slug}))
+                return redirect(reverse('members', kwargs={"slug": chorale.slug}))
             except Exception as e:
                 messages.error(request, "Une erreur est survenue lors de l'ajout du membre.")
-                return redirect(reverse('members', kwargs={"slug": slug}))
+                return redirect(reverse('members', kwargs={"slug": chorale.slug}))
 
 
 @login_required

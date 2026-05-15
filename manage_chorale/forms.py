@@ -269,7 +269,7 @@ class AddMemberForm(forms.Form):
     role = forms.ChoiceField(
         required=True,
         label=_("Rôle dans la chorale"),
-        choices=CustomUser.ROLE_CHOICES,
+        choices=CustomUser.CHORALE_ROLE_CHOICES,
         widget=forms.Select(attrs={
             "class": "w-full appearance-none px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium text-on-surface cursor-pointer",
         }),
@@ -277,7 +277,7 @@ class AddMemberForm(forms.Form):
 
     def clean_email(self):
         """Valide l'email de contact"""
-        email = self.cleaned_data.get("semail")
+        email = self.cleaned_data.get("email")
         
         if email:
             email = email.strip()
@@ -287,6 +287,23 @@ class AddMemberForm(forms.Form):
                 raise ValidationError(_("L'adresse email est trop longue."))
         
         return email
+
+
+class MemberRoleForm(forms.ModelForm):
+    """Formulaire pour mettre à jour le rôle du membre dans la chorale"""
+
+    class Meta:
+        model = CustomUser
+        fields = ['chorale_role']
+        labels = {
+            'chorale_role': _('Rôle dans la chorale'),
+        }
+        widgets = {
+            'chorale_role': forms.Select(attrs={
+                "class": "w-full appearance-none px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium text-on-surface cursor-pointer",
+            }),
+        }
+
     
     def clean_contact_phone(self):
         """Valide et nettoie le numéro de téléphone"""
