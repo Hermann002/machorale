@@ -13,11 +13,14 @@ def test_login_view_get(client):
 
 @pytest.mark.django_db
 def test_login_view_post_success(client):
-    user = baker.make(CustomUser, username="testuser", is_verify=True, role=CustomUser.ROLE_SUPERADMIN_CHORALE)
+    from manage_chorale.models import Membership
+
+    user = baker.make(CustomUser, username="testuser", is_verify=True)
     user.set_password("secret")
     user.save()
 
-    chorale = baker.make("manage_chorale.Chorale", admin=user, slug="my-chorale")
+    chorale = baker.make("manage_chorale.Chorale", slug="my-chorale", created_by=user)
+    Membership.objects.create(user=user, chorale=chorale, role=Membership.ROLE_ADMIN, is_admin=True)
 
     response = client.post(reverse("login"), {
         "username":"testuser",

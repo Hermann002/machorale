@@ -18,18 +18,15 @@ from django.core.exceptions import ObjectDoesNotExist
 def home(request):
     slug = None
     if request.user.is_authenticated:
-        user = request.user
-        cache_key = f"user_slug_{user.id}"
-        slug = cache.get(cache_key)
-        if slug is None:
-            try:
-                slug = user.managed_group.slug
-            except ObjectDoesNotExist:
-                first_chorale = user.chorales.only('slug').first()
-                if first_chorale:
-                    slug = first_chorale.slug
-            if slug:
-                cache.set(cache_key, slug, timeout=3600)
+        active = request.session.get('active_chorale_slug')
+        membership_qs = request.user.memberships.select_related('chorale').only('chorale__slug')
+        if active and membership_qs.filter(chorale__slug=active).exists():
+            slug = active
+        else:
+            first = membership_qs.first()
+            if first:
+                slug = first.chorale.slug
+                request.session['active_chorale_slug'] = slug
     return render(request, 'landing/pages/home.html', {"slug": slug})
 
 class DemoView(View):
@@ -59,7 +56,6 @@ class DemoView(View):
             email=f"demo_{suffix}@demo.internal",
             first_name="Admin",
             last_name="Démo",
-            role=CustomUser.ROLE_SUPERADMIN_CHORALE,
             is_verify=True,
         )
         demo_user.set_unusable_password()
@@ -68,7 +64,7 @@ class DemoView(View):
         return demo_user
 
     def _seed_demo_chorale(self, admin):
-        from manage_chorale.models import Chorale, ChoraleEvent, Event
+        from manage_chorale.models import Chorale, ChoraleEvent, Event, Membership
         from manage_users.models import Profile
 
         chorale = Chorale.objects.create(
@@ -80,37 +76,39 @@ class DemoView(View):
             contact_email="contact@chorale-demo.cm",
             contact_phone="+237 690 000 000",
             type_c="chorale",
-            admin=admin,
+            created_by=admin,
             slogan="Louer ensemble, grandir ensemble",
             meeting_frequency="weekly",
             description="Chorale de démonstration pour découvrir l'application.",
         )
 
+        Membership.objects.create(
+            user=admin, chorale=chorale,
+            role=Membership.ROLE_ADMIN, is_admin=True,
+        )
+
         member_data = [
-            ("Sophie", "Mballa", CustomUser.CHORALE_ROLE_SECRETARY),
-            ("Paul", "Nkeng", CustomUser.CHORALE_ROLE_TREASURER),
-            ("Marie", "Fotso", CustomUser.CHORALE_ROLE_MEMBER),
-            ("Jean", "Ateba", CustomUser.CHORALE_ROLE_MEMBER),
-            ("Claire", "Biya", CustomUser.CHORALE_ROLE_CENSOR),
+            ("Sophie", "Mballa", Membership.ROLE_SECRETARY),
+            ("Paul", "Nkeng", Membership.ROLE_TREASURER),
+            ("Marie", "Fotso", Membership.ROLE_MEMBER),
+            ("Jean", "Ateba", Membership.ROLE_MEMBER),
+            ("Claire", "Biya", Membership.ROLE_CENSOR),
         ]
-        members = []
-        for first_name, last_name, chorale_role in member_data:
+        for first_name, last_name, role in member_data:
             suffix = uuid4().hex[:6]
             m = CustomUser.objects.create(
                 username=f"demo_m_{suffix}",
                 email=f"demo_m_{suffix}@demo.internal",
                 first_name=first_name,
                 last_name=last_name,
-                role=CustomUser.ROLE_MEMBER,
-                chorale_role=chorale_role,
                 is_verify=True,
             )
             m.set_unusable_password()
             m.save()
             Profile.objects.create(user=m)
-            members.append(m)
-
-        chorale.members.set(members)
+            Membership.objects.create(
+                user=m, chorale=chorale, role=role, is_admin=False,
+            )
 
         now = timezone.now()
         ChoraleEvent.objects.bulk_create([

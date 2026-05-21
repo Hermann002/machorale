@@ -2,7 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from .models import Chorale, ChoraleEvent, Contribution, MemberContribution, CashFlow, Absence, Sanction
+from .models import Chorale, ChoraleEvent, Contribution, MemberContribution, CashFlow, Absence, Sanction, Membership
 from manage_users.models import CustomUser
 
 # Classe Tailwind partagée pour les inputs/selects des forms du tableau de bord.
@@ -364,16 +364,16 @@ class AddMemberForm(forms.Form):
 
 
 class MemberRoleForm(forms.ModelForm):
-    """Formulaire pour mettre à jour le rôle du membre dans la chorale"""
+    """Met à jour le rôle (per-chorale) via Membership. instance=Membership(user,chorale)."""
 
     class Meta:
-        model = CustomUser
-        fields = ['chorale_role']
+        model = Membership
+        fields = ['role']
         labels = {
-            'chorale_role': _('Rôle dans la chorale'),
+            'role': _('Rôle dans la chorale'),
         }
         widgets = {
-            'chorale_role': forms.Select(attrs={
+            'role': forms.Select(attrs={
                 "class": "w-full appearance-none px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium text-on-surface cursor-pointer",
             }),
         }

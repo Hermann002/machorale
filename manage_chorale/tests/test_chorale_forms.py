@@ -16,7 +16,7 @@ def user():
 
 @pytest.fixture
 def chorale(user) -> Chorale:
-    chorale = baker.make(Chorale, name="salut", slug="salut", description="test chorale", established_date=datetime(2020, 1, 1, tzinfo=timezone.utc), country="France", city="Paris", address="123 rue de Paris", contact_email="test@example.com", contact_phone="0123456789", type_c="chorale", admin=user)
+    chorale = baker.make(Chorale, name="salut", slug="salut", description="test chorale", established_date=datetime(2020, 1, 1, tzinfo=timezone.utc), country="France", city="Paris", address="123 rue de Paris", contact_email="test@example.com", contact_phone="0123456789", type_c="chorale", created_by=user)
     chorale.save()
     return chorale
 

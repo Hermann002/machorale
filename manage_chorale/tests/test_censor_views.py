@@ -18,7 +18,7 @@ from model_bakery import baker
 
 from manage_users.models import CustomUser
 from manage_chorale.models import (
-    Chorale, ChoraleEvent, Absence, Sanction, Event,
+    Chorale, ChoraleEvent, Absence, Sanction, Event, Membership,
 )
 from manage_chorale.services import SanctionService
 
@@ -28,35 +28,27 @@ from manage_chorale.services import SanctionService
 
 @pytest.fixture
 def admin_user(db):
-    return baker.make(CustomUser, role=CustomUser.ROLE_SUPERADMIN_CHORALE, is_verify=True)
+    return baker.make(CustomUser, is_verify=True)
 
 
 @pytest.fixture
 def chorale(admin_user):
-    return baker.make(Chorale, admin=admin_user)
+    c = baker.make(Chorale, created_by=admin_user)
+    Membership.objects.create(user=admin_user, chorale=c, role=Membership.ROLE_ADMIN, is_admin=True)
+    return c
 
 
 @pytest.fixture
 def censor(chorale):
-    user = baker.make(
-        CustomUser,
-        role=CustomUser.ROLE_MEMBER,
-        chorale_role=CustomUser.CHORALE_ROLE_CENSOR,
-        is_verify=True,
-    )
-    chorale.members.add(user)
+    user = baker.make(CustomUser, is_verify=True)
+    Membership.objects.create(user=user, chorale=chorale, role=Membership.ROLE_CENSOR)
     return user
 
 
 @pytest.fixture
 def plain_member(chorale):
-    user = baker.make(
-        CustomUser,
-        role=CustomUser.ROLE_MEMBER,
-        chorale_role=CustomUser.CHORALE_ROLE_MEMBER,
-        is_verify=True,
-    )
-    chorale.members.add(user)
+    user = baker.make(CustomUser, is_verify=True)
+    Membership.objects.create(user=user, chorale=chorale, role=Membership.ROLE_MEMBER)
     return user
 
 
@@ -110,7 +102,7 @@ def test_plain_member_cannot_access_sanctions(client, chorale, plain_member):
 @pytest.mark.django_db
 def test_bulk_absence_creates_records(client, chorale, censor, plain_member, practice):
     other = baker.make(CustomUser, is_verify=True)
-    chorale.members.add(other)
+    Membership.objects.create(user=other, chorale=chorale, role=Membership.ROLE_MEMBER)
     client.force_login(censor)
     response = client.post(
         reverse("absence_bulk_create", kwargs={"slug": chorale.slug}),

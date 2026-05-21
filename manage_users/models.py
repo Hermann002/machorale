@@ -55,6 +55,9 @@ class Profile(models.Model):
         return dict(self.PROFESSION_CHOICES).get(self.profession_c, '')
 
 class CustomUser(AbstractUser):
+    # Constantes héritées (les champs `role` et `chorale_role` sont supprimés ;
+    # les valeurs vivent désormais sur manage_chorale.Membership). Gardées en
+    # alias pour ne pas casser les imports historiques le temps du refactor.
     ROLE_MEMBER = 'member'
     ROLE_SUPERADMIN_CHORALE = 'super_admin_chorale'
 
@@ -74,13 +77,11 @@ class CustomUser(AbstractUser):
         (CHORALE_ROLE_TREASURER, _('Treasurer')),
         (CHORALE_ROLE_CENSOR, _('Censor')),
     ]
-    
-    role = models.CharField(max_length=50, choices=ROLE_CHOICES, default=ROLE_MEMBER)
-    chorale_role = models.CharField(max_length=20, choices=CHORALE_ROLE_CHOICES, default=CHORALE_ROLE_MEMBER)
+
     is_verify = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.username} ({self.get_role_display()})"
+        return self.username
     
     def save(self, *args, **kwargs):
         if self.username:

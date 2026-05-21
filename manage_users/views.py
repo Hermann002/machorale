@@ -70,27 +70,21 @@ class LoginView(TemplateView):
             user = form.cleaned_data.get("user")
             if user is not None:
                 login(request, user)
-                
-                # Si l'utilisateur est admin de chorale (role == ROLE_SUPERADMIN_CHORALE)
-                if user.role == CustomUser.ROLE_SUPERADMIN_CHORALE:
-                    try:
-                        # Vérifier s'il a déjà une chorale
-                        slug = user.managed_group.slug
-                        cache.set(f"user_slug_{user.id}", slug)
-                        return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
-                    except ObjectDoesNotExist:
-                        # Pas de chorale créée, le rediriger vers la création
-                        return HttpResponseRedirect(reverse("create_chorale"))
 
-                # Sinon, c'est un membre/secrétaire/censeur/trésorier
-                first_chorale = user.chorales.only('slug').first()
-                if first_chorale:
-                    slug = first_chorale.slug
+                # Membership la plus pertinente : admin d'abord, sinon la plus ancienne
+                membership = (
+                    user.memberships
+                    .select_related('chorale')
+                    .order_by('-is_admin', 'joined_at')
+                    .first()
+                )
+                if membership is not None:
+                    slug = membership.chorale.slug
                     cache.set(f"user_slug_{user.id}", slug)
                     return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
-                
-                # Pas de chorale trouvée (cas très rare)
-                return HttpResponseRedirect(reverse("home"))
+
+                # Aucun lien à une chorale : on propose la création.
+                return HttpResponseRedirect(reverse("create_chorale"))
             messages.error(request, _("Invalid credentials. Please try again."))
         else:
             messages.error(request, _("Invalid username or password."))

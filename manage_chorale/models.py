@@ -26,8 +26,19 @@ class Chorale(models.Model):
     )
 
     type_c = models.CharField(max_length=20, choices=TYPE_CHOICES, default='chorale')
-    admin = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="managed_group")
-    members = models.ManyToManyField(CustomUser, related_name="chorales", blank=True)
+    created_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_chorales",
+    )
+    members = models.ManyToManyField(
+        CustomUser,
+        through="Membership",
+        related_name="chorales",
+        blank=True,
+    )
     logo = models.ImageField(upload_to='chorale_logos/', blank=True, null=True)
     slogan = models.CharField(max_length=255, blank=True)
     meeting_frequency = models.CharField(max_length=20, blank=True, null=True)
@@ -35,7 +46,7 @@ class Chorale(models.Model):
     slug = models.SlugField(max_length=100, blank=True, null=True)
 
     def __str__(self):
-        return f"{self.name}{self.admin.username}"
+        return self.name
     
     def generate_unique_slug(self):
         base_slug = slugify(self.name)
@@ -50,6 +61,50 @@ class Chorale(models.Model):
         if not self.slug:
             self.slug = self.generate_unique_slug()
         super().save(*args, **kwargs)
+
+
+class Membership(models.Model):
+    """Lien (user, chorale, rôle). Source de vérité pour l'appartenance et le rôle par chorale."""
+
+    ROLE_MEMBER = 'member'
+    ROLE_SECRETARY = 'secretary'
+    ROLE_TREASURER = 'treasurer'
+    ROLE_CENSOR = 'censor'
+    ROLE_ADMIN = 'admin'
+
+    ROLE_CHOICES = [
+        (ROLE_MEMBER, _('Member')),
+        (ROLE_SECRETARY, _('Secretary')),
+        (ROLE_TREASURER, _('Treasurer')),
+        (ROLE_CENSOR, _('Censor')),
+        (ROLE_ADMIN, _('Admin')),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="memberships",
+    )
+    chorale = models.ForeignKey(
+        Chorale,
+        on_delete=models.CASCADE,
+        related_name="memberships",
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_MEMBER)
+    is_admin = models.BooleanField(default=False)
+    joined_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'chorale'], name='uniq_user_chorale'),
+        ]
+        indexes = [
+            models.Index(fields=['chorale', 'is_admin']),
+            models.Index(fields=['user', 'chorale']),
+        ]
+
+    def __str__(self):
+        return f"{self.user} @ {self.chorale} ({self.get_role_display()})"
 
 
 class Contribution(models.Model):

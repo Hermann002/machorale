@@ -12,7 +12,7 @@ from django.urls import reverse
 from model_bakery import baker
 
 from manage_users.models import CustomUser
-from manage_chorale.models import Chorale, Contribution, MemberContribution, CashFlow, Event
+from manage_chorale.models import Chorale, Contribution, MemberContribution, CashFlow, Event, Membership
 from manage_chorale.services import ContributionService
 
 
@@ -21,35 +21,27 @@ from manage_chorale.services import ContributionService
 
 @pytest.fixture
 def admin_user(db):
-    return baker.make(CustomUser, role=CustomUser.ROLE_SUPERADMIN_CHORALE, is_verify=True)
+    return baker.make(CustomUser, is_verify=True)
 
 
 @pytest.fixture
 def chorale(admin_user):
-    return baker.make(Chorale, admin=admin_user)
+    c = baker.make(Chorale, created_by=admin_user)
+    Membership.objects.create(user=admin_user, chorale=c, role=Membership.ROLE_ADMIN, is_admin=True)
+    return c
 
 
 @pytest.fixture
 def treasurer(chorale):
-    user = baker.make(
-        CustomUser,
-        role=CustomUser.ROLE_MEMBER,
-        chorale_role=CustomUser.CHORALE_ROLE_TREASURER,
-        is_verify=True,
-    )
-    chorale.members.add(user)
+    user = baker.make(CustomUser, is_verify=True)
+    Membership.objects.create(user=user, chorale=chorale, role=Membership.ROLE_TREASURER)
     return user
 
 
 @pytest.fixture
 def plain_member(chorale):
-    user = baker.make(
-        CustomUser,
-        role=CustomUser.ROLE_MEMBER,
-        chorale_role=CustomUser.CHORALE_ROLE_MEMBER,
-        is_verify=True,
-    )
-    chorale.members.add(user)
+    user = baker.make(CustomUser, is_verify=True)
+    Membership.objects.create(user=user, chorale=chorale, role=Membership.ROLE_MEMBER)
     return user
 
 

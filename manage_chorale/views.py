@@ -15,10 +15,16 @@ from functools import lru_cache
 import calendar
 import json
 import os
-from .models import Chorale, Event as ActivityEvent, ChoraleEvent, Contribution, MemberContribution, CashFlow, Absence, Sanction
+from .models import Chorale, Membership, Event as ActivityEvent, ChoraleEvent, Contribution, MemberContribution, CashFlow, Absence, Sanction
 from manage_users.models import CustomUser, Profile
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .mixins import ChoraleRequireMixin, TreasurerRequiredMixin, CensorRequiredMixin
+from .mixins import (
+    ChoraleRequireMixin,
+    TreasurerRequiredMixin,
+    CensorRequiredMixin,
+    AdminRequiredMixin,
+    SecretaryOrAdminRequiredMixin,
+)
 from .services import get_dashboard_stats, ContributionService, SanctionService
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db.models import Sum, Q
@@ -110,14 +116,15 @@ class CreateChoraleView(SessionWizardView):
             messages.error(request, _("You need to verify your email before creating a chorale."))
             return redirect(reverse('home'))
 
-        try:
-            managed_chorale = request.user.managed_group
-        except ObjectDoesNotExist:
-            managed_chorale = None
-
-        if managed_chorale:
+        admin_membership = (
+            Membership.objects
+            .select_related('chorale')
+            .filter(user=request.user, is_admin=True)
+            .first()
+        )
+        if admin_membership:
             messages.info(request, _("You already manage a chorale. Redirecting to your dashboard."))
-            return redirect(reverse('dashboard', kwargs={"slug": managed_chorale.slug}))
+            return redirect(reverse('dashboard', kwargs={"slug": admin_membership.chorale.slug}))
 
         return super().get(request, *args, **kwargs)
 
@@ -148,17 +155,19 @@ class CreateChoraleView(SessionWizardView):
                 contact_phone=data.get('contact_phone', ''),
                 slogan=data.get('slogan', ''),
                 meeting_frequency=data.get('meeting_frequency', ''),
-                admin=self.request.user,  # L'utilisateur connecté devient admin
+                created_by=user,
             )
-            
-            # Sauvegarder le logo si présent
+
             if data.get('logo'):
                 chorale.logo = data['logo']
-            
+
             chorale.save()
-            chorale.members.add(user)
-            user.role = CustomUser.ROLE_SUPERADMIN_CHORALE
-            user.save()
+            Membership.objects.create(
+                user=user,
+                chorale=chorale,
+                role=Membership.ROLE_ADMIN,
+                is_admin=True,
+            )
 
             messages.success(self.request, _("Your chorale has been created successfully!"))
             return redirect(reverse('dashboard', kwargs={"slug": chorale.slug}))
@@ -191,37 +200,37 @@ class ListMembersView(ChoraleRequireMixin, ListView):
         context["slug"] = self.chorale.slug
         return context
 
-class UpdateMemberRoleView(ChoraleRequireMixin, TemplateView):
+class UpdateMemberRoleView(AdminRequiredMixin, TemplateView):
     template_name = "pages/member_role.html"
     form_class = MemberRoleForm
 
-    def dispatch(self, request, *args, **kwargs):
-        # Seul l'admin peut modifier les rôles des membres
-        if request.user.role != CustomUser.ROLE_SUPERADMIN_CHORALE:
-            messages.error(request, _("You do not have permission to modify roles."))
-            return redirect(reverse('home'))
-        return super().dispatch(request, *args, **kwargs)
+    def _get_target(self, user_id):
+        return get_object_or_404(
+            Membership.objects.select_related('user'),
+            user_id=user_id,
+            chorale=self.chorale,
+        )
 
     def get(self, request, slug, user_id, *args, **kwargs):
-        member = get_object_or_404(CustomUser, id=user_id, chorales=self.chorale)
-        form = self.form_class(instance=member)
+        target = self._get_target(user_id)
+        form = self.form_class(instance=target)
         return render(request, self.template_name, {
             "form": form,
-            "member": member,
+            "member": target.user,
             "slug": self.chorale.slug,
         })
 
     def post(self, request, slug, user_id, *args, **kwargs):
-        member = get_object_or_404(CustomUser, id=user_id, chorales=self.chorale)
-        form = self.form_class(request.POST, instance=member)
+        target = self._get_target(user_id)
+        form = self.form_class(request.POST, instance=target)
         if form.is_valid():
             form.save()
-            messages.success(request, _("The role of %(name)s has been updated.") % {'name': member.get_full_name()})
+            messages.success(request, _("The role of %(name)s has been updated.") % {'name': target.user.get_full_name()})
             return redirect(reverse('members', kwargs={"slug": self.chorale.slug}))
 
         return render(request, self.template_name, {
             "form": form,
-            "member": member,
+            "member": target.user,
             "slug": self.chorale.slug,
         })
 
@@ -280,15 +289,10 @@ class EventListView(ChoraleRequireMixin, TemplateView):
         }
         return render(request, self.template_name, context)
 
-class CreateEventView(ChoraleRequireMixin, TemplateView):
+class CreateEventView(SecretaryOrAdminRequiredMixin, TemplateView):
     template_name = "pages/event_form.html"
     form_class = None
-
-    def dispatch(self, request, *args, **kwargs):
-        if not (request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE or request.user.chorale_role == CustomUser.CHORALE_ROLE_SECRETARY):
-            messages.error(request, _("You do not have permission to create an event."))
-            return redirect(reverse('dashboard', kwargs={"slug": kwargs.get('slug')}))
-        return super().dispatch(request, *args, **kwargs)
+    permission_denied_message = "Accès réservé à l'admin ou au secrétaire de la chorale."
 
     def get(self, request, slug, *args, **kwargs):
         from .forms import ChoraleEventForm
@@ -332,30 +336,17 @@ class EventTableView(ChoraleRequireMixin, TemplateView):
         events = ChoraleEvent.objects.filter(
             chorale=self.chorale
         ).select_related('created_by').order_by('-date')
-        can_create = (
-            request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE
-            or request.user.chorale_role == CustomUser.CHORALE_ROLE_SECRETARY
-        )
+        can_create = self.membership.is_admin or self.membership.role == Membership.ROLE_SECRETARY
         return render(request, self.template_name, {
             'events': events,
             'slug': self.chorale.slug,
             'can_create': can_create,
         })
 
-class EventUpdateView(ChoraleRequireMixin, TemplateView):
+class EventUpdateView(SecretaryOrAdminRequiredMixin, TemplateView):
     template_name = "pages/event_form.html"
-
-    def _can_edit(self, request):
-        return (
-            request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE
-            or request.user.chorale_role == CustomUser.CHORALE_ROLE_SECRETARY
-        )
-
-    def dispatch(self, request, *args, **kwargs):
-        if not self._can_edit(request):
-            messages.error(request, _("You do not have permission to modify an event."))
-            return redirect(reverse('events', kwargs={"slug": kwargs.get('slug')}))
-        return super().dispatch(request, *args, **kwargs)
+    permission_denied_message = "Accès réservé à l'admin ou au secrétaire de la chorale."
+    permission_denied_redirect = 'events'
 
     def get(self, request, slug, event_id, *args, **kwargs):
         from .forms import ChoraleEventForm
@@ -923,60 +914,69 @@ class MemberPopupView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/member_popup.html"
     form_class = AddMemberForm
 
-    def get_role_choices(self, request):
-        """Retourne les choix de rôle selon le rôle de l'utilisateur"""
-        if request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE:
-            # Admin : tous les rôles disponibles
-            return CustomUser.CHORALE_ROLE_CHOICES
-        else:
-            # Non-admin (secrétaire, censeur, trésorier) : seulement "member"
-            return [
-                (CustomUser.CHORALE_ROLE_MEMBER, _('Member'))
-            ]
+    # Choix de rôles présentables (hors 'admin' qui se gère via Membership.is_admin)
+    ASSIGNABLE_ROLE_CHOICES = [
+        (Membership.ROLE_MEMBER, _('Member')),
+        (Membership.ROLE_SECRETARY, _('Secretary')),
+        (Membership.ROLE_TREASURER, _('Treasurer')),
+        (Membership.ROLE_CENSOR, _('Censor')),
+    ]
+
+    def get_role_choices(self):
+        if self.membership.is_admin:
+            return self.ASSIGNABLE_ROLE_CHOICES
+        return [(Membership.ROLE_MEMBER, _('Member'))]
 
     def get_form(self, request):
-        """Crée le formulaire et adapte les choix selon le rôle"""
         form = self.form_class(request.POST) if request.method == 'POST' else self.form_class()
-        form.fields['role'].choices = self.get_role_choices(request)
+        form.fields['role'].choices = self.get_role_choices()
         return form
 
     def get(self, request, slug, *args, **kwargs):
         form = self.get_form(request)
         return render(request, self.template_name, {"form": form, "slug": self.chorale.slug})
-    
+
     def post(self, request, slug, *args, **kwargs):
         form = self.get_form(request)
         chorale = self.chorale
 
         if form.is_valid():
-            # Validation supplémentaire : vérifier que le rôle choisi est autorisé pour l'utilisateur
             role = form['role'].value()
-            allowed_roles = [choice[0] for choice in self.get_role_choices(request)]
-            
+            allowed_roles = [choice[0] for choice in self.get_role_choices()]
+
             if role not in allowed_roles:
                 messages.error(request, _("You are not authorized to assign this role."))
                 return render(request, self.template_name, {"form": form, "slug": chorale.slug})
-            
+
             email = form['email'].value()
             first_name = form['first_name'].value()
             last_name = form['last_name'].value()
             contact_phone = form['contact_phone'].value()
             username = email.split('@')[0].lower()
             try:
-                member = CustomUser.objects.create_user(
-                    username=username,
-                    email=email,
-                    password="defaultpassword123",
-                    first_name=first_name,
-                    last_name=last_name,
-                    chorale_role=role,
-                )
-                Profile.objects.create(user=member, _contact=contact_phone)
-                chorale.members.add(member)
+                with transaction.atomic():
+                    member = CustomUser.objects.create_user(
+                        username=username,
+                        email=email,
+                        password="defaultpassword123",
+                        first_name=first_name,
+                        last_name=last_name,
+                    )
+                    Profile.objects.create(user=member, _contact=contact_phone)
+                    Membership.objects.create(
+                        user=member,
+                        chorale=chorale,
+                        role=role,
+                        is_admin=False,
+                    )
 
-                messages.success(request, _("%(name)s has been added as %(role)s.") % {'name': member.get_full_name(), 'role': member.get_role_display()})
+                role_label = dict(self.ASSIGNABLE_ROLE_CHOICES).get(role, role)
+                messages.success(request, _("%(name)s has been added as %(role)s.") % {
+                    'name': member.get_full_name(),
+                    'role': role_label,
+                })
                 return redirect(reverse('members', kwargs={"slug": chorale.slug}))
-            except Exception as e:
+            except Exception:
                 messages.error(request, _("An error occurred while adding the member."))
                 return redirect(reverse('members', kwargs={"slug": chorale.slug}))
 

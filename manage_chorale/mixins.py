@@ -1,92 +1,108 @@
 from django.contrib import messages
-from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
-from manage_users.models import CustomUser
 
 
 class ChoraleRequireMixin(LoginRequiredMixin):
+    """Résout la chorale (depuis le slug) et l'appartenance courante via Membership.
+
+    Attache ``self.chorale`` et ``self.membership`` pour usage dans la vue.
+    Les sous-classes peuvent surcharger ``_check_role`` pour ajouter un filtre
+    de rôle (exécuté AVANT que ``get``/``post`` ne tourne — pas d'effet de bord
+    parasite).
+    """
+
     chorale_url_kwargs = 'slug'
 
-    def dispatch(self, request, *args, **kwargs):
-        from manage_chorale.models import Chorale
+    def _resolve_membership(self, request, **kwargs):
+        from manage_chorale.models import Membership
 
         slug = kwargs.get(self.chorale_url_kwargs)
-        chorale = None
 
-        # Si l'utilisateur est admin de chorale
-        if request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE:
-            if slug:
-                try:
-                    chorale = Chorale.objects.select_related('admin').get(slug=slug, admin=request.user)
-                except Chorale.DoesNotExist:
-                    messages.error(request, "Cette chorale n'existe pas, Vous devez créer une chorale !")
-                    return redirect(reverse('create_chorale'))
-
-            if chorale is None:
-                messages.info(request, "Vous devez créer une chorale !")
-                return redirect(reverse('create_chorale'))
+        if slug:
+            try:
+                membership = (
+                    Membership.objects
+                    .select_related('chorale')
+                    .get(chorale__slug=slug, user=request.user)
+                )
+            except Membership.DoesNotExist:
+                messages.error(request, "Vous n'êtes pas membre de cette chorale !")
+                return redirect(reverse('home'))
         else:
-            # L'utilisateur n'est pas admin, récupérer la chorale où il est membre
-            if slug:
-                try:
-                    chorale = Chorale.objects.get(slug=slug, members=request.user)
-                except Chorale.DoesNotExist:
-                    messages.error(request, "Vous n'êtes pas membre de cette chorale !")
-                    return redirect(reverse('home'))
-            else:
-                # Pas de slug fourni, prendre la première chorale du membre
-                chorale = request.user.chorales.first()
-                if not chorale:
-                    messages.info(request, "Vous n'êtes membre d'aucune chorale !")
-                    return redirect(reverse('home'))
+            membership = (
+                Membership.objects
+                .select_related('chorale')
+                .filter(user=request.user)
+                .order_by('-is_admin', 'joined_at')
+                .first()
+            )
+            if membership is None:
+                messages.info(request, "Vous n'êtes membre d'aucune chorale !")
+                return redirect(reverse('home'))
 
-        self.chorale = chorale
+        self.membership = membership
+        self.chorale = membership.chorale
+        return None
+
+    def _check_role(self, request):
+        """Hook : retourne une réponse de redirection si l'accès doit être refusé."""
+        return None
+
+    def dispatch(self, request, *args, **kwargs):
+        # LoginRequiredMixin doit s'exécuter en premier (auth check)
+        if not request.user.is_authenticated:
+            return super().dispatch(request, *args, **kwargs)
+
+        deny = self._resolve_membership(request, **kwargs)
+        if deny is not None:
+            return deny
+
+        deny = self._check_role(request)
+        if deny is not None:
+            return deny
+
         return super().dispatch(request, *args, **kwargs)
 
 
 class RoleRequireMixin(ChoraleRequireMixin):
-    """Filtre l'accès en fonction du chorale_role de l'utilisateur.
+    """Filtre l'accès par rôle Membership.
 
-    Pattern: Template Method — on intercale un check entre la résolution de chorale
-    (assurée par le parent) et le dispatch effectif vers la vue.
-
-    Convention: les super_admin_chorale (admins de la chorale) bypassent toujours
-    le filtre — ils peuvent tout faire dans leur chorale.
+    Convention : ``is_admin=True`` bypass toujours le filtre.
     """
 
-    # Sous-classes : liste de chorale_role autorisés
     allowed_chorale_roles: list[str] = []
     permission_denied_message = "Vous n'avez pas la permission d'accéder à cette page."
     permission_denied_redirect = 'dashboard'
 
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-
-        # Si le parent a déjà redirigé (chorale introuvable, etc.), on respecte sans surcharger.
-        # Détection : la chorale n'a pas pu être attachée à self.
-        if not getattr(self, 'chorale', None):
-            return response
-
-        # Admin de chorale : accès total dans sa chorale
-        if request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE:
-            return response
-
-        # Membre lambda : check du chorale_role
-        if request.user.chorale_role not in self.allowed_chorale_roles:
+    def _check_role(self, request):
+        if self.membership.is_admin:
+            return None
+        if self.membership.role not in self.allowed_chorale_roles:
             messages.error(request, self.permission_denied_message)
             return redirect(reverse(self.permission_denied_redirect,
                                     kwargs={'slug': self.chorale.slug}))
+        return None
 
-        return response
+
+class AdminRequiredMixin(RoleRequireMixin):
+    """Réserve l'accès à l'admin de la chorale (Membership.is_admin)."""
+
+    allowed_chorale_roles: list[str] = []  # personne d'autre que l'admin
+    permission_denied_message = "Accès réservé à l'admin de la chorale."
 
 
 class TreasurerRequiredMixin(RoleRequireMixin):
-    allowed_chorale_roles = [CustomUser.CHORALE_ROLE_TREASURER]
+    allowed_chorale_roles = ['treasurer']
     permission_denied_message = "Accès réservé au trésorier de la chorale."
 
 
 class CensorRequiredMixin(RoleRequireMixin):
-    allowed_chorale_roles = [CustomUser.CHORALE_ROLE_CENSOR]
+    allowed_chorale_roles = ['censor']
     permission_denied_message = "Accès réservé au censeur de la chorale."
+
+
+class SecretaryOrAdminRequiredMixin(RoleRequireMixin):
+    allowed_chorale_roles = ['secretary']
+    permission_denied_message = "Accès réservé au secrétaire ou à l'admin de la chorale."

@@ -1,10 +1,11 @@
 from django.db import models
 from django.utils import timezone
-from .models import Chorale
 
 class EventManager(models.Manager):
     def for_chorale(self, chorale, user):
-        if not Chorale.objects.filter(id=chorale.id, admin=user).exists():
+        # Accès historique : réservé à l'admin de la chorale (Membership.is_admin)
+        from .models import Membership
+        if not Membership.objects.filter(chorale=chorale, user=user, is_admin=True).exists():
             return self.none()
         return self.filter(chorale=chorale)
     
