@@ -1,0 +1,84 @@
+{% extends "landing/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% translate "Choisir une chorale" %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-start justify-center px-4 py-16 bg-background-light dark:bg-background-dark">
+  <div class="w-full max-w-3xl">
+
+    <div class="text-center mb-10">
+      <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+        {% translate "Choisissez la chorale à ouvrir" %}
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">
+        {% translate "Vous êtes membre de plusieurs chorales. Sélectionnez celle sur laquelle vous voulez travailler." %}
+      </p>
+    </div>
+
+    {% if messages %}
+      <div class="mb-6 space-y-2">
+        {% for message in messages %}
+          <div class="rounded-xl border border-amber-200 bg-amber-50 text-amber-800 px-4 py-3 text-sm">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {% for m in memberships %}
+      <form method="post" action="{% url 'select_chorale' %}">
+        {% csrf_token %}
+        <input type="hidden" name="slug" value="{{ m.chorale.slug }}">
+        <button type="submit"
+                class="w-full text-left bg-white dark:bg-gray-900 rounded-2xl border border-[#cfd7e7] dark:border-gray-800 p-5 hover:border-primary hover:shadow-md hover:shadow-primary/10 active:scale-[0.99] transition-all duration-150">
+          <div class="flex items-start gap-3">
+            {% if m.chorale.logo %}
+              <img src="{{ m.chorale.logo.url }}" alt="" class="size-12 rounded-xl object-cover border border-slate-200 dark:border-slate-700">
+            {% else %}
+              <div class="size-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-lg">
+                {{ m.chorale.name|slice:":1"|upper }}
+              </div>
+            {% endif %}
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-bold text-slate-900 dark:text-white truncate">{{ m.chorale.name }}</h3>
+                {% if m.is_admin %}
+                  <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-primary/10 text-primary whitespace-nowrap">Admin</span>
+                {% endif %}
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {% if m.is_admin %}
+                  {% translate "Administrateur" %}
+                {% else %}
+                  {{ m.get_role_display }}
+                {% endif %}
+                · {{ m.members_count }} {% translate "membres" %}
+              </p>
+              {% if m.chorale.city %}
+                <p class="text-xs text-slate-400 mt-1 truncate">{{ m.chorale.city }}{% if m.chorale.country %}, {{ m.chorale.country }}{% endif %}</p>
+              {% endif %}
+            </div>
+          </div>
+          <div class="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+            {% translate "Entrer" %}
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+          </div>
+        </button>
+      </form>
+      {% endfor %}
+    </div>
+
+    <div class="mt-8 text-center">
+      <a href="{% url 'create_chorale' %}"
+         class="inline-flex items-center gap-2 text-sm font-semibold text-[#4c669a] hover:text-primary transition-colors">
+        <span class="material-symbols-outlined text-base">add_circle</span>
+        {% translate "Créer une nouvelle chorale" %}
+      </a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.core import mail
 from model_bakery import baker
 from manage_users.models import CustomUser, OtpCode
-from manage_chorale.models import Chorale
+from manage_chorale.models import Chorale, Membership
 from datetime import date
 
 @pytest.mark.django_db
@@ -83,8 +83,7 @@ def test_user_registration_to_chorale_creation_flow():
     user.refresh_from_db()
     # Vérifie que la chorale a été créée
     chorale = Chorale.objects.get(name='Ma Chorale')
-    assert chorale.admin == user
+    membership = Membership.objects.get(user=user, chorale=chorale)
+    assert membership.is_admin is True
+    assert membership.role == Membership.ROLE_ADMIN
     assert user in chorale.members.all()
-    print(chorale.admin.username)
-    print(user.username, user.email, user.role)
-    assert user.role == CustomUser.ROLE_SUPERADMIN_CHORALE

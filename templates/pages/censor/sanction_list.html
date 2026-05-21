@@ -12,10 +12,12 @@
             <h2 class="text-2xl font-bold tracking-tight">Sanctions</h2>
             <p class="text-[#4c669a] text-sm mt-1">Avertissements, amendes et suspensions appliqués aux membres.</p>
         </div>
+        {% if current_membership.is_admin or current_membership.role == 'censor' %}
         <a href="{% url 'sanction_create' slug=slug %}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 active:scale-95 transition-all duration-150">
             <span class="material-symbols-outlined text-base">add</span>
             Nouvelle sanction
         </a>
+        {% endif %}
     </div>
 
     <form method="get" class="bg-white dark:bg-gray-900 rounded-2xl border border-[#cfd7e7] dark:border-gray-800 p-4 mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -78,6 +80,7 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 text-right">
+                            {% if current_membership.is_admin or current_membership.role == 'censor' %}
                             <div class="flex items-center justify-end gap-2">
                                 {% if s.is_active %}
                                 <form method="post" action="{% url 'sanction_lift' slug=slug sanction_id=s.id %}" class="inline" onsubmit="return confirm('Lever cette sanction ?');">
@@ -97,6 +100,7 @@
                                     </button>
                                 </form>
                             </div>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -107,9 +111,11 @@
         <div class="p-12 text-center">
             <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700">gavel</span>
             <p class="text-slate-500 mt-4">Aucune sanction appliquée.</p>
+            {% if current_membership.is_admin or current_membership.role == 'censor' %}
             <a href="{% url 'sanction_create' slug=slug %}" class="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-primary hover:underline">
                 Créer une sanction →
             </a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

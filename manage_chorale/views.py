@@ -27,7 +27,7 @@ from .mixins import (
 )
 from .services import get_dashboard_stats, ContributionService, SanctionService
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, Prefetch
 from django.db import transaction
 from django.utils.translation import gettext as _, ngettext
 
@@ -116,16 +116,6 @@ class CreateChoraleView(SessionWizardView):
             messages.error(request, _("You need to verify your email before creating a chorale."))
             return redirect(reverse('home'))
 
-        admin_membership = (
-            Membership.objects
-            .select_related('chorale')
-            .filter(user=request.user, is_admin=True)
-            .first()
-        )
-        if admin_membership:
-            messages.info(request, _("You already manage a chorale. Redirecting to your dashboard."))
-            return redirect(reverse('dashboard', kwargs={"slug": admin_membership.chorale.slug}))
-
         return super().get(request, *args, **kwargs)
 
     def done(self, form_list, **kwargs):
@@ -168,6 +158,7 @@ class CreateChoraleView(SessionWizardView):
                 role=Membership.ROLE_ADMIN,
                 is_admin=True,
             )
+            self.request.session['active_chorale_slug'] = chorale.slug
 
             messages.success(self.request, _("Your chorale has been created successfully!"))
             return redirect(reverse('dashboard', kwargs={"slug": chorale.slug}))
@@ -189,7 +180,15 @@ class ListMembersView(ChoraleRequireMixin, ListView):
 
     def get_queryset(self):
         if not hasattr(self, '_queryset'):
-            self._queryset = CustomUser.objects.filter(chorales=self.chorale).select_related('profile')
+            self._queryset = CustomUser.objects.filter(
+                chorales=self.chorale,
+            ).select_related('profile').prefetch_related(
+                Prefetch(
+                    'memberships',
+                    queryset=Membership.objects.filter(chorale=self.chorale),
+                    to_attr='chorale_memberships',
+                ),
+            )
         return self._queryset
 
     def get_context_data(self, **kwargs):
@@ -394,7 +393,7 @@ class EventUpdateView(SecretaryOrAdminRequiredMixin, TemplateView):
 # délibéré : ici on restreint TOUT, car les données financières sont sensibles.
 
 
-class ContributionListView(TreasurerRequiredMixin, TemplateView):
+class ContributionListView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/treasurer/contribution_list.html"
 
     def get(self, request, slug, *args, **kwargs):
@@ -491,7 +490,7 @@ class ContributionDeleteView(TreasurerRequiredMixin, TemplateView):
         return redirect(reverse('contributions', kwargs={'slug': kwargs.get('slug')}))
 
 
-class MemberContributionListView(TreasurerRequiredMixin, TemplateView):
+class MemberContributionListView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/treasurer/payment_list.html"
 
     def get(self, request, slug, *args, **kwargs):
@@ -558,7 +557,7 @@ class MemberContributionCreateView(TreasurerRequiredMixin, TemplateView):
         })
 
 
-class CashFlowListView(TreasurerRequiredMixin, TemplateView):
+class CashFlowListView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/treasurer/cashflow_list.html"
 
     def get(self, request, slug, *args, **kwargs):
@@ -647,7 +646,7 @@ class CashFlowUpdateView(TreasurerRequiredMixin, TemplateView):
 # - autres → redirect dashboard avec message d'erreur
 
 
-class AbsenceListView(CensorRequiredMixin, TemplateView):
+class AbsenceListView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/censor/absence_list.html"
 
     def get(self, request, slug, *args, **kwargs):
@@ -767,7 +766,7 @@ class AbsenceDeleteView(CensorRequiredMixin, TemplateView):
         return redirect(reverse('absences', kwargs={'slug': kwargs.get('slug')}))
 
 
-class SanctionListView(CensorRequiredMixin, TemplateView):
+class SanctionListView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/censor/sanction_list.html"
 
     def get(self, request, slug, *args, **kwargs):
@@ -979,6 +978,50 @@ class MemberPopupView(ChoraleRequireMixin, TemplateView):
             except Exception:
                 messages.error(request, _("An error occurred while adding the member."))
                 return redirect(reverse('members', kwargs={"slug": chorale.slug}))
+
+
+class ChoraleSelectView(LoginRequiredMixin, TemplateView):
+    """Écran de sélection de chorale pour les users multi-chorales.
+
+    - GET : liste des memberships avec rôle + count de membres.
+    - POST (slug) : valide qu'il s'agit d'une chorale de l'user, écrit
+      ``session['active_chorale_slug']`` puis redirige vers le dashboard.
+    """
+
+    template_name = "pages/select_chorale.html"
+
+    def _user_memberships(self):
+        from django.db.models import Count
+        return (
+            self.request.user.memberships
+            .select_related('chorale')
+            .annotate(members_count=Count('chorale__memberships'))
+            .order_by('-is_admin', 'joined_at')
+        )
+
+    def get(self, request, *args, **kwargs):
+        memberships = list(self._user_memberships())
+        if not memberships:
+            return redirect(reverse('create_chorale'))
+        if len(memberships) == 1:
+            slug = memberships[0].chorale.slug
+            request.session['active_chorale_slug'] = slug
+            return redirect(reverse('dashboard', kwargs={'slug': slug}))
+        return render(request, self.template_name, {'memberships': memberships})
+
+    def post(self, request, *args, **kwargs):
+        slug = request.POST.get('slug') or request.GET.get('slug')
+        if not slug:
+            messages.error(request, _("Please choose a chorale."))
+            return redirect(reverse('select_chorale'))
+
+        belongs = request.user.memberships.filter(chorale__slug=slug).exists()
+        if not belongs:
+            messages.error(request, _("You do not belong to this chorale."))
+            return redirect(reverse('select_chorale'))
+
+        request.session['active_chorale_slug'] = slug
+        return redirect(reverse('dashboard', kwargs={'slug': slug}))
 
 
 @login_required

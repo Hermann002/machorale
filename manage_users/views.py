@@ -8,7 +8,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
-from .utils import send_code_to_user, send_password_reset_link
+from .utils import send_code_to_user, send_password_reset_link, resolve_post_login_redirect
 from manage_users.models import OtpCode, CustomUser
 from django.views.generic.edit import UpdateView
 from django.core.exceptions import ObjectDoesNotExist
@@ -70,21 +70,9 @@ class LoginView(TemplateView):
             user = form.cleaned_data.get("user")
             if user is not None:
                 login(request, user)
-
-                # Membership la plus pertinente : admin d'abord, sinon la plus ancienne
-                membership = (
-                    user.memberships
-                    .select_related('chorale')
-                    .order_by('-is_admin', 'joined_at')
-                    .first()
+                return HttpResponseRedirect(
+                    resolve_post_login_redirect(user, request.session)
                 )
-                if membership is not None:
-                    slug = membership.chorale.slug
-                    cache.set(f"user_slug_{user.id}", slug)
-                    return HttpResponseRedirect(reverse("dashboard", kwargs={"slug": slug}))
-
-                # Aucun lien à une chorale : on propose la création.
-                return HttpResponseRedirect(reverse("create_chorale"))
             messages.error(request, _("Invalid credentials. Please try again."))
         else:
             messages.error(request, _("Invalid username or password."))

@@ -67,9 +67,16 @@ def practice(chorale):
 
 
 @pytest.mark.django_db
-def test_plain_member_cannot_access_absences(client, chorale, plain_member):
+def test_plain_member_can_read_absences(client, chorale, plain_member):
     client.force_login(plain_member)
     response = client.get(reverse("absences", kwargs={"slug": chorale.slug}))
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_plain_member_cannot_create_absence(client, chorale, plain_member):
+    client.force_login(plain_member)
+    response = client.get(reverse("absence_bulk_create", kwargs={"slug": chorale.slug}))
     assert response.status_code == 302
     assert response.url == reverse("dashboard", kwargs={"slug": chorale.slug})
 
@@ -90,9 +97,16 @@ def test_admin_can_access_sanctions(client, chorale, admin_user):
 
 
 @pytest.mark.django_db
-def test_plain_member_cannot_access_sanctions(client, chorale, plain_member):
+def test_plain_member_can_read_sanctions(client, chorale, plain_member):
     client.force_login(plain_member)
     response = client.get(reverse("sanctions", kwargs={"slug": chorale.slug}))
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_plain_member_cannot_create_sanction(client, chorale, plain_member):
+    client.force_login(plain_member)
+    response = client.get(reverse("sanction_create", kwargs={"slug": chorale.slug}))
     assert response.status_code == 302
 
 

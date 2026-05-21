@@ -19,31 +19,27 @@ class ChoraleRequireMixin(LoginRequiredMixin):
         from manage_chorale.models import Membership
 
         slug = kwargs.get(self.chorale_url_kwargs)
+        if not slug:
+            # Toutes les URLs scope-chorale incluent <slug:slug>/. Une absence ici
+            # signifie un câblage cassé côté URL conf — préférable d'envoyer vers
+            # le sélecteur plutôt que de masquer le bug.
+            return redirect(reverse('select_chorale'))
 
-        if slug:
-            try:
-                membership = (
-                    Membership.objects
-                    .select_related('chorale')
-                    .get(chorale__slug=slug, user=request.user)
-                )
-            except Membership.DoesNotExist:
-                messages.error(request, "Vous n'êtes pas membre de cette chorale !")
-                return redirect(reverse('home'))
-        else:
+        try:
             membership = (
                 Membership.objects
                 .select_related('chorale')
-                .filter(user=request.user)
-                .order_by('-is_admin', 'joined_at')
-                .first()
+                .get(chorale__slug=slug, user=request.user)
             )
-            if membership is None:
-                messages.info(request, "Vous n'êtes membre d'aucune chorale !")
-                return redirect(reverse('home'))
+        except Membership.DoesNotExist:
+            messages.error(request, "Vous n'êtes pas membre de cette chorale !")
+            return redirect(reverse('select_chorale'))
 
         self.membership = membership
         self.chorale = membership.chorale
+        # Sticky : on garde la chorale active en session pour le switcher
+        # et pour la redirection sticky depuis /, /login, etc.
+        request.session['active_chorale_slug'] = membership.chorale.slug
         return None
 
     def _check_role(self, request):

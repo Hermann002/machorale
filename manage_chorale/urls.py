@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (
     DashboardView, CreateChoraleView, ListMembersView, MemberPopupView,
-    UpdateMemberRoleView, close_popup, sidebar_toggle,
+    UpdateMemberRoleView, ChoraleSelectView, close_popup, sidebar_toggle,
     EventListView, CreateEventView, EventDetailView, EventTableView, EventUpdateView,
     # Trésorier
     ContributionListView, ContributionCreateView, ContributionUpdateView, ContributionDeleteView,
@@ -14,7 +14,9 @@ from .views import (
 )
 
 urlpatterns = [
+    # Patterns sans <slug:slug> en premier (sinon collision).
     path("create-chorale/", CreateChoraleView.as_view(), name="create_chorale"),
+    path("select-chorale/", ChoraleSelectView.as_view(), name="select_chorale"),
     path("<slug:slug>/dashboard/", DashboardView.as_view(), name="dashboard"),
     path("<slug:slug>/list-members/", ListMembersView.as_view(), name="members"),
     path("<slug:slug>/member/<int:user_id>/role/", UpdateMemberRoleView.as_view(), name="member_role_edit"),

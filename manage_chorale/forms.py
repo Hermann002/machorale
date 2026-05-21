@@ -378,27 +378,6 @@ class MemberRoleForm(forms.ModelForm):
             }),
         }
 
-    
-    def clean_contact_phone(self):
-        """Valide et nettoie le numéro de téléphone"""
-        phone = self.cleaned_data.get("contact_phone")
-        
-        if phone:
-            # Supprimer les espaces, parenthèses, tirets
-            cleaned_phone = ''.join(c for c in phone if c.isdigit() or c == '+')
-            
-            # Vérifier la longueur minimale (au moins 7 chiffres)
-            digits_only = ''.join(c for c in cleaned_phone if c.isdigit())
-            
-            if len(digits_only) < 7:
-                raise ValidationError(_("Le numéro de téléphone doit contenir au moins 7 chiffres."))
-            
-            if len(digits_only) > 15:
-                raise ValidationError(_("Le numéro de téléphone est trop long."))
-            
-            phone = cleaned_phone
-        
-        return phone
 
 # ── Trésorier ──────────────────────────────────────────────────────────────
 

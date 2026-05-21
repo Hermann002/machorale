@@ -12,7 +12,7 @@
             <a href="{% url 'events' slug=slug %}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline active:scale-95 transition-all duration-150">
                 <span class="material-symbols-outlined">arrow_back</span>Retour au calendrier
             </a>
-            {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'secretary' %}
+            {% if current_membership.is_admin or current_membership.role == 'secretary' %}
             <a href="{% url 'event_edit' slug=slug event_id=event.id %}"
                class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 transition-all duration-150">
                 <span class="material-symbols-outlined text-base">edit</span>

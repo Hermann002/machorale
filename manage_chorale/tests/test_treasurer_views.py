@@ -54,9 +54,16 @@ def contribution(chorale):
 
 
 @pytest.mark.django_db
-def test_plain_member_cannot_access_contribution_list(client, chorale, plain_member):
+def test_plain_member_can_read_contribution_list(client, chorale, plain_member):
     client.force_login(plain_member)
     response = client.get(reverse("contributions", kwargs={"slug": chorale.slug}))
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_plain_member_cannot_create_contribution(client, chorale, plain_member):
+    client.force_login(plain_member)
+    response = client.get(reverse("contribution_create", kwargs={"slug": chorale.slug}))
     assert response.status_code == 302
     assert response.url == reverse("dashboard", kwargs={"slug": chorale.slug})
 
@@ -76,17 +83,17 @@ def test_admin_can_access_contribution_list(client, chorale, admin_user):
 
 
 @pytest.mark.django_db
-def test_plain_member_cannot_access_cashflow(client, chorale, plain_member):
+def test_plain_member_can_read_cashflow(client, chorale, plain_member):
     client.force_login(plain_member)
     response = client.get(reverse("cashflow", kwargs={"slug": chorale.slug}))
-    assert response.status_code == 302
+    assert response.status_code == 200
 
 
 @pytest.mark.django_db
-def test_plain_member_cannot_access_payments(client, chorale, plain_member):
+def test_plain_member_can_read_payments(client, chorale, plain_member):
     client.force_login(plain_member)
     response = client.get(reverse("payments", kwargs={"slug": chorale.slug}))
-    assert response.status_code == 302
+    assert response.status_code == 200
 
 
 # ── CRUD Contribution ───────────────────────────────────────────────────

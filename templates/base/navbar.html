@@ -6,7 +6,7 @@
   <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 shadow-xl md:static md:translate-x-0 md:shadow-none md:flex md:w-64 flex-shrink-0 flex flex-col bg-white dark:bg-gray-900 border-r border-[#e7ebf3] dark:border-gray-800 {% if sidebar_open %}translate-x-0{% else %}-translate-x-full{% endif %} h-full">
     <div class="p-6 flex flex-col h-full justify-between">
       <div>
-        <div class="flex items-center justify-between gap-3 mb-10">
+        <div class="flex items-center justify-between gap-3 mb-6">
         <div class="flex items-center gap-3">
           <div class="p-2 rounded-lg">
             <a href="{% url 'home'%}">
@@ -19,6 +19,62 @@
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
+
+      {% if user_memberships and current_membership %}
+      <div class="relative mb-6" data-chorale-switcher>
+        <button type="button" data-switcher-toggle
+                class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-[#e7ebf3] dark:border-gray-800 bg-[#f8f9fc] dark:bg-gray-950 hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-colors">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="material-symbols-outlined text-base text-[#4c669a]">groups</span>
+            <span class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ current_membership.chorale.name }}</span>
+          </div>
+          <span class="material-symbols-outlined text-base text-[#4c669a]" data-switcher-caret>expand_more</span>
+        </button>
+        <div data-switcher-menu hidden
+             class="absolute left-0 right-0 mt-2 z-50 rounded-xl border border-[#e7ebf3] dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
+          {% for m in user_memberships %}
+          <a href="{% url 'dashboard' slug=m.chorale.slug %}"
+             class="flex items-center justify-between gap-2 px-3 py-2.5 text-sm hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors
+                    {% if m.chorale.slug == current_membership.chorale.slug %}bg-primary/5 text-primary font-semibold{% else %}text-slate-700 dark:text-slate-300{% endif %}">
+            <span class="truncate">{{ m.chorale.name }}</span>
+            {% if m.is_admin %}
+              <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary/10 text-primary">Admin</span>
+            {% else %}
+              <span class="text-[10px] font-bold uppercase text-slate-400">{{ m.get_role_display }}</span>
+            {% endif %}
+          </a>
+          {% endfor %}
+          <a href="{% url 'create_chorale' %}"
+             class="flex items-center gap-2 px-3 py-2.5 text-sm text-[#4c669a] border-t border-[#e7ebf3] dark:border-gray-800 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+            <span class="material-symbols-outlined text-base">add</span>
+            {% translate "Créer une chorale" %}
+          </a>
+        </div>
+      </div>
+      <script>
+        (function () {
+          var root = document.querySelector('[data-chorale-switcher]');
+          if (!root) return;
+          var btn = root.querySelector('[data-switcher-toggle]');
+          var menu = root.querySelector('[data-switcher-menu]');
+          var caret = root.querySelector('[data-switcher-caret]');
+          if (!btn || !menu) return;
+          function close() {
+            menu.hidden = true;
+            if (caret) caret.textContent = 'expand_more';
+          }
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isHidden = menu.hidden;
+            menu.hidden = !isHidden;
+            if (caret) caret.textContent = isHidden ? 'expand_less' : 'expand_more';
+          });
+          document.addEventListener('click', function (e) {
+            if (!root.contains(e.target)) close();
+          });
+        })();
+      </script>
+      {% endif %}
       <nav class="flex flex-col gap-2">
         <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg
 
@@ -32,7 +88,6 @@
           <span class="material-symbols-outlined text-xl">dashboard</span>
           <span class="text-sm font-medium">{% translate "Dashboard" %}</span>
         </a>
-        {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'treasurer' %}
         <a href="{% url 'contributions' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
         {% if request.resolver_match.url_name == 'contributions' or request.resolver_match.url_name == 'contribution_create' or request.resolver_match.url_name == 'contribution_edit' %}
           bg-primary text-white
@@ -53,13 +108,6 @@
           <span class="material-symbols-outlined text-xl">receipt_long</span>
           <span class="text-sm font-medium">{% translate "Paiements" %}</span>
         </a>
-        {% else %}
-        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
-        disabled>
-          <span class="material-symbols-outlined text-xl">money</span>
-          <span class="text-sm font-medium">{% translate "Cotisations" %}</span>
-        </button>
-        {% endif %}
         <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg
 
         {% if request.resolver_match.url_name == 'members' %}
@@ -84,7 +132,6 @@
           <span class="material-symbols-outlined text-xl">event</span>
           <span class="text-sm font-medium">{% translate "Calendrier" %}</span>
         </a>
-        {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'censor' %}
         <a href="{% url 'absences' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
         {% if request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'absence_bulk_create' or request.resolver_match.url_name == 'absence_edit' %}
           bg-primary text-white
@@ -105,14 +152,6 @@
           <span class="material-symbols-outlined text-xl">gavel</span>
           <span class="text-sm font-medium">{% translate "Sanctions" %}</span>
         </a>
-        {% else %}
-        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
-        disabled>
-          <span class="material-symbols-outlined text-xl">description</span>
-          <span class="text-sm font-medium">{% translate "Sanctions" %}</span>
-        </button>
-        {% endif %}
-        {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'treasurer' %}
         <a href="{% url 'cashflow' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
         {% if request.resolver_match.url_name == 'cashflow' or request.resolver_match.url_name == 'cashflow_create' or request.resolver_match.url_name == 'cashflow_edit' %}
           bg-primary text-white
@@ -123,13 +162,6 @@
           <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
           <span class="text-sm font-medium">{% translate "Finances" %}</span>
         </a>
-        {% else %}
-        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
-        disabled>
-          <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
-          <span class="text-sm font-medium">{% translate "Finances" %}</span>
-        </button>
-        {% endif %}
         <a href="{% url 'events_list' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
         {% if request.resolver_match.url_name == 'events_list' %}
           bg-primary text-white

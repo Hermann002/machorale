@@ -3,12 +3,12 @@ from django.urls import reverse
 from django.contrib.messages import get_messages
 from model_bakery import baker
 from manage_users.models import CustomUser
-from manage_chorale.models import Chorale
+from manage_chorale.models import Chorale, Membership
 from datetime import date
 
 @pytest.fixture
 def verified_user():
-    user = baker.make(CustomUser, is_verify=True, role="member")
+    user = baker.make(CustomUser, is_verify=True)
     return user
 
 @pytest.mark.django_db
@@ -21,12 +21,15 @@ def test_create_chorale_view_redirects_if_not_verified(client):
     assert "You need to verify your email" in str(messages[0])
 
 @pytest.mark.django_db
-def test_create_chorale_view_redirects_if_already_admin(client, verified_user):
-    chorale = baker.make("manage_chorale.Chorale", admin=verified_user)
+def test_create_chorale_view_allows_existing_admin_to_create_another(client, verified_user):
+    """Multi-chorale : un admin peut créer une seconde chorale."""
+    chorale = baker.make("manage_chorale.Chorale", created_by=verified_user)
+    Membership.objects.create(user=verified_user, chorale=chorale, role=Membership.ROLE_ADMIN, is_admin=True)
     client.force_login(verified_user)
     response = client.get(reverse("create_chorale"))
-    assert response.status_code == 302
-    assert response.url == reverse("dashboard", kwargs={"slug": chorale.slug})
+    # Le wizard doit s'afficher (étape 1), pas rediriger vers le dashboard existant.
+    assert response.status_code == 200
+    assert "Nom du groupe" in response.content.decode()
 
 @pytest.mark.django_db
 def test_create_chorale_view_get_step1(client, verified_user):

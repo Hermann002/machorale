@@ -13,7 +13,7 @@
             <h2 class="text-2xl font-bold tracking-tight">{% translate "Vue d'ensemble" %}</h2>
             <p class="text-[#4c669a] text-sm">{% translate "Content de te revoir. Voici ce qui s'est passé aujourd'hui avec la chorale." %}</p>
         </div>
-        {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'secretary' %}
+        {% if current_membership.is_admin or current_membership.role == 'secretary' %}
         <a href="{% url 'event_create' slug=slug %}" class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
             <span class="material-symbols-outlined mr-2">add</span>
             {% translate "Créer un événement" %}

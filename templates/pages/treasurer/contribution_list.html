@@ -17,10 +17,12 @@
                 <span class="material-symbols-outlined text-base">payments</span>
                 Voir les paiements
             </a>
+            {% if current_membership.is_admin or current_membership.role == 'treasurer' %}
             <a href="{% url 'contribution_create' slug=slug %}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 transition-all duration-150">
                 <span class="material-symbols-outlined text-base">add</span>
                 Nouveau type
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -53,6 +55,7 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 text-right">
+                            {% if current_membership.is_admin or current_membership.role == 'treasurer' %}
                             <div class="flex items-center justify-end gap-2">
                                 <a href="{% url 'contribution_edit' slug=slug contribution_id=c.id %}" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Modifier">
                                     <span class="material-symbols-outlined text-base">edit</span>
@@ -64,6 +67,7 @@
                                     </button>
                                 </form>
                             </div>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -74,9 +78,11 @@
         <div class="p-12 text-center">
             <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700">payments</span>
             <p class="text-slate-500 mt-4">Aucun type de cotisation pour l'instant.</p>
+            {% if current_membership.is_admin or current_membership.role == 'treasurer' %}
             <a href="{% url 'contribution_create' slug=slug %}" class="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-primary hover:underline">
                 Créer le premier type →
             </a>
+            {% endif %}
         </div>
         {% endif %}
     </div>
