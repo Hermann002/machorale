@@ -2,8 +2,16 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from .models import Chorale, ChoraleEvent
+from .models import Chorale, ChoraleEvent, Contribution, MemberContribution, CashFlow, Absence, Sanction
 from manage_users.models import CustomUser
+
+# Classe Tailwind partagée pour les inputs/selects des forms du tableau de bord.
+# Mutualisée pour éviter le drift visuel et garder un seul endroit à modifier
+# quand le design system évolue.
+DASHBOARD_FIELD_CLASS = (
+    "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border "
+    "border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm"
+)
 
 class CreateChoraleForm(forms.Form):
     """Collecte les données de base - PAS un ModelForm"""
@@ -391,3 +399,239 @@ class MemberRoleForm(forms.ModelForm):
             phone = cleaned_phone
         
         return phone
+
+# ── Trésorier ──────────────────────────────────────────────────────────────
+
+
+class ContributionForm(forms.ModelForm):
+    """CRUD d'un type de cotisation. `chorale` est injectée par la vue,
+    jamais saisie par l'utilisateur (sécurité : un trésorier ne doit pas
+    pouvoir forger un POST visant une autre chorale)."""
+
+    class Meta:
+        model = Contribution
+        fields = ['title', 'amount', 'target_amount', 'description', 'is_active']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS,
+                'placeholder': _("Ex: Cotisation mensuelle Janvier 2026"),
+            }),
+            'amount': forms.NumberInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS,
+                'placeholder': '5000',
+                'step': '0.01', 'min': '0',
+            }),
+            'target_amount': forms.NumberInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS,
+                'placeholder': _("Objectif total (optionnel)"),
+                'step': '0.01', 'min': '0',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'rows': 3,
+                'placeholder': _("À quoi sert cette cotisation ?"),
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'h-5 w-5 rounded text-primary focus:ring-primary/40',
+            }),
+        }
+
+    def __init__(self, *args, chorale=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._chorale = chorale  # mémorisé pour `clean_title` (unicité)
+
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount is not None and amount <= 0:
+            raise ValidationError(_("Le montant doit être strictement positif."))
+        return amount
+
+    def clean_title(self):
+        # On vérifie l'unicité côté form pour donner une erreur lisible
+        # (la contrainte DB ferait planter par IntegrityError sinon).
+        title = self.cleaned_data.get('title')
+        if title and self._chorale:
+            qs = Contribution.objects.filter(chorale=self._chorale, title__iexact=title)
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise ValidationError(_("Un type de cotisation portant ce titre existe déjà."))
+        return title
+
+
+class MemberContributionForm(forms.ModelForm):
+    """Enregistrer un paiement. Les choix de `contribution` et `member`
+    sont restreints à la chorale courante — la liste déroulante ne doit pas
+    laisser fuiter des objets d'autres chorales (sécurité par construction)."""
+
+    class Meta:
+        model = MemberContribution
+        fields = ['contribution', 'member', 'amount', 'paid_at', 'note']
+        widgets = {
+            'contribution': forms.Select(attrs={'class': DASHBOARD_FIELD_CLASS}),
+            'member': forms.Select(attrs={'class': DASHBOARD_FIELD_CLASS}),
+            'amount': forms.NumberInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'step': '0.01', 'min': '0',
+            }),
+            'paid_at': forms.DateInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'type': 'date',
+            }),
+            'note': forms.TextInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS,
+                'placeholder': _("Référence, mode de paiement... (optionnel)"),
+            }),
+        }
+
+    def __init__(self, *args, chorale=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if chorale is not None:
+            self.fields['contribution'].queryset = chorale.contributions.filter(is_active=True)
+            self.fields['member'].queryset = chorale.members.all()
+
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount is not None and amount <= 0:
+            raise ValidationError(_("Le montant doit être strictement positif."))
+        return amount
+
+
+class CashFlowForm(forms.ModelForm):
+    """CRUD entrée/sortie. Le `created_by` et `chorale` sont injectés en vue."""
+
+    class Meta:
+        model = CashFlow
+        fields = ['title', 'type_cash_flow', 'amount', 'date', 'description']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS,
+                'placeholder': _("Ex: Don pour le concert, Achat partitions"),
+            }),
+            'type_cash_flow': forms.Select(attrs={'class': DASHBOARD_FIELD_CLASS}),
+            'amount': forms.NumberInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'step': '0.01', 'min': '0',
+            }),
+            'date': forms.DateInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'type': 'date',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'rows': 3,
+                'placeholder': _("Détails (optionnel)"),
+            }),
+        }
+
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        if amount is not None and amount <= 0:
+            raise ValidationError(_("Le montant doit être strictement positif."))
+        return amount
+
+
+# ── Censeur ────────────────────────────────────────────────────────────
+
+
+class BulkAbsenceForm(forms.Form):
+    """Saisie en masse : 1 rencontre + N membres absents en un seul submit.
+    Pattern Bulk + Idempotent upsert : le post est rejouable (delete + recreate
+    dans une transaction côté vue) — pas de doublons possibles.
+    """
+    event = forms.ModelChoiceField(
+        queryset=ChoraleEvent.objects.none(),  # rempli dans __init__
+        label=_("Rencontre"),
+        widget=forms.Select(attrs={'class': DASHBOARD_FIELD_CLASS}),
+    )
+    absent_members = forms.ModelMultipleChoiceField(
+        queryset=None,  # rempli dans __init__
+        required=False,  # vider la liste = 0 absent (efface tout)
+        widget=forms.CheckboxSelectMultiple,
+        label=_("Membres absents"),
+    )
+    reason = forms.CharField(
+        required=False,
+        label=_("Raison commune (optionnel)"),
+        widget=forms.TextInput(attrs={
+            'class': DASHBOARD_FIELD_CLASS,
+            'placeholder': _("Ex: Maladie, voyage..."),
+        }),
+    )
+    is_justified = forms.BooleanField(
+        required=False, label=_("Absence(s) justifiée(s)"),
+        widget=forms.CheckboxInput(attrs={'class': 'h-5 w-5 rounded text-primary'}),
+    )
+
+    def __init__(self, *args, chorale=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if chorale is not None:
+            self.fields['event'].queryset = ChoraleEvent.objects.filter(
+                chorale=chorale, event_type__in=Absence.TRACKED_EVENT_TYPES,
+            ).order_by('-date')
+            self.fields['absent_members'].queryset = chorale.members.all()
+
+
+class AbsenceEditForm(forms.ModelForm):
+    """Édition fine d'une absence existante (raison, caractère justifié)."""
+
+    class Meta:
+        model = Absence
+        fields = ['reason', 'is_justified']
+        widgets = {
+            'reason': forms.TextInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS,
+                'placeholder': _("Raison de l'absence"),
+            }),
+            'is_justified': forms.CheckboxInput(attrs={
+                'class': 'h-5 w-5 rounded text-primary',
+            }),
+        }
+
+
+class SanctionForm(forms.ModelForm):
+    """CRUD d'une sanction.
+    Validation croisée: amount obligatoire pour les amendes, interdit sinon.
+    """
+
+    class Meta:
+        model = Sanction
+        fields = ['member', 'sanction_type', 'reason', 'amount', 'time_limit',
+                  'applied_at', 'is_paid']
+        widgets = {
+            'member': forms.Select(attrs={'class': DASHBOARD_FIELD_CLASS}),
+            'sanction_type': forms.Select(attrs={'class': DASHBOARD_FIELD_CLASS,
+                                                 'data-sanction-type-select': '1'}),
+            'reason': forms.Textarea(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'rows': 3,
+                'placeholder': _("Pourquoi cette sanction ?"),
+            }),
+            'amount': forms.NumberInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'step': '0.01', 'min': '0',
+                'placeholder': _("Montant (amende uniquement)"),
+            }),
+            'time_limit': forms.DateInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'type': 'date',
+            }),
+            'applied_at': forms.DateInput(attrs={
+                'class': DASHBOARD_FIELD_CLASS, 'type': 'date',
+            }),
+            'is_paid': forms.CheckboxInput(attrs={
+                'class': 'h-5 w-5 rounded text-primary',
+            }),
+        }
+
+    def __init__(self, *args, chorale=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if chorale is not None:
+            self.fields['member'].queryset = chorale.members.all()
+
+    def clean(self):
+        cleaned = super().clean()
+        sanction_type = cleaned.get('sanction_type')
+        amount = cleaned.get('amount')
+
+        if sanction_type == Sanction.SANCTION_FINE:
+            if amount is None or amount <= 0:
+                self.add_error('amount', _("Une amende requiert un montant strictement positif."))
+        else:
+            # Pour warning/suspension, on force l'amount à None (cohérence DB).
+            cleaned['amount'] = None
+            # is_paid n'a de sens que pour les amendes
+            cleaned['is_paid'] = False
+
+        return cleaned

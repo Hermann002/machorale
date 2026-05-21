@@ -17,6 +17,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.urls import reverse_lazy
 from django.core.cache import cache
+from django.utils.translation import gettext as _
 
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
@@ -45,7 +46,7 @@ class RegisterView(TemplateView):
                 print(f"Error sending email: {e}")
                 raise(e)
             cache.set(f"user_id", user.id)
-            messages.success(request, "Account created successfully! Please verify your email.")
+            messages.success(request, _("Account created successfully! Please verify your email."))
             return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user.id}))
         return render(request, self.template_name, {"form": form})
 
@@ -57,7 +58,7 @@ class LoginView(TemplateView):
         if request.user.is_authenticated:
             messages.info(
                 request,
-                "You're already logged in. Please log out first to switch accounts."
+                _("You're already logged in. Please log out first to switch accounts.")
             )
             return HttpResponseRedirect("/")
         form = UserLoginForm()
@@ -90,9 +91,9 @@ class LoginView(TemplateView):
                 
                 # Pas de chorale trouvée (cas très rare)
                 return HttpResponseRedirect(reverse("home"))
-            messages.error(request, "Invalid credentials. Please try again.")
+            messages.error(request, _("Invalid credentials. Please try again."))
         else:
-            messages.error(request, "Invalid username or password.")
+            messages.error(request, _("Invalid username or password."))
         return render(request, self.template_name, {"form": form})
 
 @method_decorator(ratelimit(key='ip', rate='4/m', method='POST', block=True), name='dispatch')
@@ -105,7 +106,7 @@ class VerifyEmailView(TemplateView):
             user = CustomUser.objects.get(id=user_id)
             return render(request, self.template_name, {"user_id": user.id})
         except CustomUser.DoesNotExist:
-            messages.error(request, "User not found ! register first")
+            messages.error(request, _("User not found! Please register first."))
             return HttpResponseRedirect(reverse("register"))
 
 
@@ -115,7 +116,7 @@ class VerifyEmailView(TemplateView):
             otp_record = OtpCode.objects.get(otp_code=code)
             user = otp_record.user
             if otp_record.otp_expired() or otp_record.used:
-                messages.error(request, "OTP code has expired. Please request a new code.")
+                messages.error(request, _("OTP code has expired. Please request a new code."))
                 return render(request, self.template_name)
 
             if not user.is_verify:
@@ -124,17 +125,17 @@ class VerifyEmailView(TemplateView):
                 otp_record.used = True
                 otp_record.save()
                 login(request, user)
-                messages.success(request, "Email verified successfully!")
+                messages.success(request, _("Email verified successfully!"))
                 return HttpResponseRedirect(reverse("create_chorale"))
             else:
-                messages.info(request, "Email is already verified. Please log in.")
+                messages.info(request, _("Email is already verified. Please log in."))
                 return HttpResponseRedirect(reverse("login"))
         except OtpCode.DoesNotExist:
             print("No OTP record found for code:", code)
-            messages.error(request, "No OTP record found. Please request a new code.")
+            messages.error(request, _("No OTP record found. Please request a new code."))
             return render(request, self.template_name)
         except Ratelimited:
-            messages.error(request, "You rate a limit, please wait 1 minute and retry !")
+            messages.error(request, _("Rate limit reached, please wait 1 minute and retry."))
 
 class LogoutView(TemplateView):
     def get(self, request, *args, **kwargs):
@@ -154,11 +155,11 @@ def resend_otp_views(request, user_id):
         otp_record = OtpCode.objects.create(user=user)
         code = otp_record.generate_new_code()
         send_code_to_user(email=user_email, code=code)
-        messages.success(request, "OTP code resent successfully! Please check your email.")
+        messages.success(request, _("OTP code resent successfully! Please check your email."))
     except CustomUser.DoesNotExist:
-        messages.error(request, "User not found.")
+        messages.error(request, _("User not found."))
     except Ratelimited:
-        messages.error(request, "Rate limit exceeded, please wait before trying again.")
+        messages.error(request, _("Rate limit exceeded, please wait before trying again."))
     return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user_id}))
 
 class ResetPasswordRequestView(TemplateView):
@@ -184,14 +185,14 @@ class ResetPasswordRequestView(TemplateView):
                 token = token_generator.make_token(user)
                 print(f"Attempting to send password reset email to {email} with uidb64: {uuidb64} and token: {token}")
                 send_password_reset_link(email, uuidb64, token)
-                messages.success(request, "Password reset link sent! Please check your email.")
+                messages.success(request, _("Password reset link sent! Please check your email."))
                 return HttpResponseRedirect(reverse("reset_password_request"))
             except CustomUser.DoesNotExist:
-                messages.error(request, "No account found with that email address.")
+                messages.error(request, _("No account found with that email address."))
             except Ratelimited:
-                messages.error(request, "Rate limit exceeded, please wait before trying again.")
+                messages.error(request, _("Rate limit exceeded, please wait before trying again."))
         else:
-            messages.error(request, "Please enter a valid email address.")
+            messages.error(request, _("Please enter a valid email address."))
         return render(request, self.template_name, {"form": form})
     
 class ResetPasswordConfirmView(TemplateView):
@@ -212,10 +213,10 @@ class ResetPasswordConfirmView(TemplateView):
             if token_generator.check_token(user, token):
                 form = self.form_class()
                 return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})
-            messages.error(request, "Invalid or expired password reset link.")
+            messages.error(request, _("Invalid or expired password reset link."))
             return HttpResponseRedirect(reverse("reset_password_request"))
         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
-            messages.error(request, "Invalid password reset link.")
+            messages.error(request, _("Invalid password reset link."))
             return HttpResponseRedirect(reverse("reset_password_request"))
 
     def post(self, request, *args, **kwargs):
@@ -224,7 +225,7 @@ class ResetPasswordConfirmView(TemplateView):
         form = self.form_class(request.POST)
 
         if not uidb64 or not token:
-            messages.error(request, "Invalid password reset request.")
+            messages.error(request, _("Invalid password reset request."))
             return HttpResponseRedirect(reverse("reset_password_request"))
 
         try:
@@ -232,19 +233,19 @@ class ResetPasswordConfirmView(TemplateView):
             user = CustomUser.objects.get(id=uid)
             token_generator = PasswordResetTokenGenerator()
             if not token_generator.check_token(user, token):
-                messages.error(request, "Invalid or expired password reset link.")
+                messages.error(request, _("Invalid or expired password reset link."))
                 return HttpResponseRedirect(reverse("reset_password_request"))
         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
-            messages.error(request, "Invalid password reset link.")
+            messages.error(request, _("Invalid password reset link."))
             return HttpResponseRedirect(reverse("reset_password_request"))
         except Ratelimited:
-            messages.error(request, "Rate limit exceeded, please wait before trying again.")
+            messages.error(request, _("Rate limit exceeded, please wait before trying again."))
             return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})
 
         if form.is_valid():
             user.password = make_password(form.cleaned_data.get("new_password"))
             user.save()
-            messages.success(request, "Your password has been reset successfully! You can now log in.")
+            messages.success(request, _("Your password has been reset successfully! You can now log in."))
             return HttpResponseRedirect(reverse("login"))
 
         return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})

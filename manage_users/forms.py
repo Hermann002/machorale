@@ -1,5 +1,5 @@
 from django import forms
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 from .models import CustomUser, OtpCode
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
@@ -38,13 +38,13 @@ class UserRegisterForm(forms.ModelForm):
     def clean_username(self):
         username = self.cleaned_data.get("username")
         if username and CustomUser.objects.filter(username=username.lower()).exists():
-            raise forms.ValidationError("Ce nom d'utilisateur est déjà utilisé.")
+            raise forms.ValidationError(_("Ce nom d'utilisateur est déjà utilisé."))
         return username.lower()
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
         if email and CustomUser.objects.filter(email=email.lower()).exists():
-            raise forms.ValidationError("Cet email est déjà utilisé.")
+            raise forms.ValidationError(_("Cet email est déjà utilisé."))
         return email.lower()
     
     def clean_password(self):

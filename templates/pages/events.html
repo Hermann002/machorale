@@ -2,82 +2,137 @@
 {% load static %}
 {% load i18n %}
 
-{% block title %}Calendrier des événements{% endblock %}
+{% block title %}{% translate "Calendrier des événements" %}{% endblock %}
 
 {% block content %}
 {% include "../components/alert/message.html" %}
-<div class="p-8">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-8">
+{% comment %}
+Mobile-first :
+  - padding wrapper : p-3 → sm:p-6 → lg:p-8
+  - le bouton "Ajouter" est full-width sur mobile (cible tactile), auto sur sm+
+{% endcomment %}
+<div class="p-3 sm:p-6 lg:p-8">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8">
         <div>
-            <h2 class="text-2xl font-bold tracking-tight">Calendrier des événements</h2>
-            <p class="text-[#4c669a] text-sm">Consultez la liste des événements et les prochaines dates importantes.</p>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight">{% translate "Calendrier des événements" %}</h2>
+            <p class="text-[#4c669a] text-sm mt-1">{% translate "Consultez la liste des événements et les prochaines dates importantes." %}</p>
         </div>
         {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'secretary' %}
-        <a href="{% url 'event_create' slug=slug %}" class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
+        <a href="{% url 'event_create' slug=slug %}" class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150 w-full sm:w-auto">
             <span class="material-symbols-outlined mr-2">add</span>
-            Ajouter un événement
+            {% translate "Ajouter un événement" %}
         </a>
         {% endif %}
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-4 gap-8">
+    <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 xl:gap-8">
         <div class="xl:col-span-3">
-            <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <div>
-                        <p class="text-sm font-semibold text-slate-500">{{ current_month }} {{ current_year }}</p>
-                        <h3 class="text-xl font-bold">Calendrier</h3>
+            <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-3 sm:p-6">
+                {% comment %}
+                Header : titre + nav.
+                  Mobile : titre + boutons icônes seuls (gain d'espace)
+                  sm+    : titre + boutons avec texte
+                {% endcomment %}
+                <div class="flex items-center justify-between mb-4 sm:mb-6 gap-2">
+                    <div class="min-w-0">
+                        <p class="text-xs sm:text-sm font-semibold text-slate-500 truncate">{{ current_month }} {{ current_year }}</p>
+                        <h3 class="text-lg sm:text-xl font-bold">{% translate "Calendrier" %}</h3>
                     </div>
-                    <div class="flex gap-2">
-                        <a href="?year={{ previous_month.year }}&month={{ previous_month.month }}" class="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 active:scale-95 transition-all duration-150">Précédent</a>
-                        <a href="?year={{ next_month.year }}&month={{ next_month.month }}" class="rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 active:scale-95 transition-all duration-150">Suivant</a>
+                    <div class="flex gap-1 sm:gap-2 shrink-0">
+                        <a href="?year={{ previous_month.year }}&month={{ previous_month.month }}"
+                           class="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-gray-700 px-2 sm:px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150"
+                           aria-label="{% translate 'Mois précédent' %}">
+                            <span class="material-symbols-outlined text-base sm:hidden">chevron_left</span>
+                            <span class="hidden sm:inline">{% translate "Précédent" %}</span>
+                        </a>
+                        <a href="?year={{ next_month.year }}&month={{ next_month.month }}"
+                           class="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-gray-700 px-2 sm:px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150"
+                           aria-label="{% translate 'Mois suivant' %}">
+                            <span class="hidden sm:inline">{% translate "Suivant" %}</span>
+                            <span class="material-symbols-outlined text-base sm:hidden">chevron_right</span>
+                        </a>
                     </div>
                 </div>
-                <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-[#4c669a] mb-4">
+
+                {% comment %}
+                Jours de la semaine.
+                  Mobile : on tronque à 1 lettre (L M M J V S D) via la 1ère lettre — pas idéal pour
+                  distinguer "Mar/Mer/Jeu", donc on garde 3 lettres mais texte plus petit.
+                {% endcomment %}
+                <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-[10px] sm:text-xs font-bold text-[#4c669a] mb-2 sm:mb-4">
                     {% for weekday in weekdays %}
-                        <div>{{ weekday }}</div>
+                        <div class="truncate">{{ weekday }}</div>
                     {% endfor %}
                 </div>
-                <div class="grid grid-cols-7 gap-2">
+
+                {% comment %}
+                Cellules du calendrier.
+                  Hauteur : aspect-square sur mobile (carrés ≈ 45px), puis min-h croissante
+                  à partir de sm. Padding et coins arrondis aussi adaptatifs.
+                {% endcomment %}
+                <div class="grid grid-cols-7 gap-1 sm:gap-2">
                     {% for week in calendar_weeks %}
                         {% for cell in week %}
                             {% if cell %}
-                                <div class="min-h-[140px] rounded-2xl border p-3 text-left {% if cell.events %}border-primary/30 bg-primary/5{% else %}border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950{% endif %}">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <span class="text-sm font-semibold">{{ cell.day.day }}</span>
+                                <div class="relative aspect-square sm:aspect-auto sm:min-h-[90px] xl:min-h-[140px] rounded-lg sm:rounded-2xl border p-1 sm:p-2 xl:p-3 text-left flex flex-col {% if cell.events %}border-primary/30 bg-primary/5{% else %}border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950{% endif %}">
+                                    <div class="flex items-center justify-between sm:mb-2 xl:mb-3 gap-1">
+                                        <span class="text-xs sm:text-sm font-semibold">{{ cell.day.day }}</span>
                                         {% if cell.events %}
-                                            <span class="rounded-full bg-primary text-white px-2 text-[10px]">{{ cell.events|length }} événements</span>
+                                            {% comment %}
+                                            Mobile : badge compact (juste le count) — le mot "événements" ne tient pas.
+                                              sm+   : badge complet.
+                                            {% endcomment %}
+                                            <span class="rounded-full bg-primary text-white px-1.5 sm:px-2 text-[9px] sm:text-[10px] leading-tight shrink-0">
+                                                {{ cell.events|length }}<span class="hidden sm:inline"> {% blocktranslate count n=cell.events|length %}événement{% plural %}événements{% endblocktranslate %}</span>
+                                            </span>
                                         {% endif %}
                                     </div>
-                                    {% for event in cell.events|slice:":2" %}
-                                        <a href="{% url 'event_detail' slug=slug event_id=event.id %}" class="block mb-2 rounded-lg bg-slate-50 p-2 text-sm text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-150">
-                                            <p class="font-semibold">{{ event.title }}</p>
-                                            <p class="text-xs text-slate-500">{{ event.location }}</p>
-                                        </a>
-                                    {% endfor %}
+                                    {% comment %}
+                                    Détails événements : cachés sur mobile (pas de place), visibles dès sm.
+                                      1 sur sm-md, 2 sur xl.
+                                    {% endcomment %}
+                                    <div class="hidden sm:block flex-1 overflow-hidden">
+                                        {% for event in cell.events|slice:":2" %}
+                                            <a href="{% url 'event_detail' slug=slug event_id=event.id %}"
+                                               class="block mb-1 xl:mb-2 rounded-lg bg-slate-50 p-1.5 xl:p-2 text-xs text-slate-700 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-200 transition-colors duration-150 {% if forloop.counter > 1 %}hidden xl:block{% endif %}">
+                                                <p class="font-semibold truncate">{{ event.title }}</p>
+                                                <p class="text-[10px] xl:text-xs text-slate-500 truncate hidden xl:block">{{ event.location }}</p>
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                    {% comment %}
+                                    Mobile uniquement : la cellule entière est cliquable s'il y a 1 événement.
+                                      Pour plus, l'utilisateur consulte la sidebar "Prochains événements".
+                                    {% endcomment %}
+                                    {% if cell.events|length == 1 %}
+                                        <a href="{% url 'event_detail' slug=slug event_id=cell.events.0.id %}"
+                                           class="sm:hidden absolute inset-0 rounded-lg" aria-label="{{ cell.events.0.title }}"></a>
+                                    {% endif %}
                                 </div>
                             {% else %}
-                                <div class="min-h-[140px] rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950"></div>
+                                <div class="aspect-square sm:aspect-auto sm:min-h-[90px] xl:min-h-[140px] rounded-lg sm:rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-950"></div>
                             {% endif %}
                         {% endfor %}
                     {% endfor %}
                 </div>
             </div>
         </div>
+
         <div class="space-y-6">
-            <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-6">
-                <h3 class="font-bold mb-4">Prochains événements</h3>
-                <div class="space-y-4">
+            <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-4 sm:p-6">
+                <h3 class="font-bold mb-3 sm:mb-4">{% translate "Prochains événements" %}</h3>
+                <div class="space-y-3 sm:space-y-4">
                     {% if upcoming_events %}
                         {% for event in upcoming_events %}
-                            <div class="rounded-2xl border border-slate-200 p-4 dark:border-gray-800 bg-slate-50 dark:bg-slate-950">
-                                <a href="{% url 'event_detail' slug=slug event_id=event.id %}" class="text-sm font-semibold text-slate-900 dark:text-white">{{ event.title }}</a>
-                                <p class="text-xs text-[#4c669a]">{{ event.date|date:'D j M @ H:i' }}</p>
-                                <p class="text-xs text-slate-500">{{ event.location }}</p>
-                            </div>
+                            <a href="{% url 'event_detail' slug=slug event_id=event.id %}"
+                               class="block rounded-2xl border border-slate-200 p-3 sm:p-4 dark:border-gray-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900 active:scale-[0.98] transition-all duration-150">
+                                <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ event.title }}</p>
+                                <p class="text-xs text-[#4c669a] mt-0.5">{{ event.date|date:'D j M @ H:i' }}</p>
+                                <p class="text-xs text-slate-500 truncate">{{ event.location }}</p>
+                            </a>
                         {% endfor %}
                     {% else %}
-                        <p class="text-sm text-slate-500">Aucun événement à venir dans ce mois.</p>
+                        <p class="text-sm text-slate-500">{% translate "Aucun événement à venir dans ce mois." %}</p>
                     {% endif %}
                 </div>
             </div>

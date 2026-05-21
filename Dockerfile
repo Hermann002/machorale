@@ -46,6 +46,7 @@ RUN groupadd -g ${APP_GID} ${APP_USER} && \
     apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     curl \
+    gettext \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -58,7 +59,8 @@ COPY --chown=${APP_UID}:${APP_GID} . .
 RUN chmod +x /app/entrypoint.sh && \
     mkdir -p /app/media /app/logs && \
     chown -R ${APP_UID}:${APP_GID} /app/media /app/logs && \
-    chmod -R 755 /app
+    chmod -R 755 /app && \
+    /opt/venv/bin/python -m django compilemessages --settings=ma_chorale.settings.prod || true
 
 USER ${APP_UID}:${APP_GID}
 

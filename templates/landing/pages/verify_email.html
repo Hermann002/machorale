@@ -1,9 +1,10 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
     {% include "../head.html" %}
-    <title>Vérification Email - Choir Management</title>
+    <title>{% translate "Vérification Email - Choir Management" %}</title>
 </head>
     <body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col">
         <div class="relative flex h-full grow flex-col group/design-root overflow-x-hidden">
@@ -37,12 +38,12 @@
                         </div>
                         <!-- Headline -->
                         <h1 class="text-[#0d121b] dark:text-white tracking-light text-[28px] md:text-[32px] font-bold leading-tight text-center pb-3">
-                                                Vérifiez votre adresse email
-                                            </h1>
+                            {% translate "Vérifiez votre adresse email" %}
+                        </h1>
                         <!-- Body Text -->
                         <p class="text-[#4f6b8e] dark:text-slate-400 text-base font-normal leading-relaxed text-center pb-8">
-                                                Un code de vérification à 6 chiffres a été envoyé à l'adresse associée à votre compte. Veuillez le saisir ci-dessous.
-                                            </p>
+                            {% translate "Un code de vérification à 6 chiffres a été envoyé à l'adresse associée à votre compte. Veuillez le saisir ci-dessous." %}
+                        </p>
                         <!-- Code Inputs -->
                         <form action="{% url 'verify_email' user_id %}" method="post">
                             {% csrf_token %}
@@ -92,17 +93,17 @@
                             <!-- Confirm Button -->
                             <div class="flex justify-center mb-6 mt-8">
                                 <button class="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-5 bg-primary hover:bg-primary/90 text-white text-lg font-bold transition-all shadow-md shadow-primary/20" type="submit">
-                                    <span class="truncate">Confirmer</span>
+                                    <span class="truncate">{% translate "Confirmer" %}</span>
                                 </button>
                             </div>
                         </form>
                         <!-- Footer Options -->
                         <div class="text-center">
                             <p class="text-sm text-[#4f6b8e] dark:text-slate-400">
-                                                        Vous n'avez pas reçu de code ? 
-                                                        <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="{% url 'resend_otp' user_id=user_id %}">
-                                                            Renvoyer le code
-                                                        </a>
+                                {% translate "Vous n'avez pas reçu de code ?" %}
+                                <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="{% url 'resend_otp' user_id=user_id %}">
+                                    {% translate "Renvoyer le code" %}
+                                </a>
                             </p>
                         </div>
                     </div>

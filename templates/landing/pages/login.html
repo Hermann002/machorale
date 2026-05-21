@@ -1,9 +1,10 @@
 {% load static %}
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
     <head>
         {% include "../head.html" %}
-        <title>login</title>
+        <title>{% translate "Connexion" %}</title>
     </head>
     <body class="bg-background-light dark:bg-background-dark font-display text-[#111318] dark:text-white min-h-screen flex flex-col">
         <!-- Top Navigation Bar -->
@@ -17,7 +18,7 @@
             </div>
             <div class="flex flex-1 justify-end gap-8">
                 <div class="flex items-center gap-9">
-                    <a class="text-[#111318] dark:text-white text-sm font-medium leading-normal hover:text-[#e0ad53] transition-colors" href="#">Contact Support</a>
+                    <a class="text-[#111318] dark:text-white text-sm font-medium leading-normal hover:text-[#e0ad53] transition-colors" href="#">{% translate "Contact support" %}</a>
                 </div>
             </div>
         </header>
@@ -35,20 +36,20 @@
                         <div class="mb-6 flex justify-center">
                             <span class="material-symbols-outlined text-6xl">music_note</span>
                         </div>
-                        <h2 class="text-3xl font-bold mb-4">Harmonie</h2>
+                        <h2 class="text-3xl font-bold mb-4">{% translate "Harmonie" %}</h2>
                         <p class="text-lg font-light text-white/90 leading-relaxed max-w-sm">
-                                                Gérez les activités, les finances et la fréquentation de votre chorale de manière fluide dans une seule plateforme unifiée.
-                                            </p>
+                            {% translate "Gérez les activités, les finances et la fréquentation de votre chorale de manière fluide dans une seule plateforme unifiée." %}
+                        </p>
                     </div>
                     <div class="absolute bottom-8 left-8 z-20">
-                        <p class="text-xs text-white/60 tracking-widest uppercase font-bold">ma chorale Pro v1</p>
+                        <p class="text-xs text-white/60 tracking-widest uppercase font-bold">{% translate "ma chorale Pro v1" %}</p>
                     </div>
                 </div>
                 <!-- Right Side: Login Form -->
                 <div class="w-full md:w-1/2 flex flex-col justify-center p-8 lg:p-16">
                     <div class="mb-10 text-center md:text-left">
-                        <h1 class="text-[#111318] dark:text-white tracking-light text-[32px] font-bold leading-tight pb-2">Se connecter</h1>
-                        <p class="text-[#616f89] dark:text-slate-400 text-base font-normal leading-normal">Bienvenue ! Veuillez entrer vos identifiants.</p>
+                        <h1 class="text-[#111318] dark:text-white tracking-light text-[32px] font-bold leading-tight pb-2">{% translate "Se connecter" %}</h1>
+                        <p class="text-[#616f89] dark:text-slate-400 text-base font-normal leading-normal">{% translate "Bienvenue ! Veuillez entrer vos identifiants." %}</p>
                     </div>
                     <form action="{% url 'login' %}" method="post" class="flex flex-col gap-6">
                         {% csrf_token %}
@@ -85,29 +86,29 @@
                         {% endif %}
                         <div class="flex items-center gap-2">
                             <input class="w-5 h-5 rounded border-[#dbdfe6] text-[#e0ad53] focus:ring-[#e0ad53] focus:ring-offset-0 transition-all cursor-pointer" id="remember" type="checkbox"/>
-                            <label class="text-sm font-medium text-[#616f89] dark:text-slate-400 cursor-pointer select-none" for="remember">Se souvenir de moi</label>
+                            <label class="text-sm font-medium text-[#616f89] dark:text-slate-400 cursor-pointer select-none" for="remember">{% translate "Se souvenir de moi" %}</label>
                         </div>
                         <!-- Submit Button -->
                         <button id="submitBtn" class="flex min-w-[84px] w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-14 px-4 bg-[#e0ad53] text-white text-base font-bold leading-normal hover:bg-[#e0ad53]/90 transition-all shadow-lg shadow-[#e0ad53]/20" type="submit">
-                            <span class="truncate">Se connecter</span>
+                            <span class="truncate">{% translate "Se connecter" %}</span>
                         </button>
                     </form>
                     <p class=" mt-4 text-center text-[#616f89] dark:text-slate-400 text-sm">
-                        <a class="text-[#e0ad53] font-bold hover:underline ml-1" href="{% url 'reset_password_request' %}">mot de passe oublié ?</a>
+                        <a class="text-[#e0ad53] font-bold hover:underline ml-1" href="{% url 'reset_password_request' %}">{% translate "Mot de passe oublié ?" %}</a>
                     </p>
                     <div class="mt-4 text-center">
-                        <p class="text-[#616f89] dark:text-slate-400 text-sm">Nouveau ici ? 
-                            <a class="text-[#e0ad53] font-bold hover:underline ml-1" href="{% url 'register' %}">Créer un compte</a>
+                        <p class="text-[#616f89] dark:text-slate-400 text-sm">{% translate "Nouveau ici ?" %}
+                            <a class="text-[#e0ad53] font-bold hover:underline ml-1" href="{% url 'register' %}">{% translate "Créer un compte" %}</a>
                         </p>
                     </div>
                 </div>
             </div>
         </main>
         <footer class="py-6 px-10 border-t border-[#f0f2f4] dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-background-dark">
-            <p class="text-[#616f89] text-xs">© 2026 machorale. Tous droits réservés.</p>
+            <p class="text-[#616f89] text-xs">{% translate "© 2026 machorale. Tous droits réservés." %}</p>
             <div class="flex gap-6">
-                <a class="text-[#616f89] text-xs hover:text-[#e0ad53] transition-colors" href="#">Confidentialité</a>
-                <a class="text-[#616f89] text-xs hover:text-[#e0ad53] transition-colors" href="#">Conditions d'utilisation</a>
+                <a class="text-[#616f89] text-xs hover:text-[#e0ad53] transition-colors" href="#">{% translate "Confidentialité" %}</a>
+                <a class="text-[#616f89] text-xs hover:text-[#e0ad53] transition-colors" href="#">{% translate "Conditions d'utilisation" %}</a>
             </div>
         </footer>
     </body>

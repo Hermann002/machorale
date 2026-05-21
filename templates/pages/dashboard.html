@@ -3,7 +3,7 @@
 {% load i18n %}
 {% load chorale_tags %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}{% translate "Tableau de bord" %}{% endblock %}
 
 {% block content %}
 {% include "../components/alert/message.html" %}
@@ -11,12 +11,12 @@
     <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
             <h2 class="text-2xl font-bold tracking-tight">{% translate "Vue d'ensemble" %}</h2>
-            <p class="text-[#4c669a] text-sm">Content de te revoir. Ce qui s'est passé aujourdh'hui avec la chorale.</p>
+            <p class="text-[#4c669a] text-sm">{% translate "Content de te revoir. Voici ce qui s'est passé aujourd'hui avec la chorale." %}</p>
         </div>
         {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'secretary' %}
         <a href="{% url 'event_create' slug=slug %}" class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
             <span class="material-symbols-outlined mr-2">add</span>
-            Créer un événement
+            {% translate "Créer un événement" %}
         </a>
         {% endif %}
     </div>
@@ -27,10 +27,10 @@
                 <div class="p-2 bg-primary/10 rounded-lg">
                     <span class="material-symbols-outlined text-primary">groups</span>
                 </div>
-            <span class="text-[#07883b] text-xs font-bold">+{{ increase_members }} new</span>
+            <span class="text-[#07883b] text-xs font-bold">+{{ increase_members }} {% translate "nouveaux" %}</span>
             </div>
-            <p class="text-[#4c669a] text-sm font-medium">Total Membres</p>
-            <p class="text-2xl font-bold mt-1">{{ total_members }} Actif(s)</p>
+            <p class="text-[#4c669a] text-sm font-medium">{% translate "Total membres" %}</p>
+            <p class="text-2xl font-bold mt-1">{% blocktranslate count n=total_members %}{{ n }} actif{% plural %}{{ n }} actifs{% endblocktranslate %}</p>
         </div>
         <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div class="flex justify-between items-start mb-4">
@@ -39,7 +39,7 @@
                 </div>
             <span class="text-[#e73908] text-xs font-bold">-{{ number_absentees }} att.</span>
             </div>
-            <p class="text-[#4c669a] text-sm font-medium">Last Meeting Date</p>
+            <p class="text-[#4c669a] text-sm font-medium">{% translate "Date de la dernière réunion" %}</p>
             <p class="text-2xl font-bold mt-1">{{ last_meeting_date }}</p>
         </div>
         <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -49,18 +49,18 @@
                 </div>
             <span class="text-[#07883b] text-xs font-bold">+{{ increase_balance }}%</span>
             </div>
-            <p class="text-[#4c669a] text-sm font-medium">Current Balance</p>
-            <p class="text-2xl font-bold mt-1">xaf {{ current_balance|floatformat:2 }}</p>
+            <p class="text-[#4c669a] text-sm font-medium">{% translate "Solde actuel" %}</p>
+            <p class="text-2xl font-bold mt-1">XAF {{ current_balance|floatformat:2 }}</p>
         </div>
         <div class="bg-white dark:bg-gray-900 p-6 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm hover:shadow-md transition-shadow duration-200">
             <div class="flex justify-between items-start mb-4">
                 <div class="p-2 bg-rose-100 rounded-lg">
                     <span class="material-symbols-outlined text-rose-600">priority_high</span>
                 </div>
-                <span class="text-[#07883b] text-xs font-bold">+{{ increase_sanctions }} new</span>
+                <span class="text-[#07883b] text-xs font-bold">+{{ increase_sanctions }} {% translate "nouveaux" %}</span>
             </div>
-            <p class="text-[#4c669a] text-sm font-medium">Pending Sanctions</p>
-            <p class="text-2xl font-bold mt-1">{{ pending_sanctions }} Sanctions</p>
+            <p class="text-[#4c669a] text-sm font-medium">{% translate "Sanctions en cours" %}</p>
+            <p class="text-2xl font-bold mt-1">{% blocktranslate count n=pending_sanctions %}{{ n }} sanction{% plural %}{{ n }} sanctions{% endblocktranslate %}</p>
         </div>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -68,8 +68,8 @@
         <div class="lg:col-span-2">
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-[#e7ebf3] dark:border-gray-800 flex justify-between items-center">
-                    <h3 class="font-bold">Activités récentes</h3>
-                    <button class="text-primary text-sm font-bold hover:underline active:scale-95 transition-all duration-150">voir plus</button>
+                    <h3 class="font-bold">{% translate "Activités récentes" %}</h3>
+                    <button class="text-primary text-sm font-bold hover:underline active:scale-95 transition-all duration-150">{% translate "Voir plus" %}</button>
                 </div>
                 <div class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
                     {% if recent_activities %}
@@ -81,7 +81,7 @@
                                 <div class="flex-1">
                                     <p class="text-sm font-semibold">{{ event.short_description|default:event.description }}</p>
                                     {% if event.event_type == 'payment' and event.amount %}
-                                        <p class="text-xs text-[#4c669a]">Added to General Fund • xaf {{ event.amount|floatformat:2 }}</p>
+                                        <p class="text-xs text-[#4c669a]">{% blocktranslate with amount=event.amount|floatformat:2 %}Ajouté au fonds général • XAF {{ amount }}{% endblocktranslate %}</p>
                                     {% else %}
                                         <p class="text-xs text-[#4c669a]">{{ event.description }}</p>
                                     {% endif %}
@@ -97,7 +97,7 @@
                         {% endfor %}
                     {% else %}
                         <div class="px-6 py-8 text-center text-sm text-slate-500">
-                            Aucune activité récente enregistrée.
+                            {% translate "Aucune activité récente enregistrée." %}
                         </div>
                     {% endif %}
                 </div>
@@ -108,7 +108,7 @@
             <!-- Upcoming Practices -->
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-6">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="font-bold">Upcoming Practices</h3>
+                    <h3 class="font-bold">{% translate "Prochaines répétitions" %}</h3>
                     <span class="material-symbols-outlined text-[#4c669a] cursor-pointer">more_horiz</span>
                 </div>
                 <div class="space-y-4">
@@ -123,23 +123,23 @@
                         {% endfor %}
                     {% else %}
                         <div class="text-sm text-slate-500">
-                            Aucun événement de pratique à venir pour le moment.
+                            {% translate "Aucun événement de pratique à venir pour le moment." %}
                         </div>
                     {% endif %}
                 </div>
             </div>
             <!-- Quick Links -->
             <div class="bg-primary/5 rounded-xl border border-primary/20 p-6">
-                <h4 class="text-sm font-bold text-primary mb-4">Quick Tasks</h4>
+                <h4 class="text-sm font-bold text-primary mb-4">{% translate "Actions rapides" %}</h4>
                 <div class="flex flex-col gap-3">
                     <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 active:scale-95 transition-all duration-150">
-                        <span class="material-symbols-outlined text-sm">download</span> Export attendance log
+                        <span class="material-symbols-outlined text-sm">download</span> {% translate "Exporter le registre des présences" %}
                     </button>
                     <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 active:scale-95 transition-all duration-150">
-                        <span class="material-symbols-outlined text-sm">mail</span> Email all members
+                        <span class="material-symbols-outlined text-sm">mail</span> {% translate "Envoyer un email à tous les membres" %}
                     </button>
                     <button class="flex items-center gap-2 text-xs font-semibold text-primary hover:text-primary/80 active:scale-95 transition-all duration-150">
-                        <span class="material-symbols-outlined text-sm">print</span> Print choir sheet
+                        <span class="material-symbols-outlined text-sm">print</span> {% translate "Imprimer la fiche de la chorale" %}
                     </button>
                 </div>
             </div>

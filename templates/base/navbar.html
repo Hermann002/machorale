@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 
 <div id="sidebar-container">
   <div id="sidebar-backdrop" class="fixed inset-0 z-30 bg-black/40 md:hidden {% if not sidebar_open %}hidden{% endif %} h-full"></div>
@@ -12,7 +13,7 @@
               <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-auto">
             </a>
           </div>
-          <p class="text-xs text-[#4c669a] mt-1">Admin Portal</p>
+          <p class="text-xs text-[#4c669a] mt-1">{% translate "Admin Portal" %}</p>
         </div>
         <button hx-get="{% url 'sidebar_toggle' slug=slug %}?open=0" hx-target="#sidebar-container" hx-swap="outerHTML" class="md:hidden p-2 rounded-lg text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800">
           <span class="material-symbols-outlined">close</span>
@@ -29,13 +30,36 @@
         
         transition-all" hx-boost="true" href="{% url 'dashboard' slug=slug %}">
           <span class="material-symbols-outlined text-xl">dashboard</span>
-          <span class="text-sm font-medium">Dashboard</span>
+          <span class="text-sm font-medium">{% translate "Dashboard" %}</span>
         </a>
+        {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'treasurer' %}
+        <a href="{% url 'contributions' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
+        {% if request.resolver_match.url_name == 'contributions' or request.resolver_match.url_name == 'contribution_create' or request.resolver_match.url_name == 'contribution_edit' %}
+          bg-primary text-white
+        {% else %}
+          text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
+        {% endif %}
+        transition-all" hx-boost="true">
+          <span class="material-symbols-outlined text-xl">money</span>
+          <span class="text-sm font-medium">{% translate "Cotisations" %}</span>
+        </a>
+        <a href="{% url 'payments' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
+        {% if request.resolver_match.url_name == 'payments' or request.resolver_match.url_name == 'payment_create' %}
+          bg-primary text-white
+        {% else %}
+          text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
+        {% endif %}
+        transition-all" hx-boost="true">
+          <span class="material-symbols-outlined text-xl">receipt_long</span>
+          <span class="text-sm font-medium">{% translate "Paiements" %}</span>
+        </a>
+        {% else %}
         <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
         disabled>
           <span class="material-symbols-outlined text-xl">money</span>
-          <span class="text-sm font-medium">Contributions</span>
+          <span class="text-sm font-medium">{% translate "Cotisations" %}</span>
         </button>
+        {% endif %}
         <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg
 
         {% if request.resolver_match.url_name == 'members' %}
@@ -46,7 +70,7 @@
         
         transition-all" hx-get="{% url 'members' slug=slug %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
           <span class="material-symbols-outlined text-xl">group</span>
-          <span class="text-sm font-medium">Members</span>
+          <span class="text-sm font-medium">{% translate "Membres" %}</span>
         </button>
         <a href="{% url 'events' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
 
@@ -58,18 +82,54 @@
         
         transition-all" hx-get="{% url 'events' slug=slug %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
           <span class="material-symbols-outlined text-xl">event</span>
-          <span class="text-sm font-medium">Calendrier</span>
+          <span class="text-sm font-medium">{% translate "Calendrier" %}</span>
         </a>
+        {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'censor' %}
+        <a href="{% url 'absences' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
+        {% if request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'absence_bulk_create' or request.resolver_match.url_name == 'absence_edit' %}
+          bg-primary text-white
+        {% else %}
+          text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
+        {% endif %}
+        transition-all" hx-boost="true">
+          <span class="material-symbols-outlined text-xl">event_busy</span>
+          <span class="text-sm font-medium">{% translate "Absences" %}</span>
+        </a>
+        <a href="{% url 'sanctions' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
+        {% if request.resolver_match.url_name == 'sanctions' or request.resolver_match.url_name == 'sanction_create' or request.resolver_match.url_name == 'sanction_edit' %}
+          bg-primary text-white
+        {% else %}
+          text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
+        {% endif %}
+        transition-all" hx-boost="true">
+          <span class="material-symbols-outlined text-xl">gavel</span>
+          <span class="text-sm font-medium">{% translate "Sanctions" %}</span>
+        </a>
+        {% else %}
         <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
         disabled>
           <span class="material-symbols-outlined text-xl">description</span>
-          <span class="text-sm font-medium">Sanctions</span>
+          <span class="text-sm font-medium">{% translate "Sanctions" %}</span>
         </button>
+        {% endif %}
+        {% if request.user.role == 'super_admin_chorale' or request.user.chorale_role == 'treasurer' %}
+        <a href="{% url 'cashflow' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
+        {% if request.resolver_match.url_name == 'cashflow' or request.resolver_match.url_name == 'cashflow_create' or request.resolver_match.url_name == 'cashflow_edit' %}
+          bg-primary text-white
+        {% else %}
+          text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
+        {% endif %}
+        transition-all" hx-boost="true">
+          <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
+          <span class="text-sm font-medium">{% translate "Finances" %}</span>
+        </a>
+        {% else %}
         <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
         disabled>
           <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
-          <span class="text-sm font-medium">Finances</span>
+          <span class="text-sm font-medium">{% translate "Finances" %}</span>
         </button>
+        {% endif %}
         <a href="{% url 'events_list' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
         {% if request.resolver_match.url_name == 'events_list' %}
           bg-primary text-white
@@ -78,12 +138,12 @@
         {% endif %}
         transition-all" hx-get="{% url 'events_list' slug=slug %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
           <span class="material-symbols-outlined text-xl">event_list</span>
-          <span class="text-sm font-medium">Evénements</span>
+          <span class="text-sm font-medium">{% translate "Evénements" %}</span>
         </a>
         <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
         disabled>
           <span class="material-symbols-outlined text-xl">source_notes</span>
-          <span class="text-sm font-medium">Activités</span>
+          <span class="text-sm font-medium">{% translate "Activités" %}</span>
         </button>
       </nav>
     </div>
@@ -95,13 +155,26 @@
         hx-trigger="click"
         class="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
         <span class="material-symbols-outlined text-base">person_add</span>
-        Ajouter un membre
+        {% translate "Ajouter un membre" %}
       </button>
       <a href="{% url 'logout' %}"
          class="mt-3 w-full flex items-center justify-center gap-2 border border-[#e7ebf3] dark:border-gray-700 text-[#4c669a] dark:text-slate-400 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#e7ebf3] dark:hover:bg-gray-800 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
         <span class="material-symbols-outlined text-base">logout</span>
-        Déconnexion
+        {% translate "Déconnexion" %}
       </a>
+      {% get_current_language as CURRENT_LANGUAGE %}
+      {% get_available_languages as AVAILABLE_LANGUAGES %}
+      <form action="{% url 'set_language' %}" method="post" data-no-loading class="mt-3 flex items-center justify-center gap-1 text-xs">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ redirect_to|default:request.get_full_path }}">
+        {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+          <button type="submit" name="language" value="{{ lang_code }}"
+                  class="px-2 py-1 rounded {% if lang_code == CURRENT_LANGUAGE %}bg-primary text-white{% else %}text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800{% endif %} transition-all uppercase">
+            {{ lang_code }}
+          </button>
+          {% if not forloop.last %}<span class="text-slate-400">|</span>{% endif %}
+        {% endfor %}
+      </form>
     </div>
   </div>
 </aside>

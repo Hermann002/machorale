@@ -1,0 +1,64 @@
+{% extends "../../base/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% if is_edit %}Modifier la cotisation{% else %}Nouveau type de cotisation{% endif %}{% endblock %}
+
+{% block content %}
+{% include "../../components/alert/message.html" %}
+<div class="p-8 max-w-3xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'contributions' slug=slug %}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline active:scale-95 transition-all duration-150 mb-3">
+            <span class="material-symbols-outlined">arrow_back</span>Retour aux cotisations
+        </a>
+        <h2 class="text-2xl font-bold tracking-tight">
+            {% if is_edit %}Modifier « {{ contribution.title }} »{% else %}Nouveau type de cotisation{% endif %}
+        </h2>
+        <p class="text-[#4c669a] text-sm">Définissez le montant attendu par membre et un éventuel objectif total.</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-3xl border border-[#cfd7e7] dark:border-gray-800 p-8 shadow-sm">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Titre</label>
+                {{ form.title }}
+                {{ form.title.errors }}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Montant par membre (XAF)</label>
+                    {{ form.amount }}
+                    {{ form.amount.errors }}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Objectif total (optionnel)</label>
+                    {{ form.target_amount }}
+                    {{ form.target_amount.errors }}
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Description</label>
+                {{ form.description }}
+                {{ form.description.errors }}
+            </div>
+
+            <label class="inline-flex items-center gap-2">
+                {{ form.is_active }}
+                <span class="text-sm text-slate-700 dark:text-slate-200">Cotisation active (visible dans les paiements)</span>
+            </label>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <a href="{% url 'contributions' slug=slug %}" class="text-sm font-semibold text-slate-500 hover:text-slate-700 px-4 py-2">Annuler</a>
+                <button type="submit" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-5 py-2.5 rounded-xl hover:bg-primary/90 active:scale-95 transition-all duration-150">
+                    <span class="material-symbols-outlined text-base">save</span>
+                    {% if is_edit %}Enregistrer{% else %}Créer{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 {% load static %}
+{% load i18n %}
 <header class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-solid border-[#e7ebf3] dark:border-[#2d3648] px-6 lg:px-40 py-4">
     <div class="max-w-[1200px] mx-auto">
         <!-- Desktop Layout : Logo à gauche, Navbar centrée, Boutons à droite -->
@@ -13,45 +14,58 @@
             <!-- Navbar centrée -->
             <div class="mx-auto">
                 <nav class="flex items-center gap-10">
-                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#features">Fonctionnalités</a>
-                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#pricing">Tarifs</a>
-                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#about">À propos</a>
+                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#features">{% translate "Fonctionnalités" %}</a>
+                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#pricing">{% translate "Tarifs" %}</a>
+                    <a class="text-sm font-semibold hover:text-[#e0ad53] transition-colors" href="#about">{% translate "À propos" %}</a>
                 </nav>
             </div>
 
             <!-- Boutons (à droite) -->
-            <div class="flex gap-3">
+            <div class="flex gap-3 items-center">
+                {% get_current_language as CURRENT_LANGUAGE %}
+                {% get_available_languages as AVAILABLE_LANGUAGES %}
+                <form action="{% url 'set_language' %}" method="post" data-no-loading class="flex items-center gap-1 text-xs mr-2">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ redirect_to|default:request.get_full_path }}">
+                    {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+                        <button type="submit" name="language" value="{{ lang_code }}"
+                                class="px-2 py-1 rounded {% if lang_code == CURRENT_LANGUAGE %}bg-primary text-white{% else %}text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800{% endif %} transition-all uppercase">
+                            {{ lang_code }}
+                        </button>
+                        {% if not forloop.last %}<span class="text-slate-400">|</span>{% endif %}
+                    {% endfor %}
+                </form>
                 {% if not user.is_authenticated %}
                 <a href="{% url 'login' %}">
                     <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
-                        login
+                        {% translate "Connexion" %}
                     </button>
                 </a>
                 <a href="{% url 'register' %}" class="no-underline">
                     <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-                        Free trial
+                        {% translate "Essai gratuit" %}
                     </button>
                 </a>
                 {% elif slug %}
                 <a href="{% url 'dashboard' slug=slug %}">
                     <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
-                        Dashboard
+                        {% translate "Tableau de bord" %}
                     </button>
                 </a>
                 <a href="{% url 'logout' %}">
                     <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
-                        logout
+                        {% translate "Déconnexion" %}
                     </button>
                 </a>
                 {% else %}
                 <a href="{% url 'create_chorale' %}">
                     <button class="sm:flex min-w-[100px] items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
-                        Créer une chorale
+                        {% translate "Créer une chorale" %}
                     </button>
                 </a>
                 <a href="{% url 'logout' %}">
                     <button class="flex min-w-[120px] items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
-                        logout
+                        {% translate "Déconnexion" %}
                     </button>
                 </a>
                 {% endif %}
@@ -76,43 +90,54 @@
     <div id="mobile-menu" class="hidden md:hidden max-w-[1200px] mx-auto mt-4 px-6 lg:px-40">
         <div class="bg-background-light dark:bg-background-dark rounded-lg shadow-lg p-6 border border-[#e7ebf3] dark:border-[#2d3648]">
             <nav class="flex flex-col gap-4 mb-6">
-                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#features">Fonctionnalités</a>
-                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#pricing">Tarifs</a>
-                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#about">À propos</a>
+                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#features">{% translate "Fonctionnalités" %}</a>
+                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#pricing">{% translate "Tarifs" %}</a>
+                <a class="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-[#e0ad53] transition-colors py-2" href="#about">{% translate "À propos" %}</a>
             </nav>
+            <form action="{% url 'set_language' %}" method="post" data-no-loading class="flex items-center justify-center gap-1 text-xs mb-3">
+                {% csrf_token %}
+                <input name="next" type="hidden" value="{{ redirect_to|default:request.get_full_path }}">
+                {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+                    <button type="submit" name="language" value="{{ lang_code }}"
+                            class="px-2 py-1 rounded {% if lang_code == CURRENT_LANGUAGE %}bg-primary text-white{% else %}text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800{% endif %} transition-all uppercase">
+                        {{ lang_code }}
+                    </button>
+                    {% if not forloop.last %}<span class="text-slate-400">|</span>{% endif %}
+                {% endfor %}
+            </form>
 
             <div class="flex flex-col gap-3 pt-4 border-t border-[#e7ebf3] dark:border-[#2d3648]">
                 {% if not user.is_authenticated %}
                 <a href="{% url 'login' %}" class="block">
                     <button class="w-full flex items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
-                        login
+                        {% translate "Connexion" %}
                     </button>
                 </a>
                 <a href="{% url 'register' %}" class="block no-underline">
                     <button class="w-full flex items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
-                        Free trial
+                        {% translate "Essai gratuit" %}
                     </button>
                 </a>
                 {% elif slug %}
                 <a href="{% url 'dashboard' slug=slug %}" class="block">
                     <button class="w-full flex items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
-                        dashboard
+                        {% translate "Tableau de bord" %}
                     </button>
                 </a>
                 <a href="{% url 'logout' %}" class="block">
                     <button class="w-full flex items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
-                        logout
+                        {% translate "Déconnexion" %}
                     </button>
                 </a>
                 {% else %}
                 <a href="{% url 'create_chorale' %}" class="block">
                     <button class="w-full flex items-center justify-center rounded-lg h-10 px-4 bg-transparent border border-[#e7ebf3] dark:border-[#2d3648] text-sm font-bold hover:bg-[#fffaf2] dark:hover:bg-[#2d3648] transition-all">
-                        Créer une chorale
+                        {% translate "Créer une chorale" %}
                     </button>
                 </a>
                 <a href="{% url 'logout' %}" class="block">
                     <button class="w-full flex items-center justify-center rounded-lg h-10 px-5 bg-[#e5a026] text-white text-sm font-bold shadow-lg shadow-[#e0ad53]/20 hover:scale-105 transition-all">
-                        logout
+                        {% translate "Déconnexion" %}
                     </button>
                 </a>
                 {% endif %}

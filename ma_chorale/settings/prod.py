@@ -6,7 +6,6 @@ SECRET_KEY = config('SECRET_KEY')
 
 MIDDLEWARE += [
     'django.middleware.cache.UpdateCacheMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 

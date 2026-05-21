@@ -15,11 +15,15 @@ from functools import lru_cache
 import calendar
 import json
 import os
-from .models import Chorale, Event as ActivityEvent, ChoraleEvent
+from .models import Chorale, Event as ActivityEvent, ChoraleEvent, Contribution, MemberContribution, CashFlow, Absence, Sanction
 from manage_users.models import CustomUser, Profile
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .mixins import ChoraleRequireMixin
-from .services import get_dashboard_stats
+from .mixins import ChoraleRequireMixin, TreasurerRequiredMixin, CensorRequiredMixin
+from .services import get_dashboard_stats, ContributionService, SanctionService
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import Sum, Q
+from django.db import transaction
+from django.utils.translation import gettext as _, ngettext
 
 
 @lru_cache(maxsize=1)
@@ -41,13 +45,15 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
         total_members = stats.get("total_members", 0)
         upcoming_event_count = stats.get("upcoming_event_count", 0)
         last_meeting_date = formats.date_format(timezone.now(), "M d, Y")
-        current_balance = 1_000_000.00
-        pending_sanctions = 5
+        # Vraies stats issues du service (anciens mocks supprimés)
+        current_balance = stats.get("cash_balance", 0)
+        pending_sanctions = stats.get("open_sanctions_count", 0)
+        number_absentees = stats.get("unjustified_absences_this_month", 0)
 
-        increase_members = 2
-        number_absentees = 4
-        increase_balance = 10
-        increase_sanctions = 1
+        # Deltas non encore calculés (TODO: snapshots historiques pour comparer)
+        increase_members = 0
+        increase_balance = 0
+        increase_sanctions = 0
 
         recent_events = list(ActivityEvent.objects.filter(chorale=self.chorale).order_by('-timestamp')[:5])
         recent_activities = recent_events if recent_events else load_recent_activities()
@@ -63,7 +69,7 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
             last_meeting_date = formats.date_format(upcoming_events[0].date, "M d, Y")
 
         context = {
-            "page_title": "Tableau de bord",
+            "page_title": _("Dashboard"),
             "total_members": total_members,
             "last_meeting_date": last_meeting_date,
             "current_balance": current_balance,
@@ -101,7 +107,7 @@ class CreateChoraleView(SessionWizardView):
 
     def get(self, request, *args, **kwargs):
         if not getattr(request.user, 'is_verify', False):
-            messages.error(request, "You need to verify your email before creating a chorale.")
+            messages.error(request, _("You need to verify your email before creating a chorale."))
             return redirect(reverse('home'))
 
         try:
@@ -110,7 +116,7 @@ class CreateChoraleView(SessionWizardView):
             managed_chorale = None
 
         if managed_chorale:
-            messages.info(request, "You already manage a chorale. Redirecting to your dashboard.")
+            messages.info(request, _("You already manage a chorale. Redirecting to your dashboard."))
             return redirect(reverse('dashboard', kwargs={"slug": managed_chorale.slug}))
 
         return super().get(request, *args, **kwargs)
@@ -154,12 +160,12 @@ class CreateChoraleView(SessionWizardView):
             user.role = CustomUser.ROLE_SUPERADMIN_CHORALE
             user.save()
 
-            messages.success(self.request, "Votre chorale a été créée avec succès !")
+            messages.success(self.request, _("Your chorale has been created successfully!"))
             return redirect(reverse('dashboard', kwargs={"slug": chorale.slug}))
-            
+
         except Exception as e:
             print(f"Erreur lors de la création de la chorale: {e}")
-            messages.error(self.request, "Une erreur est survenue lors de la création de la chorale.")
+            messages.error(self.request, _("An error occurred while creating the chorale."))
             return redirect(reverse('home'))
     
 
@@ -180,7 +186,7 @@ class ListMembersView(ChoraleRequireMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         total_members = self.paginator.count if hasattr(self, 'paginator') else len(self.get_queryset())
-        context["page_title"] = "Membres de la chorale"
+        context["page_title"] = _("Chorale members")
         context["total_members"] = total_members
         context["slug"] = self.chorale.slug
         return context
@@ -192,7 +198,7 @@ class UpdateMemberRoleView(ChoraleRequireMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         # Seul l'admin peut modifier les rôles des membres
         if request.user.role != CustomUser.ROLE_SUPERADMIN_CHORALE:
-            messages.error(request, "Vous n'avez pas la permission de modifier les rôles.")
+            messages.error(request, _("You do not have permission to modify roles."))
             return redirect(reverse('home'))
         return super().dispatch(request, *args, **kwargs)
 
@@ -210,7 +216,7 @@ class UpdateMemberRoleView(ChoraleRequireMixin, TemplateView):
         form = self.form_class(request.POST, instance=member)
         if form.is_valid():
             form.save()
-            messages.success(request, f"Le rôle de {member.get_full_name()} a bien été mis à jour.")
+            messages.success(request, _("The role of %(name)s has been updated.") % {'name': member.get_full_name()})
             return redirect(reverse('members', kwargs={"slug": self.chorale.slug}))
 
         return render(request, self.template_name, {
@@ -262,9 +268,9 @@ class EventListView(ChoraleRequireMixin, TemplateView):
         next_month = date(year, month, days_in_month) + timedelta(days=1)
 
         context = {
-            "page_title": "Calendrier des événements",
+            "page_title": _("Events calendar"),
             "calendar_weeks": weeks,
-            "weekdays": ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
+            "weekdays": [_("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat"), _("Sun")],
             "current_month": calendar.month_name[month],
             "current_year": year,
             "previous_month": previous_month,
@@ -280,7 +286,7 @@ class CreateEventView(ChoraleRequireMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if not (request.user.role == CustomUser.ROLE_SUPERADMIN_CHORALE or request.user.chorale_role == CustomUser.CHORALE_ROLE_SECRETARY):
-            messages.error(request, "Vous n'avez pas la permission de créer un événement.")
+            messages.error(request, _("You do not have permission to create an event."))
             return redirect(reverse('dashboard', kwargs={"slug": kwargs.get('slug')}))
         return super().dispatch(request, *args, **kwargs)
 
@@ -307,7 +313,7 @@ class CreateEventView(ChoraleRequireMixin, TemplateView):
                 request=request,
             )
 
-            messages.success(request, "L'événement a été créé avec succès.")
+            messages.success(request, _("The event has been created successfully."))
             return redirect(reverse('events', kwargs={"slug": self.chorale.slug}))
 
         return render(request, self.template_name, {"form": form, "slug": self.chorale.slug})
@@ -347,7 +353,7 @@ class EventUpdateView(ChoraleRequireMixin, TemplateView):
 
     def dispatch(self, request, *args, **kwargs):
         if not self._can_edit(request):
-            messages.error(request, "Vous n'avez pas la permission de modifier un événement.")
+            messages.error(request, _("You do not have permission to modify an event."))
             return redirect(reverse('events', kwargs={"slug": kwargs.get('slug')}))
         return super().dispatch(request, *args, **kwargs)
 
@@ -376,7 +382,7 @@ class EventUpdateView(ChoraleRequireMixin, TemplateView):
                 metadata={"event_id": event.id, "title": event.title},
                 request=request,
             )
-            messages.success(request, "L'événement a été modifié avec succès.")
+            messages.success(request, _("The event has been updated successfully."))
             return redirect(reverse('event_detail', kwargs={"slug": self.chorale.slug, "event_id": event.id}))
         return render(request, self.template_name, {
             "form": form,
@@ -385,12 +391,534 @@ class EventUpdateView(ChoraleRequireMixin, TemplateView):
             "is_edit": True,
         })
 
-class ContributionView(ChoraleRequireMixin, TemplateView):
-    template_name = "pages/contributions.html"
+# ── Trésorier ─────────────────────────────────────────────────────────────
+#
+# Toutes les vues ci-dessous héritent de TreasurerRequiredMixin :
+# - super_admin_chorale → accès complet
+# - chorale_role == 'treasurer' → accès complet
+# - autres rôles → redirect vers dashboard avec message d'erreur
+#
+# Les listes (Contribution, MemberContribution, CashFlow) restent accessibles
+# en lecture à tout membre via ChoraleRequireMixin si on l'utilisait — choix
+# délibéré : ici on restreint TOUT, car les données financières sont sensibles.
+
+
+class ContributionListView(TreasurerRequiredMixin, TemplateView):
+    template_name = "pages/treasurer/contribution_list.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        contributions = (
+            self.chorale.contributions
+            .annotate(collected=Sum('payments__amount'))
+            .order_by('-is_active', '-created_at')
+        )
+        return render(request, self.template_name, {
+            'contributions': contributions,
+            'slug': self.chorale.slug,
+        })
+
+
+class ContributionCreateView(TreasurerRequiredMixin, TemplateView):
+    template_name = "pages/treasurer/contribution_form.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        from .forms import ContributionForm
+        form = ContributionForm(chorale=self.chorale)
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'is_edit': False,
+        })
+
+    def post(self, request, slug, *args, **kwargs):
+        from .forms import ContributionForm
+        form = ContributionForm(request.POST, chorale=self.chorale)
+        if form.is_valid():
+            contribution = form.save(commit=False)
+            contribution.chorale = self.chorale  # ne JAMAIS faire confiance au form pour ça
+            contribution.save()
+            ActivityEvent.log(
+                chorale=self.chorale, user=request.user, event_type='other',
+                description=f"Type de cotisation créé : {contribution.title}",
+                obj=contribution, request=request,
+            )
+            messages.success(request, _("Contribution type created."))
+            return redirect(reverse('contributions', kwargs={'slug': self.chorale.slug}))
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'is_edit': False,
+        })
+
+
+class ContributionUpdateView(TreasurerRequiredMixin, TemplateView):
+    template_name = "pages/treasurer/contribution_form.html"
+
+    def _get_object(self, contribution_id):
+        return get_object_or_404(Contribution, id=contribution_id, chorale=self.chorale)
+
+    def get(self, request, slug, contribution_id, *args, **kwargs):
+        from .forms import ContributionForm
+        obj = self._get_object(contribution_id)
+        form = ContributionForm(instance=obj, chorale=self.chorale)
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'contribution': obj, 'is_edit': True,
+        })
+
+    def post(self, request, slug, contribution_id, *args, **kwargs):
+        from .forms import ContributionForm
+        obj = self._get_object(contribution_id)
+        form = ContributionForm(request.POST, instance=obj, chorale=self.chorale)
+        if form.is_valid():
+            form.save()
+            ActivityEvent.log(
+                chorale=self.chorale, user=request.user, event_type='other',
+                description=f"Type de cotisation modifié : {obj.title}",
+                obj=obj, request=request,
+            )
+            messages.success(request, _("Contribution type updated."))
+            return redirect(reverse('contributions', kwargs={'slug': self.chorale.slug}))
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'contribution': obj, 'is_edit': True,
+        })
+
+
+class ContributionDeleteView(TreasurerRequiredMixin, TemplateView):
+    """POST only — pas de page de confirmation séparée pour rester simple.
+    Le bouton dans la liste demande confirmation côté JS."""
+
+    def post(self, request, slug, contribution_id, *args, **kwargs):
+        obj = get_object_or_404(Contribution, id=contribution_id, chorale=self.chorale)
+        title = obj.title
+        obj.delete()
+        ActivityEvent.log(
+            chorale=self.chorale, user=request.user, event_type='other',
+            description=f"Type de cotisation supprimé : {title}",
+            request=request,
+        )
+        messages.success(request, _("Contribution \"%(title)s\" deleted.") % {'title': title})
+        return redirect(reverse('contributions', kwargs={'slug': self.chorale.slug}))
 
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name)
-    
+        # Empêche le retrait par GET (idempotence HTTP)
+        return redirect(reverse('contributions', kwargs={'slug': kwargs.get('slug')}))
+
+
+class MemberContributionListView(TreasurerRequiredMixin, TemplateView):
+    template_name = "pages/treasurer/payment_list.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        payments = (
+            MemberContribution.objects
+            .filter(contribution__chorale=self.chorale)
+            .select_related('contribution', 'member', 'recorded_by')
+        )
+        # Filtre optionnel par contribution / membre via query string
+        contrib_id = request.GET.get('contribution')
+        member_id = request.GET.get('member')
+        if contrib_id:
+            payments = payments.filter(contribution_id=contrib_id)
+        if member_id:
+            payments = payments.filter(member_id=member_id)
+
+        total = payments.aggregate(s=Sum('amount'))['s'] or 0
+
+        return render(request, self.template_name, {
+            'payments': payments,
+            'total': total,
+            'slug': self.chorale.slug,
+            'contributions': self.chorale.contributions.filter(is_active=True),
+            'members': self.chorale.members.all(),
+            'filter_contribution': contrib_id or '',
+            'filter_member': member_id or '',
+        })
+
+
+class MemberContributionCreateView(TreasurerRequiredMixin, TemplateView):
+    template_name = "pages/treasurer/payment_form.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        from .forms import MemberContributionForm
+        form = MemberContributionForm(chorale=self.chorale)
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug,
+        })
+
+    def post(self, request, slug, *args, **kwargs):
+        from .forms import MemberContributionForm
+        form = MemberContributionForm(request.POST, chorale=self.chorale)
+        if form.is_valid():
+            try:
+                # On délègue au service : centralise validation métier + audit
+                ContributionService.record_payment(
+                    contribution=form.cleaned_data['contribution'],
+                    member=form.cleaned_data['member'],
+                    amount=form.cleaned_data['amount'],
+                    paid_at=form.cleaned_data.get('paid_at'),
+                    note=form.cleaned_data.get('note', ''),
+                    recorded_by=request.user,
+                    request=request,
+                )
+            except DjangoValidationError as e:
+                form.add_error(None, e.message)
+                return render(request, self.template_name, {
+                    'form': form, 'slug': self.chorale.slug,
+                })
+            messages.success(request, _("Payment recorded."))
+            return redirect(reverse('payments', kwargs={'slug': self.chorale.slug}))
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug,
+        })
+
+
+class CashFlowListView(TreasurerRequiredMixin, TemplateView):
+    template_name = "pages/treasurer/cashflow_list.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        flows = self.chorale.cash_flows.select_related('created_by')
+        cash_in = flows.filter(type_cash_flow=CashFlow.TYPE_ENTREE).aggregate(s=Sum('amount'))['s'] or 0
+        cash_out = flows.filter(type_cash_flow=CashFlow.TYPE_SORTIE).aggregate(s=Sum('amount'))['s'] or 0
+        return render(request, self.template_name, {
+            'flows': flows,
+            'cash_in': cash_in,
+            'cash_out': cash_out,
+            'balance': cash_in - cash_out,
+            'slug': self.chorale.slug,
+        })
+
+
+class CashFlowCreateView(TreasurerRequiredMixin, TemplateView):
+    template_name = "pages/treasurer/cashflow_form.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        from .forms import CashFlowForm
+        form = CashFlowForm()
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'is_edit': False,
+        })
+
+    def post(self, request, slug, *args, **kwargs):
+        from .forms import CashFlowForm
+        form = CashFlowForm(request.POST)
+        if form.is_valid():
+            flow = form.save(commit=False)
+            flow.chorale = self.chorale
+            flow.created_by = request.user
+            flow.save()
+            ActivityEvent.log(
+                chorale=self.chorale, user=request.user, event_type='payment',
+                description=(
+                    f"{flow.get_type_cash_flow_display()} enregistrée : {flow.title} "
+                    f"({flow.amount} XAF)"
+                ),
+                obj=flow, request=request,
+            )
+            messages.success(request, _("Cash flow entry recorded."))
+            return redirect(reverse('cashflow', kwargs={'slug': self.chorale.slug}))
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'is_edit': False,
+        })
+
+
+class CashFlowUpdateView(TreasurerRequiredMixin, TemplateView):
+    template_name = "pages/treasurer/cashflow_form.html"
+
+    def _get_object(self, cashflow_id):
+        return get_object_or_404(CashFlow, id=cashflow_id, chorale=self.chorale)
+
+    def get(self, request, slug, cashflow_id, *args, **kwargs):
+        from .forms import CashFlowForm
+        flow = self._get_object(cashflow_id)
+        form = CashFlowForm(instance=flow)
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'flow': flow, 'is_edit': True,
+        })
+
+    def post(self, request, slug, cashflow_id, *args, **kwargs):
+        from .forms import CashFlowForm
+        flow = self._get_object(cashflow_id)
+        form = CashFlowForm(request.POST, instance=flow)
+        if form.is_valid():
+            form.save()
+            ActivityEvent.log(
+                chorale=self.chorale, user=request.user, event_type='payment',
+                description=f"Mouvement de caisse modifié : {flow.title}",
+                obj=flow, request=request,
+            )
+            messages.success(request, _("Cash flow entry updated."))
+            return redirect(reverse('cashflow', kwargs={'slug': self.chorale.slug}))
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'flow': flow, 'is_edit': True,
+        })
+
+
+# ── Censeur ───────────────────────────────────────────────────────────────
+#
+# Toutes les vues ci-dessous héritent de CensorRequiredMixin :
+# - super_admin_chorale → accès complet
+# - chorale_role == 'censor' → accès complet
+# - autres → redirect dashboard avec message d'erreur
+
+
+class AbsenceListView(CensorRequiredMixin, TemplateView):
+    template_name = "pages/censor/absence_list.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        absences = (Absence.objects
+                    .filter(event__chorale=self.chorale)
+                    .select_related('event', 'member', 'recorded_by'))
+        # Filtres optionnels
+        event_id = request.GET.get('event')
+        member_id = request.GET.get('member')
+        if event_id:
+            absences = absences.filter(event_id=event_id)
+        if member_id:
+            absences = absences.filter(member_id=member_id)
+
+        return render(request, self.template_name, {
+            'absences': absences,
+            'slug': self.chorale.slug,
+            'events': ChoraleEvent.objects.filter(
+                chorale=self.chorale, event_type__in=Absence.TRACKED_EVENT_TYPES,
+            ).order_by('-date'),
+            'members': self.chorale.members.all(),
+            'filter_event': event_id or '',
+            'filter_member': member_id or '',
+        })
+
+
+class AbsenceBulkCreateView(CensorRequiredMixin, TemplateView):
+    """Saisie en masse pour UNE rencontre.
+
+    Comportement idempotent : un POST sur la même rencontre efface les absences
+    précédentes et recrée le nouvel état. Permet de corriger une saisie erronée
+    sans manipuler la DB à la main.
+    """
+    template_name = "pages/censor/absence_bulk_form.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        from .forms import BulkAbsenceForm
+        form = BulkAbsenceForm(chorale=self.chorale)
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug,
+        })
+
+    def post(self, request, slug, *args, **kwargs):
+        from .forms import BulkAbsenceForm
+        form = BulkAbsenceForm(request.POST, chorale=self.chorale)
+        if form.is_valid():
+            event = form.cleaned_data['event']
+            absent_members = form.cleaned_data['absent_members']
+            reason = form.cleaned_data['reason']
+            is_justified = form.cleaned_data['is_justified']
+
+            with transaction.atomic():
+                # Idempotent upsert : on repart d'un état propre par rencontre
+                Absence.objects.filter(event=event).delete()
+                Absence.objects.bulk_create([
+                    Absence(event=event, member=m, reason=reason,
+                            is_justified=is_justified, recorded_by=request.user)
+                    for m in absent_members
+                ])
+
+            ActivityEvent.log(
+                chorale=self.chorale, user=request.user, event_type='other',
+                description=f"Absences relevées pour « {event.title} » : "
+                            f"{len(absent_members)} absent(s)",
+                metadata={'event_id': event.id, 'count': len(absent_members)},
+                request=request,
+            )
+            count = len(absent_members)
+            messages.success(request, ngettext(
+                "%(count)d absence recorded for \"%(title)s\".",
+                "%(count)d absences recorded for \"%(title)s\".",
+                count,
+            ) % {'count': count, 'title': event.title})
+            return redirect(reverse('absences', kwargs={'slug': self.chorale.slug}))
+
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug,
+        })
+
+
+class AbsenceUpdateView(CensorRequiredMixin, TemplateView):
+    template_name = "pages/censor/absence_edit_form.html"
+
+    def _get_object(self, absence_id):
+        return get_object_or_404(Absence, id=absence_id, event__chorale=self.chorale)
+
+    def get(self, request, slug, absence_id, *args, **kwargs):
+        from .forms import AbsenceEditForm
+        absence = self._get_object(absence_id)
+        form = AbsenceEditForm(instance=absence)
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'absence': absence,
+        })
+
+    def post(self, request, slug, absence_id, *args, **kwargs):
+        from .forms import AbsenceEditForm
+        absence = self._get_object(absence_id)
+        form = AbsenceEditForm(request.POST, instance=absence)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Absence updated."))
+            return redirect(reverse('absences', kwargs={'slug': self.chorale.slug}))
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'absence': absence,
+        })
+
+
+class AbsenceDeleteView(CensorRequiredMixin, TemplateView):
+    def post(self, request, slug, absence_id, *args, **kwargs):
+        absence = get_object_or_404(Absence, id=absence_id, event__chorale=self.chorale)
+        absence.delete()
+        messages.success(request, _("Absence deleted."))
+        return redirect(reverse('absences', kwargs={'slug': self.chorale.slug}))
+
+    def get(self, request, *args, **kwargs):
+        # GET interdit (idempotence HTTP)
+        return redirect(reverse('absences', kwargs={'slug': kwargs.get('slug')}))
+
+
+class SanctionListView(CensorRequiredMixin, TemplateView):
+    template_name = "pages/censor/sanction_list.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        sanctions = (self.chorale.sanctions
+                     .select_related('member', 'recorded_by'))
+
+        # Filtres optionnels
+        sanction_type = request.GET.get('type')
+        member_id = request.GET.get('member')
+        status = request.GET.get('status')  # 'active' | 'closed' | ''
+        if sanction_type:
+            sanctions = sanctions.filter(sanction_type=sanction_type)
+        if member_id:
+            sanctions = sanctions.filter(member_id=member_id)
+        if status == 'active':
+            sanctions = sanctions.filter(lifted_at__isnull=True).filter(
+                ~Q(sanction_type=Sanction.SANCTION_FINE) | Q(is_paid=False)
+            )
+        elif status == 'closed':
+            sanctions = sanctions.filter(
+                Q(lifted_at__isnull=False)
+                | Q(sanction_type=Sanction.SANCTION_FINE, is_paid=True)
+            )
+
+        return render(request, self.template_name, {
+            'sanctions': sanctions,
+            'slug': self.chorale.slug,
+            'members': self.chorale.members.all(),
+            'sanction_types': Sanction.SANCTION_TYPE_CHOICES,
+            'filter_type': sanction_type or '',
+            'filter_member': member_id or '',
+            'filter_status': status or '',
+        })
+
+
+class SanctionCreateView(CensorRequiredMixin, TemplateView):
+    template_name = "pages/censor/sanction_form.html"
+
+    def get(self, request, slug, *args, **kwargs):
+        from .forms import SanctionForm
+        form = SanctionForm(chorale=self.chorale)
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'is_edit': False,
+        })
+
+    def post(self, request, slug, *args, **kwargs):
+        from .forms import SanctionForm
+        form = SanctionForm(request.POST, chorale=self.chorale)
+        if form.is_valid():
+            try:
+                SanctionService.apply(
+                    chorale=self.chorale,
+                    member=form.cleaned_data['member'],
+                    sanction_type=form.cleaned_data['sanction_type'],
+                    reason=form.cleaned_data['reason'],
+                    amount=form.cleaned_data.get('amount'),
+                    time_limit=form.cleaned_data.get('time_limit'),
+                    applied_at=form.cleaned_data.get('applied_at'),
+                    recorded_by=request.user,
+                    request=request,
+                )
+            except DjangoValidationError as e:
+                form.add_error(None, e.message)
+                return render(request, self.template_name, {
+                    'form': form, 'slug': self.chorale.slug, 'is_edit': False,
+                })
+            messages.success(request, _("Sanction recorded."))
+            return redirect(reverse('sanctions', kwargs={'slug': self.chorale.slug}))
+
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug, 'is_edit': False,
+        })
+
+
+class SanctionUpdateView(CensorRequiredMixin, TemplateView):
+    template_name = "pages/censor/sanction_form.html"
+
+    def _get_object(self, sanction_id):
+        return get_object_or_404(Sanction, id=sanction_id, chorale=self.chorale)
+
+    def get(self, request, slug, sanction_id, *args, **kwargs):
+        from .forms import SanctionForm
+        sanction = self._get_object(sanction_id)
+        form = SanctionForm(instance=sanction, chorale=self.chorale)
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug,
+            'sanction': sanction, 'is_edit': True,
+        })
+
+    def post(self, request, slug, sanction_id, *args, **kwargs):
+        from .forms import SanctionForm
+        sanction = self._get_object(sanction_id)
+        form = SanctionForm(request.POST, instance=sanction, chorale=self.chorale)
+        if form.is_valid():
+            form.save()
+            ActivityEvent.log(
+                chorale=self.chorale, user=request.user, event_type='other',
+                description=f"Sanction modifiée pour {sanction.member.get_full_name() or sanction.member.username}",
+                obj=sanction, request=request,
+            )
+            messages.success(request, _("Sanction updated."))
+            return redirect(reverse('sanctions', kwargs={'slug': self.chorale.slug}))
+        return render(request, self.template_name, {
+            'form': form, 'slug': self.chorale.slug,
+            'sanction': sanction, 'is_edit': True,
+        })
+
+
+class SanctionLiftView(CensorRequiredMixin, TemplateView):
+    """Lève (clôture) une sanction. POST only."""
+
+    def post(self, request, slug, sanction_id, *args, **kwargs):
+        sanction = get_object_or_404(Sanction, id=sanction_id, chorale=self.chorale)
+        try:
+            SanctionService.lift(sanction=sanction, lifted_by=request.user, request=request)
+        except DjangoValidationError as e:
+            messages.error(request, e.message)
+            return redirect(reverse('sanctions', kwargs={'slug': self.chorale.slug}))
+        messages.success(request, _("Sanction lifted."))
+        return redirect(reverse('sanctions', kwargs={'slug': self.chorale.slug}))
+
+    def get(self, request, *args, **kwargs):
+        return redirect(reverse('sanctions', kwargs={'slug': kwargs.get('slug')}))
+
+
+class SanctionDeleteView(CensorRequiredMixin, TemplateView):
+    def post(self, request, slug, sanction_id, *args, **kwargs):
+        sanction = get_object_or_404(Sanction, id=sanction_id, chorale=self.chorale)
+        target = sanction.member.get_full_name() or sanction.member.username
+        sanction.delete()
+        ActivityEvent.log(
+            chorale=self.chorale, user=request.user, event_type='other',
+            description=f"Sanction supprimée (cible : {target})",
+            request=request,
+        )
+        messages.success(request, _("Sanction deleted."))
+        return redirect(reverse('sanctions', kwargs={'slug': self.chorale.slug}))
+
+    def get(self, request, *args, **kwargs):
+        return redirect(reverse('sanctions', kwargs={'slug': kwargs.get('slug')}))
+
+
 class MemberPopupView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/member_popup.html"
     form_class = AddMemberForm
@@ -403,7 +931,7 @@ class MemberPopupView(ChoraleRequireMixin, TemplateView):
         else:
             # Non-admin (secrétaire, censeur, trésorier) : seulement "member"
             return [
-                (CustomUser.CHORALE_ROLE_MEMBER, 'Membre')
+                (CustomUser.CHORALE_ROLE_MEMBER, _('Member'))
             ]
 
     def get_form(self, request):
@@ -426,7 +954,7 @@ class MemberPopupView(ChoraleRequireMixin, TemplateView):
             allowed_roles = [choice[0] for choice in self.get_role_choices(request)]
             
             if role not in allowed_roles:
-                messages.error(request, "Vous n'êtes pas autorisé à attribuer ce rôle.")
+                messages.error(request, _("You are not authorized to assign this role."))
                 return render(request, self.template_name, {"form": form, "slug": chorale.slug})
             
             email = form['email'].value()
@@ -446,10 +974,10 @@ class MemberPopupView(ChoraleRequireMixin, TemplateView):
                 Profile.objects.create(user=member, _contact=contact_phone)
                 chorale.members.add(member)
 
-                messages.success(request, f"{member.get_full_name()} a été ajouté en tant que {member.get_role_display()} avec succès !")
+                messages.success(request, _("%(name)s has been added as %(role)s.") % {'name': member.get_full_name(), 'role': member.get_role_display()})
                 return redirect(reverse('members', kwargs={"slug": chorale.slug}))
             except Exception as e:
-                messages.error(request, "Une erreur est survenue lors de l'ajout du membre.")
+                messages.error(request, _("An error occurred while adding the member."))
                 return redirect(reverse('members', kwargs={"slug": chorale.slug}))
 
 

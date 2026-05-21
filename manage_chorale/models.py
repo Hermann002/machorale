@@ -6,6 +6,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.utils.text import slugify
+from django.utils.translation import gettext_lazy as _
 
 
 
@@ -19,9 +20,9 @@ class Chorale(models.Model):
     contact_phone = models.CharField(max_length=20)
     
     TYPE_CHOICES = (
-        ('chorale', 'CHORALE'),
-        ('mouvement', 'MOUVEMENT'),
-        ('association', 'ASSOCIATION'),
+        ('chorale', _('Chorale')),
+        ('mouvement', _('Movement')),
+        ('association', _('Association')),
     )
 
     type_c = models.CharField(max_length=20, choices=TYPE_CHOICES, default='chorale')
@@ -52,26 +53,94 @@ class Chorale(models.Model):
 
 
 class Contribution(models.Model):
+    """Type de cotisation géré par le trésorier (ex: « Cotisation Mensuelle 2026 »).
+    Catalogue, pas une transaction : les paiements sont dans MemberContribution.
+    """
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE,
+                                related_name='contributions', db_index=True)
     title = models.CharField(max_length=100)
-    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    date_contributed = models.DateField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2,
+                                 help_text=_("Amount expected per member"))
+    target_amount = models.DecimalField(max_digits=12, decimal_places=2,
+                                        null=True, blank=True,
+                                        help_text=_("Total chorale target (optional)"))
     description = models.TextField(blank=True)
-    target_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        constraints = [
+            # Empêche deux types de cotisation portant le même titre dans une chorale
+            models.UniqueConstraint(fields=['chorale', 'title'],
+                                    name='uniq_contrib_per_chorale'),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.chorale.name})"
+
+    @property
+    def total_collected(self):
+        # Somme des paiements reçus pour ce type de cotisation
+        return self.payments.aggregate(s=models.Sum('amount'))['s'] or 0
+
+
+class MemberContribution(models.Model):
+    """Paiement effectif d'un membre pour une Contribution.
+    Une transaction immuable côté métier : on n'édite pas un paiement, on en crée un nouveau (ou on log un ajustement).
+    """
+    contribution = models.ForeignKey(Contribution, on_delete=models.CASCADE,
+                                     related_name='payments')
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                               related_name='contribution_payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    paid_at = models.DateField(default=timezone.now)
+    note = models.CharField(max_length=255, blank=True)
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                    on_delete=models.SET_NULL, null=True,
+                                    related_name='recorded_payments')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-paid_at', '-created_at']
+        indexes = [
+            models.Index(fields=['contribution', 'member']),
+            models.Index(fields=['member', '-paid_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.member} → {self.contribution.title}: {self.amount}"
+
 
 class CashFlow(models.Model):
-    title = models.CharField(max_length=100)
-    
-    TYPE_CHOISE = (
-        ('entrée', 'ENTREE'),
-        ('sortie', 'SORTIE'),
+    TYPE_ENTREE = 'entree'
+    TYPE_SORTIE = 'sortie'
+    TYPE_CHOICES = (
+        (TYPE_ENTREE, _('Income')),
+        (TYPE_SORTIE, _('Expense')),
     )
 
-    type_cash_flow = models.CharField(max_length=20, choices=TYPE_CHOISE, default='entrée')
-    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    date = models.DateField(auto_now_add=True)
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE,
+                                related_name='cash_flows', db_index=True)
+    title = models.CharField(max_length=100)
+    type_cash_flow = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_ENTREE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    # date éditable (saisie par le trésorier) — auto_now_add forcerait la date du jour
+    date = models.DateField(default=timezone.now)
     description = models.TextField(blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL,
+                                   on_delete=models.SET_NULL, null=True,
+                                   related_name='cash_flows_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-date', '-created_at']
+        indexes = [models.Index(fields=['chorale', '-date'])]
+
+    def __str__(self):
+        return f"[{self.get_type_cash_flow_display()}] {self.title} — {self.amount}"
 
 class MeetingReport(models.Model):
     chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
@@ -83,11 +152,11 @@ class MeetingReport(models.Model):
 
 class ChoraleEvent(models.Model):
     EVENT_TYPE_CHOICES = [
-        ('practice', 'Pratique'),
-        ('meeting', 'Réunion'),
-        ('concert', 'Concert'),
-        ('assistance', 'Assistance'),
-        ('other', 'Autre'),
+        ('practice', _('Practice')),
+        ('meeting', _('Meeting')),
+        ('concert', _('Concert')),
+        ('assistance', _('Attendance')),
+        ('other', _('Other')),
     ]
 
     chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, related_name='chorale_events')
@@ -98,8 +167,8 @@ class ChoraleEvent(models.Model):
     event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES, default='practice')
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_chorale_events')
     report_file = models.FileField(upload_to='event_reports/', blank=True, null=True)
-    expenses = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Dépenses (XAF)")
-    income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="Entrées (XAF)")
+    expenses = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Expenses (XAF)"))
+    income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Income (XAF)"))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -117,6 +186,100 @@ class ChoraleEvent(models.Model):
     def is_upcoming(self):
         return self.date >= timezone.now()
 
+
+# ── Censeur ─────────────────────────────────────────────────────────────
+#
+# Absence : on n'enregistre QUE les absents (sparse). Les présents = members - absents.
+# Sanction : modèle polyvalent (warning / fine / suspension) — amount n'est rempli
+# que pour les amendes (validation côté form).
+
+
+class Absence(models.Model):
+    """Fait métier : un membre était absent à une rencontre donnée.
+    UniqueConstraint(event, member) empêche les doublons au niveau DB.
+    """
+    # Les rencontres pour lesquelles l'absentéisme est suivi (filtré côté form)
+    TRACKED_EVENT_TYPES = ['practice', 'meeting']
+
+    event = models.ForeignKey('ChoraleEvent', on_delete=models.CASCADE,
+                              related_name='absences', db_index=True)
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                               related_name='absences')
+    reason = models.CharField(max_length=255, blank=True)
+    is_justified = models.BooleanField(default=False)
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+                                    null=True, related_name='recorded_absences')
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at']
+        constraints = [
+            models.UniqueConstraint(fields=['event', 'member'],
+                                    name='uniq_absence_per_event_member'),
+        ]
+        indexes = [models.Index(fields=['member', '-recorded_at'])]
+
+    def __str__(self):
+        return f"{self.member} absent à {self.event.title}"
+
+
+class Sanction(models.Model):
+    """Sanction polyvalente.
+    - warning : avertissement moral (pas d'amount)
+    - fine    : amende pécuniaire (amount requis côté form)
+    - suspension : retrait temporaire (pas d'amount, time_limit utile)
+    """
+    SANCTION_WARNING = 'warning'
+    SANCTION_FINE = 'fine'
+    SANCTION_SUSPENSION = 'suspension'
+    SANCTION_TYPE_CHOICES = (
+        (SANCTION_WARNING, _('Warning')),
+        (SANCTION_FINE, _('Fine')),
+        (SANCTION_SUSPENSION, _('Suspension')),
+    )
+
+    chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE,
+                                related_name='sanctions', db_index=True)
+    member = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                               related_name='sanctions')
+    sanction_type = models.CharField(max_length=20, choices=SANCTION_TYPE_CHOICES,
+                                     default=SANCTION_WARNING)
+    reason = models.TextField()
+    amount = models.DecimalField(max_digits=10, decimal_places=2,
+                                 null=True, blank=True,
+                                 help_text=_("Only for fines"))
+    is_paid = models.BooleanField(default=False)
+    time_limit = models.DateField(null=True, blank=True,
+                                  help_text=_("Payment deadline (fine) or end date (suspension)"))
+    applied_at = models.DateField(default=timezone.now)
+    lifted_at = models.DateField(null=True, blank=True,
+                                 help_text=_("Lift date — null = sanction active"))
+    recorded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+                                    null=True, related_name='recorded_sanctions')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-applied_at', '-created_at']
+        indexes = [
+            models.Index(fields=['chorale', '-applied_at']),
+            models.Index(fields=['member', '-applied_at']),
+        ]
+
+    def __str__(self):
+        return f"[{self.get_sanction_type_display()}] {self.member} — {self.applied_at}"
+
+    @property
+    def is_active(self):
+        # Une sanction est active tant qu'elle n'a pas été levée.
+        # Pour les amendes, on tient compte aussi du paiement : payée = close.
+        if self.lifted_at is not None:
+            return False
+        if self.sanction_type == self.SANCTION_FINE and self.is_paid:
+            return False
+        return True
+
+
 class Commission(models.Model):
     name = models.CharField(max_length=100)
     chorale = models.ForeignKey(Chorale, on_delete=models.CASCADE, db_index=True)
@@ -128,31 +291,31 @@ class Event(models.Model):
     Historique des événements
     """
 
-    chorale = models.ForeignKey("Chorale", on_delete=models.CASCADE, related_name='events', help_text="Chorale Concernée par l'événement")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='events', help_text="Utilisateur ayant déclanché l'événement")
-    timestamp = models.DateTimeField(default=timezone.now, db_index=True, help_text="Date et heure de l'événement")
-    
+    chorale = models.ForeignKey("Chorale", on_delete=models.CASCADE, related_name='events', help_text=_("Chorale concerned by the event"))
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='events', help_text=_("User who triggered the event"))
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True, help_text=_("Date and time of the event"))
+
     EVENT_TYPES = [
-        ('payment', 'Paiement effectué'),
-        ('warning', 'sanction appliquée'),
-        ('person_add', 'membre ajouté'),
-        ('person_remove', 'membre retiré'),
-        ('upload_file', 'rapport'),
-        ('other', 'autre'),
+        ('payment', _('Payment made')),
+        ('warning', _('Sanction applied')),
+        ('person_add', _('Member added')),
+        ('person_remove', _('Member removed')),
+        ('upload_file', _('Report')),
+        ('other', _('Other')),
     ]
     IMPORTANT_EVENT_TYPES = ['payment', 'warning', 'person_add', 'person_remove', 'upload_file']
 
-    event_type = models.CharField(max_length=50, choices=EVENT_TYPES, help_text="Type d'événement")
-    description = models.TextField(help_text="Description détaillée de l'événement")
-    short_description = models.CharField(max_length=255, blank=True, help_text="Description courte pour les notifications")
-    comment = models.TextField(blank=True, help_text="Commentaire additionnel (ex: raison d'une sanction, etc)")
-    content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True, help_text="Type de l'objecct concerné (ex: Contribution, Sanction) ")
-    object_id = models.PositiveBigIntegerField(null=True, blank=True, help_text="ID de l'objet concerné")
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES, help_text=_("Event type"))
+    description = models.TextField(help_text=_("Detailed description of the event"))
+    short_description = models.CharField(max_length=255, blank=True, help_text=_("Short description for notifications"))
+    comment = models.TextField(blank=True, help_text=_("Additional comment (e.g., reason for a sanction)"))
+    content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True, help_text=_("Type of the related object (e.g., Contribution, Sanction)"))
+    object_id = models.PositiveBigIntegerField(null=True, blank=True, help_text=_("ID of the related object"))
     content_object = GenericForeignKey('content_type', 'object_id')
-    metadata = models.JSONField(default=dict, blank=True, help_text="Données contextuelles (ancienne valeur, nouvelle valeur, etc)")
-    ip_address = models.GenericIPAddressField(null=True, blank=True, help_text="Adresse IP de l'utilisateur au moment de l'action")
-    user_agent = models.TextField(blank=True, help_text="User agent du navigateur/appareil")
-    is_important = models.BooleanField(default=False, help_text="Indique si l'événement est considéré comme important pour les notifications")
+    metadata = models.JSONField(default=dict, blank=True, help_text=_("Contextual data (old value, new value, etc.)"))
+    ip_address = models.GenericIPAddressField(null=True, blank=True, help_text=_("User's IP address at the time of the action"))
+    user_agent = models.TextField(blank=True, help_text=_("User agent of the browser/device"))
+    is_important = models.BooleanField(default=False, help_text=_("Indicates whether the event is considered important for notifications"))
 
     def save(self, *args, **kwargs):
         if self.event_type in self.IMPORTANT_EVENT_TYPES:

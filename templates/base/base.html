@@ -1,5 +1,6 @@
+{% load i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
     {% include "base/head.html" %}
 <body class="bg-background-light dark:bg-background-dark font-display text-[#0d121b] dark:text-gray-100">
     <!-- Barre de progression HTMX globale — affichée via JS sur htmx:beforeRequest -->
@@ -10,8 +11,8 @@
     {% if request.session.is_demo %}
     <div class="fixed top-0 left-0 right-0 z-[10000] bg-[#e0ad53] text-white text-sm text-center py-2 px-4 flex items-center justify-center gap-3">
         <span class="material-symbols-outlined" style="font-size:16px">play_circle</span>
-        <span>Mode démo — vos données seront supprimées après 2h.</span>
-        <a href="{% url 'register' %}" class="ml-2 underline font-bold whitespace-nowrap">Créer un vrai compte →</a>
+        <span>{% translate "Mode démo — vos données seront supprimées après 2h." %}</span>
+        <a href="{% url 'register' %}" class="ml-2 underline font-bold whitespace-nowrap">{% translate "Créer un vrai compte →" %}</a>
     </div>
     {% endif %}
     <div class="flex {% if request.session.is_demo %}h-[calc(100vh-2.25rem)] mt-9{% else %}h-screen{% endif %} overflow-hidden">

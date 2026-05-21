@@ -1,0 +1,1590 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-17 23:19+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: ma_chorale/settings/base.py:138
+msgid "French"
+msgstr "French"
+
+#: ma_chorale/settings/base.py:139 templates/landing/footer.html:53
+msgid "English"
+msgstr "English"
+
+#: manage_chorale/forms.py:21
+msgid "Nom du groupe"
+msgstr "Nom du groupe"
+
+#: manage_chorale/forms.py:24
+msgid "Ex: Chorale Harmonie"
+msgstr "Ex: Chorale Harmonie"
+
+#: manage_chorale/forms.py:30
+msgid "Type de groupe"
+msgstr "Type de groupe"
+
+#: manage_chorale/forms.py:38
+msgid "Description"
+msgstr "Description"
+
+#: manage_chorale/forms.py:41
+msgid "Une brève description de la chorale"
+msgstr "Une brève description de la chorale"
+
+#: manage_chorale/forms.py:48
+msgid "Date de création"
+msgstr "Date de création"
+
+#: manage_chorale/forms.py:58
+msgid "Lieu"
+msgstr "Lieu"
+
+#: manage_chorale/forms.py:61
+msgid "Ex: Paris, France"
+msgstr "Ex: Paris, France"
+
+#: manage_chorale/forms.py:67
+msgid "Logo de la chorale"
+msgstr "Logo de la chorale"
+
+#: manage_chorale/forms.py:80
+msgid "Le nom du groupe est requis."
+msgstr "Le nom du groupe est requis."
+
+#: manage_chorale/forms.py:84
+msgid "Ce nom de chorale est déjà utilisé."
+msgstr "Ce nom de chorale est déjà utilisé."
+
+#: manage_chorale/forms.py:95
+msgid "La date de création ne peut pas être dans le futur."
+msgstr "La date de création ne peut pas être dans le futur."
+
+#: manage_chorale/forms.py:107
+msgid "Le lieu doit contenir au moins 2 caractères."
+msgstr "Le lieu doit contenir au moins 2 caractères."
+
+#: manage_chorale/forms.py:118
+msgid "Le fichier ne doit pas dépasser 5MB."
+msgstr "Le fichier ne doit pas dépasser 5MB."
+
+#: manage_chorale/forms.py:125
+msgid "Format de fichier non autorisé. Formats acceptés : JPG, PNG, GIF."
+msgstr "Format de fichier non autorisé. Formats acceptés : JPG, PNG, GIF."
+
+#: manage_chorale/forms.py:136
+msgid "Slogan"
+msgstr "Slogan"
+
+#: manage_chorale/forms.py:144
+msgid "Email de contact"
+msgstr "Email de contact"
+
+#: manage_chorale/forms.py:153
+msgid "Téléphone de contact"
+msgstr "Téléphone de contact"
+
+#: manage_chorale/forms.py:161
+msgid "Fréquence des réunions"
+msgstr "Fréquence des réunions"
+
+#: manage_chorale/forms.py:163 manage_chorale/forms.py:228
+msgid "Hebdomadaire"
+msgstr "Hebdomadaire"
+
+#: manage_chorale/forms.py:164 manage_chorale/forms.py:229
+msgid "Bihebdomadaire"
+msgstr "Bihebdomadaire"
+
+#: manage_chorale/forms.py:165 manage_chorale/forms.py:230
+msgid "Mensuelle"
+msgstr "Mensuelle"
+
+#: manage_chorale/forms.py:166 manage_chorale/forms.py:231
+msgid "Annuelle"
+msgstr "Annuelle"
+
+#: manage_chorale/forms.py:180
+msgid "Le slogan ne doit pas dépasser 255 caractères."
+msgstr "Le slogan ne doit pas dépasser 255 caractères."
+
+#: manage_chorale/forms.py:193 manage_chorale/forms.py:361
+msgid "L'adresse email est trop longue."
+msgstr "L'adresse email est trop longue."
+
+#: manage_chorale/forms.py:209 manage_chorale/forms.py:394
+msgid "Le numéro de téléphone doit contenir au moins 7 chiffres."
+msgstr "Le numéro de téléphone doit contenir au moins 7 chiffres."
+
+#: manage_chorale/forms.py:212 manage_chorale/forms.py:397
+msgid "Le numéro de téléphone est trop long."
+msgstr "Le numéro de téléphone est trop long."
+
+#: manage_chorale/forms.py:235
+msgid "Fréquence de réunion invalide."
+msgstr "Fréquence de réunion invalide."
+
+#: manage_chorale/forms.py:246
+msgid "Titre de l'événement"
+msgstr "Titre de l'événement"
+
+#: manage_chorale/forms.py:251
+msgid "Description de l'événement"
+msgstr "Description de l'événement"
+
+#: manage_chorale/forms.py:255
+msgid "Lieu de l'événement"
+msgstr "Lieu de l'événement"
+
+#: manage_chorale/forms.py:289
+msgid "La date de l'événement ne peut pas être dans le passé."
+msgstr "La date de l'événement ne peut pas être dans le passé."
+
+#: manage_chorale/forms.py:296
+msgid "Le fichier doit être inférieur à 10MB."
+msgstr "Le fichier doit être inférieur à 10MB."
+
+#: manage_chorale/forms.py:301
+msgid ""
+"Format de fichier non autorisé. Formats acceptés : PDF, DOC, DOCX, JPG, PNG."
+msgstr ""
+"Format de fichier non autorisé. Formats acceptés : PDF, DOC, DOCX, JPG, PNG."
+
+#: manage_chorale/forms.py:309
+msgid "Email du membre"
+msgstr "Email du membre"
+
+#: manage_chorale/forms.py:312
+msgid "Entrez l'email du membre à ajouter"
+msgstr "Entrez l'email du membre à ajouter"
+
+#: manage_chorale/forms.py:318
+msgid "Nom du membre"
+msgstr "Nom du membre"
+
+#: manage_chorale/forms.py:321 manage_chorale/forms.py:330
+msgid "Ex: Jean Dupont"
+msgstr "Ex: Jean Dupont"
+
+#: manage_chorale/forms.py:327
+msgid "Prénom du membre"
+msgstr "Prénom du membre"
+
+#: manage_chorale/forms.py:336
+msgid "Numéro de téléphone"
+msgstr "Numéro de téléphone"
+
+#: manage_chorale/forms.py:339
+msgid "Ex: 01 23 45 67 89"
+msgstr "Ex: 01 23 45 67 89"
+
+#: manage_chorale/forms.py:345 manage_chorale/forms.py:373
+msgid "Rôle dans la chorale"
+msgstr "Rôle dans la chorale"
+
+#: manage_chorale/forms.py:417
+msgid "Ex: Cotisation mensuelle Janvier 2026"
+msgstr "Ex: Cotisation mensuelle Janvier 2026"
+
+#: manage_chorale/forms.py:426
+msgid "Objectif total (optionnel)"
+msgstr "Objectif total (optionnel)"
+
+#: manage_chorale/forms.py:431
+msgid "À quoi sert cette cotisation ?"
+msgstr "À quoi sert cette cotisation ?"
+
+#: manage_chorale/forms.py:445 manage_chorale/forms.py:493
+#: manage_chorale/forms.py:524
+msgid "Le montant doit être strictement positif."
+msgstr "Le montant doit être strictement positif."
+
+#: manage_chorale/forms.py:457
+msgid "Un type de cotisation portant ce titre existe déjà."
+msgstr "Un type de cotisation portant ce titre existe déjà."
+
+#: manage_chorale/forms.py:480
+msgid "Référence, mode de paiement... (optionnel)"
+msgstr "Référence, mode de paiement... (optionnel)"
+
+#: manage_chorale/forms.py:506
+msgid "Ex: Don pour le concert, Achat partitions"
+msgstr "Ex: Don pour le concert, Achat partitions"
+
+#: manage_chorale/forms.py:517
+msgid "Détails (optionnel)"
+msgstr "Détails (optionnel)"
+
+#: manage_chorale/forms.py:538
+msgid "Rencontre"
+msgstr "Rencontre"
+
+#: manage_chorale/forms.py:545
+msgid "Membres absents"
+msgstr "Membres absents"
+
+#: manage_chorale/forms.py:549
+msgid "Raison commune (optionnel)"
+msgstr "Raison commune (optionnel)"
+
+#: manage_chorale/forms.py:552
+msgid "Ex: Maladie, voyage..."
+msgstr "Ex: Maladie, voyage..."
+
+#: manage_chorale/forms.py:556
+msgid "Absence(s) justifiée(s)"
+msgstr "Absence(s) justifiée(s)"
+
+#: manage_chorale/forms.py:578
+msgid "Raison de l'absence"
+msgstr "Raison de l'absence"
+
+#: manage_chorale/forms.py:601
+msgid "Pourquoi cette sanction ?"
+msgstr "Pourquoi cette sanction ?"
+
+#: manage_chorale/forms.py:605
+msgid "Montant (amende uniquement)"
+msgstr "Montant (amende uniquement)"
+
+#: manage_chorale/forms.py:630
+msgid "Une amende requiert un montant strictement positif."
+msgstr "Une amende requiert un montant strictement positif."
+
+#: manage_chorale/models.py:23
+msgid "Chorale"
+msgstr "Chorale"
+
+#: manage_chorale/models.py:24
+msgid "Movement"
+msgstr "Movement"
+
+#: manage_chorale/models.py:25
+msgid "Association"
+msgstr "Association"
+
+#: manage_chorale/models.py:63
+msgid "Amount expected per member"
+msgstr "Amount expected per member"
+
+#: manage_chorale/models.py:66
+msgid "Total chorale target (optional)"
+msgstr "Total chorale target (optional)"
+
+#: manage_chorale/models.py:120
+msgid "Income"
+msgstr "Income"
+
+#: manage_chorale/models.py:121
+msgid "Expense"
+msgstr "Expense"
+
+#: manage_chorale/models.py:155
+msgid "Practice"
+msgstr "Practice"
+
+#: manage_chorale/models.py:156
+msgid "Meeting"
+msgstr "Meeting"
+
+#: manage_chorale/models.py:157
+msgid "Concert"
+msgstr "Concert"
+
+#: manage_chorale/models.py:158
+msgid "Attendance"
+msgstr "Attendance"
+
+#: manage_chorale/models.py:159 manage_chorale/models.py:304
+#: manage_users/models.py:44
+msgid "Other"
+msgstr "Other"
+
+#: manage_chorale/models.py:170
+msgid "Expenses (XAF)"
+msgstr "Expenses (XAF)"
+
+#: manage_chorale/models.py:171
+msgid "Income (XAF)"
+msgstr "Income (XAF)"
+
+#: manage_chorale/models.py:236
+msgid "Warning"
+msgstr "Warning"
+
+#: manage_chorale/models.py:237
+msgid "Fine"
+msgstr "Fine"
+
+#: manage_chorale/models.py:238
+msgid "Suspension"
+msgstr "Suspension"
+
+#: manage_chorale/models.py:250
+msgid "Only for fines"
+msgstr "Only for fines"
+
+#: manage_chorale/models.py:253
+msgid "Payment deadline (fine) or end date (suspension)"
+msgstr "Payment deadline (fine) or end date (suspension)"
+
+#: manage_chorale/models.py:256
+msgid "Lift date — null = sanction active"
+msgstr "Lift date — null = sanction active"
+
+#: manage_chorale/models.py:294
+msgid "Chorale concerned by the event"
+msgstr "Chorale concerned by the event"
+
+#: manage_chorale/models.py:295
+msgid "User who triggered the event"
+msgstr "User who triggered the event"
+
+#: manage_chorale/models.py:296
+msgid "Date and time of the event"
+msgstr "Date and time of the event"
+
+#: manage_chorale/models.py:299
+msgid "Payment made"
+msgstr "Payment made"
+
+#: manage_chorale/models.py:300
+msgid "Sanction applied"
+msgstr "Sanction applied"
+
+#: manage_chorale/models.py:301
+msgid "Member added"
+msgstr "Member added"
+
+#: manage_chorale/models.py:302
+msgid "Member removed"
+msgstr "Member removed"
+
+#: manage_chorale/models.py:303
+msgid "Report"
+msgstr "Report"
+
+#: manage_chorale/models.py:308
+msgid "Event type"
+msgstr "Event type"
+
+#: manage_chorale/models.py:309
+msgid "Detailed description of the event"
+msgstr "Detailed description of the event"
+
+#: manage_chorale/models.py:310
+msgid "Short description for notifications"
+msgstr "Short description for notifications"
+
+#: manage_chorale/models.py:311
+msgid "Additional comment (e.g., reason for a sanction)"
+msgstr "Additional comment (e.g., reason for a sanction)"
+
+#: manage_chorale/models.py:312
+msgid "Type of the related object (e.g., Contribution, Sanction)"
+msgstr "Type of the related object (e.g., Contribution, Sanction)"
+
+#: manage_chorale/models.py:313
+msgid "ID of the related object"
+msgstr "ID of the related object"
+
+#: manage_chorale/models.py:315
+msgid "Contextual data (old value, new value, etc.)"
+msgstr "Contextual data (old value, new value, etc.)"
+
+#: manage_chorale/models.py:316
+msgid "User's IP address at the time of the action"
+msgstr "User's IP address at the time of the action"
+
+#: manage_chorale/models.py:317
+msgid "User agent of the browser/device"
+msgstr "User agent of the browser/device"
+
+#: manage_chorale/models.py:318
+msgid "Indicates whether the event is considered important for notifications"
+msgstr "Indicates whether the event is considered important for notifications"
+
+#: manage_chorale/views.py:72 templates/base/navbar.html:33
+msgid "Dashboard"
+msgstr "Dashboard"
+
+#: manage_chorale/views.py:110
+msgid "You need to verify your email before creating a chorale."
+msgstr "You need to verify your email before creating a chorale."
+
+#: manage_chorale/views.py:119
+msgid "You already manage a chorale. Redirecting to your dashboard."
+msgstr "You already manage a chorale. Redirecting to your dashboard."
+
+#: manage_chorale/views.py:163
+msgid "Your chorale has been created successfully!"
+msgstr "Your chorale has been created successfully!"
+
+#: manage_chorale/views.py:168
+msgid "An error occurred while creating the chorale."
+msgstr "An error occurred while creating the chorale."
+
+#: manage_chorale/views.py:189
+msgid "Chorale members"
+msgstr "Chorale members"
+
+#: manage_chorale/views.py:201
+msgid "You do not have permission to modify roles."
+msgstr "You do not have permission to modify roles."
+
+#: manage_chorale/views.py:219
+#, python-format
+msgid "The role of %(name)s has been updated."
+msgstr "The role of %(name)s has been updated."
+
+#: manage_chorale/views.py:271
+msgid "Events calendar"
+msgstr "Events calendar"
+
+#: manage_chorale/views.py:273
+msgid "Mon"
+msgstr "Mon"
+
+#: manage_chorale/views.py:273
+msgid "Tue"
+msgstr "Tue"
+
+#: manage_chorale/views.py:273
+msgid "Wed"
+msgstr "Wed"
+
+#: manage_chorale/views.py:273
+msgid "Thu"
+msgstr "Thu"
+
+#: manage_chorale/views.py:273
+msgid "Fri"
+msgstr "Fri"
+
+#: manage_chorale/views.py:273
+msgid "Sat"
+msgstr "Sat"
+
+#: manage_chorale/views.py:273
+msgid "Sun"
+msgstr "Sun"
+
+#: manage_chorale/views.py:289
+msgid "You do not have permission to create an event."
+msgstr "You do not have permission to create an event."
+
+#: manage_chorale/views.py:316
+msgid "The event has been created successfully."
+msgstr "The event has been created successfully."
+
+#: manage_chorale/views.py:356
+msgid "You do not have permission to modify an event."
+msgstr "You do not have permission to modify an event."
+
+#: manage_chorale/views.py:385
+msgid "The event has been updated successfully."
+msgstr "The event has been updated successfully."
+
+#: manage_chorale/views.py:443
+msgid "Contribution type created."
+msgstr "Contribution type created."
+
+#: manage_chorale/views.py:475
+msgid "Contribution type updated."
+msgstr "Contribution type updated."
+
+#: manage_chorale/views.py:495
+#, python-format
+msgid "Contribution \"%(title)s\" deleted."
+msgstr "Contribution \"%(title)s\" deleted."
+
+#: manage_chorale/views.py:563
+msgid "Payment recorded."
+msgstr "Payment recorded."
+
+#: manage_chorale/views.py:612
+msgid "Cash flow entry recorded."
+msgstr "Cash flow entry recorded."
+
+#: manage_chorale/views.py:644
+msgid "Cash flow entry updated."
+msgstr "Cash flow entry updated."
+
+#: manage_chorale/views.py:729
+#, python-format
+msgid "%(count)d absence recorded for \"%(title)s\"."
+msgid_plural "%(count)d absences recorded for \"%(title)s\"."
+msgstr[0] "%(count)d absence recorded for \"%(title)s\"."
+msgstr[1] "%(count)d absences recorded for \"%(title)s\"."
+
+#: manage_chorale/views.py:760
+msgid "Absence updated."
+msgstr "Absence updated."
+
+#: manage_chorale/views.py:771
+msgid "Absence deleted."
+msgstr "Absence deleted."
+
+#: manage_chorale/views.py:846
+msgid "Sanction recorded."
+msgstr "Sanction recorded."
+
+#: manage_chorale/views.py:880
+msgid "Sanction updated."
+msgstr "Sanction updated."
+
+#: manage_chorale/views.py:898
+msgid "Sanction lifted."
+msgstr "Sanction lifted."
+
+#: manage_chorale/views.py:915
+msgid "Sanction deleted."
+msgstr "Sanction deleted."
+
+#: manage_chorale/views.py:934 manage_users/models.py:62
+#: manage_users/models.py:72
+msgid "Member"
+msgstr "Member"
+
+#: manage_chorale/views.py:957
+msgid "You are not authorized to assign this role."
+msgstr "You are not authorized to assign this role."
+
+#: manage_chorale/views.py:977
+#, python-format
+msgid "%(name)s has been added as %(role)s."
+msgstr "%(name)s has been added as %(role)s."
+
+#: manage_chorale/views.py:980
+msgid "An error occurred while adding the member."
+msgstr "An error occurred while adding the member."
+
+#: manage_users/forms.py:13
+msgid "Confirm Password"
+msgstr "Confirm Password"
+
+#: manage_users/forms.py:33
+msgid "Nom d'utilisateur"
+msgstr "Nom d'utilisateur"
+
+#: manage_users/forms.py:34 manage_users/forms.py:96 manage_users/forms.py:108
+msgid "Email"
+msgstr "Email"
+
+#: manage_users/forms.py:35
+msgid "Mot de passe"
+msgstr "Mot de passe"
+
+#: manage_users/forms.py:41
+msgid "Ce nom d'utilisateur est déjà utilisé."
+msgstr "Ce nom d'utilisateur est déjà utilisé."
+
+#: manage_users/forms.py:47
+msgid "Cet email est déjà utilisé."
+msgstr "Cet email est déjà utilisé."
+
+#: manage_users/forms.py:64
+msgid "Les mots de passe ne correspondent pas."
+msgstr "Les mots de passe ne correspondent pas."
+
+#: manage_users/forms.py:69
+msgid "Username"
+msgstr "Username"
+
+#: manage_users/forms.py:70
+msgid "Password"
+msgstr "Password"
+
+#: manage_users/forms.py:82 manage_users/views.py:96
+msgid "Invalid username or password."
+msgstr "Invalid username or password."
+
+#: manage_users/forms.py:89
+msgid "OTP Code"
+msgstr "OTP Code"
+
+#: manage_users/forms.py:114
+msgid "No account found with this email."
+msgstr "No account found with this email."
+
+#: manage_users/forms.py:118
+msgid "New Password"
+msgstr "New Password"
+
+#: manage_users/forms.py:119
+msgid "Confirm New Password"
+msgstr "Confirm New Password"
+
+#: manage_users/forms.py:135
+msgid "The two password fields didn't match."
+msgstr "The two password fields didn't match."
+
+#: manage_users/models.py:17
+msgid "Le numéro doit être au format international, ex: +237 77 123 45 67"
+msgstr "Le numéro doit être au format international, ex: +237 77 123 45 67"
+
+#: manage_users/models.py:25
+msgid "Single"
+msgstr "Single"
+
+#: manage_users/models.py:26
+msgid "Married"
+msgstr "Married"
+
+#: manage_users/models.py:27
+msgid "Divorced"
+msgstr "Divorced"
+
+#: manage_users/models.py:28
+msgid "Widowed"
+msgstr "Widowed"
+
+#: manage_users/models.py:37
+msgid "Student"
+msgstr "Student"
+
+#: manage_users/models.py:38
+msgid "Computer scientist"
+msgstr "Computer scientist"
+
+#: manage_users/models.py:39
+msgid "Nurse"
+msgstr "Nurse"
+
+#: manage_users/models.py:40
+msgid "Teacher"
+msgstr "Teacher"
+
+#: manage_users/models.py:41
+msgid "Engineer"
+msgstr "Engineer"
+
+#: manage_users/models.py:42
+msgid "Doctor"
+msgstr "Doctor"
+
+#: manage_users/models.py:43
+msgid "Lawyer"
+msgstr "Lawyer"
+
+#: manage_users/models.py:63
+msgid "Super Chorale Admin"
+msgstr "Super Chorale Admin"
+
+#: manage_users/models.py:73
+msgid "Secretary"
+msgstr "Secretary"
+
+#: manage_users/models.py:74
+msgid "Treasurer"
+msgstr "Treasurer"
+
+#: manage_users/models.py:75
+msgid "Censor"
+msgstr "Censor"
+
+#: manage_users/views.py:49
+msgid "Account created successfully! Please verify your email."
+msgstr "Account created successfully! Please verify your email."
+
+#: manage_users/views.py:61
+msgid "You're already logged in. Please log out first to switch accounts."
+msgstr "You're already logged in. Please log out first to switch accounts."
+
+#: manage_users/views.py:94
+msgid "Invalid credentials. Please try again."
+msgstr "Invalid credentials. Please try again."
+
+#: manage_users/views.py:109
+msgid "User not found! Please register first."
+msgstr "User not found! Please register first."
+
+#: manage_users/views.py:119
+msgid "OTP code has expired. Please request a new code."
+msgstr "OTP code has expired. Please request a new code."
+
+#: manage_users/views.py:128
+msgid "Email verified successfully!"
+msgstr "Email verified successfully!"
+
+#: manage_users/views.py:131
+msgid "Email is already verified. Please log in."
+msgstr "Email is already verified. Please log in."
+
+#: manage_users/views.py:135
+msgid "No OTP record found. Please request a new code."
+msgstr "No OTP record found. Please request a new code."
+
+#: manage_users/views.py:138
+msgid "Rate limit reached, please wait 1 minute and retry."
+msgstr "Rate limit reached, please wait 1 minute and retry."
+
+#: manage_users/views.py:158
+msgid "OTP code resent successfully! Please check your email."
+msgstr "OTP code resent successfully! Please check your email."
+
+#: manage_users/views.py:160
+msgid "User not found."
+msgstr "User not found."
+
+#: manage_users/views.py:162 manage_users/views.py:193
+#: manage_users/views.py:242
+msgid "Rate limit exceeded, please wait before trying again."
+msgstr "Rate limit exceeded, please wait before trying again."
+
+#: manage_users/views.py:188
+msgid "Password reset link sent! Please check your email."
+msgstr "Password reset link sent! Please check your email."
+
+#: manage_users/views.py:191
+msgid "No account found with that email address."
+msgstr "No account found with that email address."
+
+#: manage_users/views.py:195
+msgid "Please enter a valid email address."
+msgstr "Please enter a valid email address."
+
+#: manage_users/views.py:216 manage_users/views.py:236
+msgid "Invalid or expired password reset link."
+msgstr "Invalid or expired password reset link."
+
+#: manage_users/views.py:219 manage_users/views.py:239
+msgid "Invalid password reset link."
+msgstr "Invalid password reset link."
+
+#: manage_users/views.py:228
+msgid "Invalid password reset request."
+msgstr "Invalid password reset request."
+
+#: manage_users/views.py:248
+msgid "Your password has been reset successfully! You can now log in."
+msgstr "Your password has been reset successfully! You can now log in."
+
+#: templates/base/base.html:14
+msgid "Mode démo — vos données seront supprimées après 2h."
+msgstr "Mode démo — vos données seront supprimées après 2h."
+
+#: templates/base/base.html:15
+msgid "Créer un vrai compte →"
+msgstr "Créer un vrai compte →"
+
+#: templates/base/header.html:24
+msgid "Rechercher..."
+msgstr "Rechercher..."
+
+#: templates/base/header.html:52
+msgid "Administrateur de chorale"
+msgstr "Administrateur de chorale"
+
+#: templates/base/navbar.html:16
+msgid "Admin Portal"
+msgstr "Admin Portal"
+
+#: templates/base/navbar.html:44 templates/base/navbar.html:60
+msgid "Cotisations"
+msgstr "Cotisations"
+
+#: templates/base/navbar.html:54
+msgid "Paiements"
+msgstr "Paiements"
+
+#: templates/base/navbar.html:73
+msgid "Membres"
+msgstr "Membres"
+
+#: templates/base/navbar.html:85 templates/pages/events.html:40
+msgid "Calendrier"
+msgstr "Calendrier"
+
+#: templates/base/navbar.html:96
+msgid "Absences"
+msgstr "Absences"
+
+#: templates/base/navbar.html:106 templates/base/navbar.html:112
+msgid "Sanctions"
+msgstr "Sanctions"
+
+#: templates/base/navbar.html:124 templates/base/navbar.html:130
+msgid "Finances"
+msgstr "Finances"
+
+#: templates/base/navbar.html:141
+msgid "Evénements"
+msgstr "Evénements"
+
+#: templates/base/navbar.html:146
+msgid "Activités"
+msgstr "Activités"
+
+#: templates/base/navbar.html:158
+msgid "Ajouter un membre"
+msgstr "Ajouter un membre"
+
+#: templates/base/navbar.html:163 templates/landing/header.html:57
+#: templates/landing/header.html:68 templates/landing/header.html:129
+#: templates/landing/header.html:140
+msgid "Déconnexion"
+msgstr "Déconnexion"
+
+#: templates/landing/footer.html:12
+msgid ""
+"La solution dédiée aux groupes chrétiens pour une gestion harmonieuse et "
+"simplifiée."
+msgstr ""
+"La solution dédiée aux groupes chrétiens pour une gestion harmonieuse et "
+"simplifiée."
+
+#: templates/landing/footer.html:24
+msgid "Produit"
+msgstr "Produit"
+
+#: templates/landing/footer.html:26 templates/landing/header.html:17
+#: templates/landing/header.html:93 templates/landing/navbar.html:3
+#: templates/landing/pages/register.html:21
+msgid "Fonctionnalités"
+msgstr "Fonctionnalités"
+
+#: templates/landing/footer.html:27 templates/landing/header.html:18
+#: templates/landing/header.html:94 templates/landing/navbar.html:4
+msgid "Tarifs"
+msgstr "Tarifs"
+
+#: templates/landing/footer.html:28 templates/landing/pages/register.html:22
+msgid "Sécurité"
+msgstr "Sécurité"
+
+#: templates/landing/footer.html:29
+msgid "Mises à jour"
+msgstr "Mises à jour"
+
+#: templates/landing/footer.html:33
+msgid "Société"
+msgstr "Société"
+
+#: templates/landing/footer.html:35 templates/landing/header.html:19
+#: templates/landing/header.html:95 templates/landing/navbar.html:5
+msgid "À propos"
+msgstr "À propos"
+
+#: templates/landing/footer.html:36
+msgid "Blog"
+msgstr "Blog"
+
+#: templates/landing/footer.html:37
+msgid "Témoignages"
+msgstr "Témoignages"
+
+#: templates/landing/footer.html:38
+msgid "Contact"
+msgstr "Contact"
+
+#: templates/landing/footer.html:42
+msgid "Légal"
+msgstr "Légal"
+
+#: templates/landing/footer.html:44 templates/landing/pages/login.html:111
+msgid "Conditions d'utilisation"
+msgstr "Conditions d'utilisation"
+
+#: templates/landing/footer.html:45 templates/landing/pages/login.html:110
+msgid "Confidentialité"
+msgstr "Confidentialité"
+
+#: templates/landing/footer.html:46
+msgid "Mentions légales"
+msgstr "Mentions légales"
+
+#: templates/landing/footer.html:51
+msgid "© 2024 ChorusSérénité. Tous droits réservés."
+msgstr "© 2024 ChorusSérénité. Tous droits réservés."
+
+#: templates/landing/footer.html:53
+msgid "Français"
+msgstr "Français"
+
+#: templates/landing/header.html:41 templates/landing/header.html:113
+#: templates/landing/pages/login.html:7
+msgid "Connexion"
+msgstr "Connexion"
+
+#: templates/landing/header.html:46 templates/landing/header.html:118
+msgid "Essai gratuit"
+msgstr "Essai gratuit"
+
+#: templates/landing/header.html:52 templates/landing/header.html:124
+#: templates/pages/dashboard.html:6
+msgid "Tableau de bord"
+msgstr "Tableau de bord"
+
+#: templates/landing/header.html:63 templates/landing/header.html:135
+msgid "Créer une chorale"
+msgstr "Créer une chorale"
+
+#: templates/landing/pages/home.html:14
+msgid "Solution pour chorales"
+msgstr "Solution pour chorales"
+
+#: templates/landing/pages/home.html:16
+msgid "Gérez votre chorale avec <span class=\"text-[#e0ad53]\">sérénité</span>"
+msgstr "Gérez votre chorale avec <span class=\"text-[#e0ad53]\">sérénité</span>"
+
+#: templates/landing/pages/home.html:19
+msgid ""
+"Une plateforme moderne tout-en-un pour simplifier la gestion de vos membres,"
+" le suivi de vos finances et l'organisation de vos répétitions."
+msgstr ""
+"Une plateforme moderne tout-en-un pour simplifier la gestion de vos membres,"
+" le suivi de vos finances et l'organisation de vos répétitions."
+
+#: templates/landing/pages/home.html:24
+msgid "Commencer Gratuitement"
+msgstr "Commencer Gratuitement"
+
+#: templates/landing/pages/home.html:29
+msgid "Voir la démo"
+msgstr "Voir la démo"
+
+#: templates/landing/pages/home.html:39
+msgid "Rejoint par plus de 500 chorales ce mois-ci"
+msgstr "Rejoint par plus de 500 chorales ce mois-ci"
+
+#: templates/landing/pages/home.html:58
+msgid "Ils nous font confiance"
+msgstr "Ils nous font confiance"
+
+#: templates/landing/pages/home.html:72
+msgid "Outils de gestion"
+msgstr "Outils de gestion"
+
+#: templates/landing/pages/home.html:73
+msgid "Tout ce dont vous avez besoin pour votre chorale"
+msgstr "Tout ce dont vous avez besoin pour votre chorale"
+
+#: templates/landing/pages/home.html:74
+msgid ""
+"Des outils puissants et intuitifs conçus spécifiquement pour les besoins des"
+" ensembles vocaux modernes au sein de l'Église."
+msgstr ""
+"Des outils puissants et intuitifs conçus spécifiquement pour les besoins des"
+" ensembles vocaux modernes au sein de l'Église."
+
+#: templates/landing/pages/home.html:81
+msgid "Suivi des Membres"
+msgstr "Suivi des Membres"
+
+#: templates/landing/pages/home.html:83
+msgid ""
+"Annuaire numérique détaillé avec répartition par pupitres (Soprano, Alto, "
+"Ténor, Basse) et gestion des contacts."
+msgstr ""
+"Annuaire numérique détaillé avec répartition par pupitres (Soprano, Alto, "
+"Ténor, Basse) et gestion des contacts."
+
+#: templates/landing/pages/home.html:90
+msgid "Livre Financier"
+msgstr "Livre Financier"
+
+#: templates/landing/pages/home.html:92
+msgid ""
+"Suivi rigoureux des cotisations, dons et dépenses. Transparence totale pour "
+"les membres et le bureau."
+msgstr ""
+"Suivi rigoureux des cotisations, dons et dépenses. Transparence totale pour "
+"les membres et le bureau."
+
+#: templates/landing/pages/home.html:99
+msgid "Comptes-rendus"
+msgstr "Comptes-rendus"
+
+#: templates/landing/pages/home.html:101
+msgid ""
+"Archivage centralisé des procès-verbaux de réunions et résumés d'activités "
+"hebdomadaires."
+msgstr ""
+"Archivage centralisé des procès-verbaux de réunions et résumés d'activités "
+"hebdomadaires."
+
+#: templates/landing/pages/home.html:108
+msgid "Présences"
+msgstr "Présences"
+
+#: templates/landing/pages/home.html:110
+msgid ""
+"Pointage rapide lors des répétitions et prestations. Statistiques "
+"d'assiduité individuelles et collectives."
+msgstr ""
+"Pointage rapide lors des répétitions et prestations. Statistiques "
+"d'assiduité individuelles et collectives."
+
+#: templates/landing/pages/home.html:121
+msgid "Nos Tarifs"
+msgstr "Nos Tarifs"
+
+#: templates/landing/pages/home.html:122
+msgid "Une offre adaptée à votre ensemble"
+msgstr "Une offre adaptée à votre ensemble"
+
+#: templates/landing/pages/home.html:123
+msgid ""
+"Choisissez le plan qui correspond le mieux à la taille et aux besoins de "
+"votre ministère musical."
+msgstr ""
+"Choisissez le plan qui correspond le mieux à la taille et aux besoins de "
+"votre ministère musical."
+
+#: templates/landing/pages/home.html:128
+msgid "Gratuit"
+msgstr "Gratuit"
+
+#: templates/landing/pages/home.html:129
+msgid "Pour les petites chorales et débuter sereinement."
+msgstr "Pour les petites chorales et débuter sereinement."
+
+#: templates/landing/pages/home.html:133 templates/landing/pages/home.html:161
+#: templates/landing/pages/home.html:196
+msgid "/mois"
+msgstr "/mois"
+
+#: templates/landing/pages/home.html:138
+msgid "Jusqu'à 15 membres"
+msgstr "Jusqu'à 15 membres"
+
+#: templates/landing/pages/home.html:142
+msgid "Suivi des présences"
+msgstr "Suivi des présences"
+
+#: templates/landing/pages/home.html:146
+msgid "Livre financier basique"
+msgstr "Livre financier basique"
+
+#: templates/landing/pages/home.html:150
+msgid "Commencer"
+msgstr "Commencer"
+
+#: templates/landing/pages/home.html:154
+msgid "Populaire"
+msgstr "Populaire"
+
+#: templates/landing/pages/home.html:156
+msgid "Pro"
+msgstr "Pro"
+
+#: templates/landing/pages/home.html:157
+msgid "Fonctionnalités complètes pour une gestion optimale."
+msgstr "Fonctionnalités complètes pour une gestion optimale."
+
+#: templates/landing/pages/home.html:166
+msgid "Membres illimités"
+msgstr "Membres illimités"
+
+#: templates/landing/pages/home.html:170
+msgid "Comptabilité avancée"
+msgstr "Comptabilité avancée"
+
+#: templates/landing/pages/home.html:174
+msgid "Rapports automatisés"
+msgstr "Rapports automatisés"
+
+#: templates/landing/pages/home.html:178
+msgid "Espace de stockage partitions"
+msgstr "Espace de stockage partitions"
+
+#: templates/landing/pages/home.html:182
+msgid "Support prioritaire"
+msgstr "Support prioritaire"
+
+#: templates/landing/pages/home.html:186
+msgid "Choisir Pro"
+msgstr "Choisir Pro"
+
+#: templates/landing/pages/home.html:191
+msgid "Église"
+msgstr "Église"
+
+#: templates/landing/pages/home.html:192
+msgid "Pour la gestion multi-groupes au sein d'une paroisse."
+msgstr "Pour la gestion multi-groupes au sein d'une paroisse."
+
+#: templates/landing/pages/home.html:201
+msgid "Jusqu'à 5 chorales/groupes"
+msgstr "Jusqu'à 5 chorales/groupes"
+
+#: templates/landing/pages/home.html:205
+msgid "Administration centralisée"
+msgstr "Administration centralisée"
+
+#: templates/landing/pages/home.html:209
+msgid "Tableau de bord de district"
+msgstr "Tableau de bord de district"
+
+#: templates/landing/pages/home.html:213
+msgid "Formation personnalisée"
+msgstr "Formation personnalisée"
+
+#: templates/landing/pages/home.html:217
+msgid "Contacter Sales"
+msgstr "Contacter Sales"
+
+#: templates/landing/pages/home.html:229
+msgid "Prêt à transformer l'organisation de votre chorale ?"
+msgstr "Prêt à transformer l'organisation de votre chorale ?"
+
+#: templates/landing/pages/home.html:230
+msgid ""
+"Rejoignez les centaines de chefs de chœur qui utilisent déjà ChorusSérénité "
+"pour se concentrer sur l'essentiel : la louange."
+msgstr ""
+"Rejoignez les centaines de chefs de chœur qui utilisent déjà ChorusSérénité "
+"pour se concentrer sur l'essentiel : la louange."
+
+#: templates/landing/pages/home.html:233
+msgid "Commencer l'essai gratuit"
+msgstr "Commencer l'essai gratuit"
+
+#: templates/landing/pages/home.html:236
+msgid "Demander une démo"
+msgstr "Demander une démo"
+
+#: templates/landing/pages/home.html:239
+msgid "Pas de carte de crédit requise • Installation en 5 minutes"
+msgstr "Pas de carte de crédit requise • Installation en 5 minutes"
+
+#: templates/landing/pages/login.html:21
+msgid "Contact support"
+msgstr "Contact support"
+
+#: templates/landing/pages/login.html:39
+msgid "Harmonie"
+msgstr "Harmonie"
+
+#: templates/landing/pages/login.html:41
+msgid ""
+"Gérez les activités, les finances et la fréquentation de votre chorale de "
+"manière fluide dans une seule plateforme unifiée."
+msgstr ""
+"Gérez les activités, les finances et la fréquentation de votre chorale de "
+"manière fluide dans une seule plateforme unifiée."
+
+#: templates/landing/pages/login.html:45
+msgid "ma chorale Pro v1"
+msgstr "ma chorale Pro v1"
+
+#: templates/landing/pages/login.html:51 templates/landing/pages/login.html:93
+#: templates/landing/pages/register.html:26
+msgid "Se connecter"
+msgstr "Se connecter"
+
+#: templates/landing/pages/login.html:52
+msgid "Bienvenue ! Veuillez entrer vos identifiants."
+msgstr "Bienvenue ! Veuillez entrer vos identifiants."
+
+#: templates/landing/pages/login.html:89
+msgid "Se souvenir de moi"
+msgstr "Se souvenir de moi"
+
+#: templates/landing/pages/login.html:97
+msgid "Mot de passe oublié ?"
+msgstr "Mot de passe oublié ?"
+
+#: templates/landing/pages/login.html:100
+msgid "Nouveau ici ?"
+msgstr "Nouveau ici ?"
+
+#: templates/landing/pages/login.html:101
+msgid "Créer un compte"
+msgstr "Créer un compte"
+
+#: templates/landing/pages/login.html:108
+#: templates/landing/pages/register.html:226
+msgid "© 2026 machorale. Tous droits réservés."
+msgstr "© 2026 machorale. Tous droits réservés."
+
+#: templates/landing/pages/register.html:7
+msgid "Inscription"
+msgstr "Inscription"
+
+#: templates/landing/pages/register.html:23
+msgid "Aide"
+msgstr "Aide"
+
+#: templates/landing/pages/register.html:38
+msgid ""
+"Simplifiez la gestion de votre <span class=\"text-primary\">groupe "
+"chrétien</span>."
+msgstr ""
+"Simplifiez la gestion de votre <span class=\"text-primary\">groupe "
+"chrétien</span>."
+
+#: templates/landing/pages/register.html:47
+msgid "Données sécurisées"
+msgstr "Données sécurisées"
+
+#: templates/landing/pages/register.html:49
+msgid ""
+"Vos données sont protégées par un cryptage de bout en bout. La "
+"confidentialité des membres est notre priorité absolue."
+msgstr ""
+"Vos données sont protégées par un cryptage de bout en bout. La "
+"confidentialité des membres est notre priorité absolue."
+
+#: templates/landing/pages/register.html:59
+msgid "Organisation simplifiée"
+msgstr "Organisation simplifiée"
+
+#: templates/landing/pages/register.html:61
+msgid ""
+"Centralisez vos partitions, répétitions et membres en un seul endroit. Ne "
+"perdez plus jamais de temps sur le planning."
+msgstr ""
+"Centralisez vos partitions, répétitions et membres en un seul endroit. Ne "
+"perdez plus jamais de temps sur le planning."
+
+#: templates/landing/pages/register.html:71
+msgid "Transparence totale"
+msgstr "Transparence totale"
+
+#: templates/landing/pages/register.html:73
+msgid ""
+"Suivi clair des finances et de l'assiduité pour toute la chorale. Une "
+"gestion saine pour un chœur en harmonie."
+msgstr ""
+"Suivi clair des finances et de l'assiduité pour toute la chorale. Une "
+"gestion saine pour un chœur en harmonie."
+
+#: templates/landing/pages/register.html:79
+msgid ""
+"« machorale a transformé la façon dont nous organisons nos répétitions. "
+"C'est simple, intuitif et tout le monde est enfin sur la même page. »"
+msgstr ""
+"« machorale a transformé la façon dont nous organisons nos répétitions. "
+"C'est simple, intuitif et tout le monde est enfin sur la même page. »"
+
+#: templates/landing/pages/register.html:84
+msgid "Directeur technique"
+msgstr "Directeur technique"
+
+#: templates/landing/pages/register.html:94
+msgid "Créer votre compte chorale"
+msgstr "Créer votre compte chorale"
+
+#: templates/landing/pages/register.html:96
+msgid "Déjà membre ?"
+msgstr "Déjà membre ?"
+
+#: templates/landing/pages/register.html:96
+msgid "Connectez-vous ici"
+msgstr "Connectez-vous ici"
+
+#: templates/landing/pages/register.html:187
+msgid "Utilisez au moins 8 caractères avec des lettres et chiffres."
+msgstr "Utilisez au moins 8 caractères avec des lettres et chiffres."
+
+#: templates/landing/pages/register.html:206
+msgid ""
+"J'accepte les <a class=\"text-primary hover:underline font-medium\" "
+"href=\"#\">conditions d'utilisation</a> et la <a class=\"text-primary "
+"hover:underline font-medium\" href=\"#\">politique de confidentialité</a>."
+msgstr ""
+"J'accepte les <a class=\"text-primary hover:underline font-medium\" "
+"href=\"#\">conditions d'utilisation</a> et la <a class=\"text-primary "
+"hover:underline font-medium\" href=\"#\">politique de confidentialité</a>."
+
+#: templates/landing/pages/register.html:212
+msgid "Créer mon compte"
+msgstr "Créer mon compte"
+
+#: templates/landing/pages/register.html:218
+msgid "Besoin d'aide pour configurer votre chorale ?"
+msgstr "Besoin d'aide pour configurer votre chorale ?"
+
+#: templates/landing/pages/register.html:219
+msgid "Contactez notre équipe de support"
+msgstr "Contactez notre équipe de support"
+
+#: templates/landing/pages/reset_password_confirm.html:6
+#: templates/landing/pages/reset_password_confirm.html:7
+#: templates/landing/pages/reset_password_confirm.html:22
+#: templates/landing/pages/reset_password_request.html:8
+#: templates/landing/pages/reset_password_request.html:61
+msgid "Réinitialisation du mot de passe"
+msgstr "Réinitialisation du mot de passe"
+
+#: templates/landing/pages/reset_password_confirm.html:15
+msgid "Azure Choir"
+msgstr "Azure Choir"
+
+#: templates/landing/pages/reset_password_confirm.html:16
+msgid "Vocal Ensemble"
+msgstr "Vocal Ensemble"
+
+#: templates/landing/pages/reset_password_confirm.html:24
+msgid ""
+"Cliquez sur le bouton ci-dessous pour confirmer la réinitialisation de votre"
+" compte."
+msgstr ""
+"Cliquez sur le bouton ci-dessous pour confirmer la réinitialisation de votre"
+" compte."
+
+#: templates/landing/pages/reset_password_confirm.html:40
+msgid "Nouveau mot de passe"
+msgstr "Nouveau mot de passe"
+
+#: templates/landing/pages/reset_password_confirm.html:57
+msgid "Confirmer le mot de passe"
+msgstr "Confirmer le mot de passe"
+
+#: templates/landing/pages/reset_password_confirm.html:75
+msgid "Réinitialiser le mot de passe"
+msgstr "Réinitialiser le mot de passe"
+
+#: templates/landing/pages/reset_password_confirm.html:84
+msgid "Retour à la connexion"
+msgstr "Retour à la connexion"
+
+#: templates/landing/pages/reset_password_request.html:20
+msgid "Gestion de chorale"
+msgstr "Gestion de chorale"
+
+#: templates/landing/pages/reset_password_request.html:65
+msgid ""
+"Entrez l'adresse email afin de recevoir les instructions pour réinitialiser "
+"votre mot de passe."
+msgstr ""
+"Entrez l'adresse email afin de recevoir les instructions pour réinitialiser "
+"votre mot de passe."
+
+#: templates/landing/pages/reset_password_request.html:83
+msgid "Envoyer les instructions"
+msgstr "Envoyer les instructions"
+
+#: templates/landing/pages/reset_password_request.html:91
+msgid "Choir Management © 2024 • Sécurisé par AES-256"
+msgstr "Choir Management © 2024 • Sécurisé par AES-256"
+
+#: templates/landing/pages/verify_email.html:7
+msgid "Vérification Email - Choir Management"
+msgstr "Vérification Email - Choir Management"
+
+#: templates/landing/pages/verify_email.html:41
+msgid "Vérifiez votre adresse email"
+msgstr "Vérifiez votre adresse email"
+
+#: templates/landing/pages/verify_email.html:45
+msgid ""
+"Un code de vérification à 6 chiffres a été envoyé à l'adresse associée à "
+"votre compte. Veuillez le saisir ci-dessous."
+msgstr ""
+"Un code de vérification à 6 chiffres a été envoyé à l'adresse associée à "
+"votre compte. Veuillez le saisir ci-dessous."
+
+#: templates/landing/pages/verify_email.html:96
+msgid "Confirmer"
+msgstr "Confirmer"
+
+#: templates/landing/pages/verify_email.html:103
+msgid "Vous n'avez pas reçu de code ?"
+msgstr "Vous n'avez pas reçu de code ?"
+
+#: templates/landing/pages/verify_email.html:105
+msgid "Renvoyer le code"
+msgstr "Renvoyer le code"
+
+#: templates/pages/conf_chorale.html:39
+msgid "Étape 3 sur 3"
+msgstr "Étape 3 sur 3"
+
+#: templates/pages/conf_chorale.html:48
+msgid "Configurez votre chorale"
+msgstr "Configurez votre chorale"
+
+#: templates/pages/conf_chorale.html:50
+msgid ""
+"Ajoutez les informations supplémentaires pour personnaliser le profil de "
+"votre chorale."
+msgstr ""
+"Ajoutez les informations supplémentaires pour personnaliser le profil de "
+"votre chorale."
+
+#: templates/pages/conf_chorale.html:110 templates/pages/events.html:47
+msgid "Précédent"
+msgstr "Précédent"
+
+#: templates/pages/conf_chorale.html:120
+msgid "Terminer la configuration"
+msgstr "Terminer la configuration"
+
+#: templates/pages/conf_chorale.html:129
+#: templates/pages/create_chorale.html:120
+msgid "En continuant, vous acceptez nos"
+msgstr "En continuant, vous acceptez nos"
+
+#: templates/pages/conf_chorale.html:129
+#: templates/pages/create_chorale.html:120
+msgid "Conditions d'Utilisation"
+msgstr "Conditions d'Utilisation"
+
+#: templates/pages/create_chorale.html:26
+msgid "Étape 2 sur 3"
+msgstr "Étape 2 sur 3"
+
+#: templates/pages/create_chorale.html:35
+msgid "Créer le profil de votre chorale"
+msgstr "Créer le profil de votre chorale"
+
+#: templates/pages/create_chorale.html:37
+msgid ""
+"Commençons par les informations de base de votre groupe musical. Vous "
+"pourrez les modifier plus tard."
+msgstr ""
+"Commençons par les informations de base de votre groupe musical. Vous "
+"pourrez les modifier plus tard."
+
+#: templates/pages/create_chorale.html:108
+msgid "Continuer la configuration"
+msgstr "Continuer la configuration"
+
+#: templates/pages/create_chorale.html:112
+msgid "Vous pourrez ajouter des membres à l'étape suivante."
+msgstr "Vous pourrez ajouter des membres à l'étape suivante."
+
+#: templates/pages/dashboard.html:13
+msgid "Vue d'ensemble"
+msgstr "Vue d'ensemble"
+
+#: templates/pages/dashboard.html:14
+msgid ""
+"Content de te revoir. Voici ce qui s'est passé aujourd'hui avec la chorale."
+msgstr ""
+"Content de te revoir. Voici ce qui s'est passé aujourd'hui avec la chorale."
+
+#: templates/pages/dashboard.html:19
+msgid "Créer un événement"
+msgstr "Créer un événement"
+
+#: templates/pages/dashboard.html:30 templates/pages/dashboard.html:60
+msgid "nouveaux"
+msgstr "nouveaux"
+
+#: templates/pages/dashboard.html:32
+msgid "Total membres"
+msgstr "Total membres"
+
+#: templates/pages/dashboard.html:33
+#, python-format
+msgid "%(n)s actif"
+msgid_plural "%(n)s actifs"
+msgstr[0] "%(n)s actif"
+msgstr[1] "%(n)s actifs"
+
+#: templates/pages/dashboard.html:42
+msgid "Date de la dernière réunion"
+msgstr "Date de la dernière réunion"
+
+#: templates/pages/dashboard.html:52
+msgid "Solde actuel"
+msgstr "Solde actuel"
+
+#: templates/pages/dashboard.html:62
+msgid "Sanctions en cours"
+msgstr "Sanctions en cours"
+
+#: templates/pages/dashboard.html:63
+#, python-format
+msgid "%(n)s sanction"
+msgid_plural "%(n)s sanctions"
+msgstr[0] "%(n)s sanction"
+msgstr[1] "%(n)s sanctions"
+
+#: templates/pages/dashboard.html:71
+msgid "Activités récentes"
+msgstr "Activités récentes"
+
+#: templates/pages/dashboard.html:72
+msgid "Voir plus"
+msgstr "Voir plus"
+
+#: templates/pages/dashboard.html:84
+#, python-format
+msgid "Ajouté au fonds général • XAF %(amount)s"
+msgstr "Ajouté au fonds général • XAF %(amount)s"
+
+#: templates/pages/dashboard.html:100
+msgid "Aucune activité récente enregistrée."
+msgstr "Aucune activité récente enregistrée."
+
+#: templates/pages/dashboard.html:111
+msgid "Prochaines répétitions"
+msgstr "Prochaines répétitions"
+
+#: templates/pages/dashboard.html:126
+msgid "Aucun événement de pratique à venir pour le moment."
+msgstr "Aucun événement de pratique à venir pour le moment."
+
+#: templates/pages/dashboard.html:133
+msgid "Actions rapides"
+msgstr "Actions rapides"
+
+#: templates/pages/dashboard.html:136
+msgid "Exporter le registre des présences"
+msgstr "Exporter le registre des présences"
+
+#: templates/pages/dashboard.html:139
+msgid "Envoyer un email à tous les membres"
+msgstr "Envoyer un email à tous les membres"
+
+#: templates/pages/dashboard.html:142
+msgid "Imprimer la fiche de la chorale"
+msgstr "Imprimer la fiche de la chorale"
+
+#: templates/pages/events.html:5 templates/pages/events.html:17
+msgid "Calendrier des événements"
+msgstr "Calendrier des événements"
+
+#: templates/pages/events.html:18
+msgid "Consultez la liste des événements et les prochaines dates importantes."
+msgstr ""
+"Consultez la liste des événements et les prochaines dates importantes."
+
+#: templates/pages/events.html:23
+msgid "Ajouter un événement"
+msgstr "Ajouter un événement"
+
+#: templates/pages/events.html:45
+msgid "Mois précédent"
+msgstr "Mois précédent"
+
+#: templates/pages/events.html:51
+msgid "Mois suivant"
+msgstr "Mois suivant"
+
+#: templates/pages/events.html:52
+msgid "Suivant"
+msgstr "Suivant"
+
+#: templates/pages/events.html:90
+msgid "événement"
+msgid_plural "événements"
+msgstr[0] "événement"
+msgstr[1] "événements"
+
+#: templates/pages/events.html:129
+msgid "Prochains événements"
+msgstr "Prochains événements"
+
+#: templates/pages/events.html:141
+msgid "Aucun événement à venir dans ce mois."
+msgstr "Aucun événement à venir dans ce mois."

@@ -1,0 +1,65 @@
+{% extends "../../base/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}Relever les absences{% endblock %}
+
+{% block content %}
+{% include "../../components/alert/message.html" %}
+<div class="p-8 max-w-3xl mx-auto">
+    <div class="mb-8">
+        <a href="{% url 'absences' slug=slug %}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline active:scale-95 transition-all duration-150 mb-3">
+            <span class="material-symbols-outlined">arrow_back</span>Retour aux absences
+        </a>
+        <h2 class="text-2xl font-bold tracking-tight">Relever les absences d'une rencontre</h2>
+        <p class="text-[#4c669a] text-sm">Sélectionnez une rencontre, puis cochez les membres absents. Relancer la saisie écrase l'état précédent.</p>
+    </div>
+    <div class="bg-white dark:bg-gray-900 rounded-3xl border border-[#cfd7e7] dark:border-gray-800 p-8 shadow-sm">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Rencontre</label>
+                {{ form.event }}
+                {{ form.event.errors }}
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-3">Membres absents</label>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700">
+                    {% for choice in form.absent_members %}
+                    <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 cursor-pointer transition-colors">
+                        {{ choice.tag }}
+                        <span class="text-sm text-slate-700 dark:text-slate-200">{{ choice.choice_label }}</span>
+                    </label>
+                    {% empty %}
+                    <p class="text-sm text-slate-500">Aucun membre dans la chorale.</p>
+                    {% endfor %}
+                </div>
+                {{ form.absent_members.errors }}
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">Raison commune (optionnel)</label>
+                    {{ form.reason }}
+                    {{ form.reason.errors }}
+                </div>
+                <label class="flex items-center gap-2 pt-7">
+                    {{ form.is_justified }}
+                    <span class="text-sm text-slate-700 dark:text-slate-200">Absences justifiées</span>
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <a href="{% url 'absences' slug=slug %}" class="text-sm font-semibold text-slate-500 hover:text-slate-700 px-4 py-2">Annuler</a>
+                <button type="submit" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-5 py-2.5 rounded-xl hover:bg-primary/90 active:scale-95 transition-all duration-150">
+                    <span class="material-symbols-outlined text-base">save</span>
+                    Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
