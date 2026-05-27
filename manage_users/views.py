@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .forms import UserRegisterForm, UserLoginForm, SetNewPasswordForm, ResetPasswordRequestForm
+from .forms import UserRegisterForm, UserLoginForm, SetNewPasswordForm, ResetPasswordRequestForm, ProfileForm
 from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 from django.contrib.auth import login, logout
@@ -124,6 +124,52 @@ class LogoutView(TemplateView):
         cache.clear()
         logout(request)
         return HttpResponseRedirect("/")
+
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    """Affichage + édition par l'utilisateur de ses propres infos."""
+    template_name = "manage_users/profile.html"
+
+    def _resolve_slug(self, request):
+        """La base.html charge la navbar qui exige `slug` pour {% url 'dashboard' %}.
+        On dérive le slug du contexte chorale courant (session > première membership).
+        Retourne None si l'utilisateur n'a aucune chorale (navbar gère ce cas)."""
+        slug = request.session.get('active_chorale_slug')
+        if slug:
+            return slug
+        from manage_chorale.models import Membership
+        membership = Membership.objects.filter(user=request.user).select_related('chorale').first()
+        return membership.chorale.slug if membership else None
+
+    def get(self, request, *args, **kwargs):
+        slug = self._resolve_slug(request)
+        if not slug:
+            # Pas de chorale → renvoyer vers création (l'UI dashboard a besoin d'un slug)
+            return HttpResponseRedirect(reverse("create_chorale"))
+        form = ProfileForm(user=request.user)
+        return render(request, self.template_name, {
+            "form": form,
+            "viewed_user": request.user,
+            "slug": slug,
+        })
+
+    def post(self, request, *args, **kwargs):
+        slug = self._resolve_slug(request)
+        if not slug:
+            return HttpResponseRedirect(reverse("create_chorale"))
+        form = ProfileForm(request.POST, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, _("Profile updated."))
+            return HttpResponseRedirect(reverse("profile"))
+        return render(request, self.template_name, {
+            "form": form,
+            "viewed_user": request.user,
+            "slug": slug,
+        })
     
 
 @ratelimit(key='ip', rate='3/m', method='GET', block=True)

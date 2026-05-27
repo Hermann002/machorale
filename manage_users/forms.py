@@ -114,6 +114,117 @@ class ResetPasswordRequestForm(forms.Form):
             raise forms.ValidationError(_("No account found with this email."))
         return cleaned_data
     
+class ProfileForm(forms.Form):
+    """Édition par l'utilisateur de ses propres infos (CustomUser + Profile)."""
+
+    FIELD_CLASS = (
+        "w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl border "
+        "border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm"
+    )
+
+    first_name = forms.CharField(max_length=150, required=True, label=_("Prénom"),
+        widget=forms.TextInput(attrs={'class': FIELD_CLASS}))
+    last_name = forms.CharField(max_length=150, required=False, label=_("Nom"),
+        widget=forms.TextInput(attrs={'class': FIELD_CLASS}))
+    email = forms.EmailField(required=True, label=_("Email"),
+        widget=forms.EmailInput(attrs={'class': FIELD_CLASS}))
+    contact = forms.CharField(max_length=15, required=False, label=_("Téléphone"),
+        widget=forms.TextInput(attrs={'class': FIELD_CLASS, 'placeholder': "+237 6XX XXX XXX"}))
+
+    MARITAL_CHOICES = (
+        ('single', _('Single')),
+        ('married', _('Married')),
+        ('divorced', _('Divorced')),
+        ('widowed', _('Widowed')),
+    )
+    PROFESSION_CHOICES = (
+        ('', '---'),
+        ('student', _('Student')),
+        ('computer_scientist', _('Computer scientist')),
+        ('nurse', _('Nurse')),
+        ('teacher', _('Teacher')),
+        ('engineer', _('Engineer')),
+        ('doctor', _('Doctor')),
+        ('lawyer', _('Lawyer')),
+        ('other', _('Other')),
+    )
+
+    marital_status = forms.ChoiceField(required=False, choices=MARITAL_CHOICES,
+        label=_("Statut matrimonial"),
+        widget=forms.Select(attrs={'class': FIELD_CLASS}))
+    christened = forms.BooleanField(required=False, label=_("Baptisé(e)"),
+        widget=forms.CheckboxInput(attrs={'class': 'h-5 w-5 rounded text-primary'}))
+    confirmed = forms.BooleanField(required=False, label=_("Confirmé(e)"),
+        widget=forms.CheckboxInput(attrs={'class': 'h-5 w-5 rounded text-primary'}))
+    joined_date = forms.DateField(required=False, label=_("Date d'adhésion"),
+        widget=forms.DateInput(attrs={'class': FIELD_CLASS, 'type': 'date'}))
+    dob = forms.DateField(required=False, label=_("Date de naissance"),
+        widget=forms.DateInput(attrs={'class': FIELD_CLASS, 'type': 'date'}))
+    profession_c = forms.ChoiceField(required=False, choices=PROFESSION_CHOICES,
+        label=_("Profession"),
+        widget=forms.Select(attrs={'class': FIELD_CLASS}))
+    profession_o = forms.CharField(max_length=100, required=False, label=_("Profession (autre)"),
+        widget=forms.TextInput(attrs={'class': FIELD_CLASS}))
+    neighborhood = forms.CharField(max_length=100, required=False, label=_("Quartier"),
+        widget=forms.TextInput(attrs={'class': FIELD_CLASS}))
+    department = forms.CharField(max_length=100, required=False, label=_("Département"),
+        widget=forms.TextInput(attrs={'class': FIELD_CLASS}))
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        initial = kwargs.pop('initial', {}) or {}
+        if user is not None:
+            initial.setdefault('first_name', user.first_name)
+            initial.setdefault('last_name', user.last_name)
+            initial.setdefault('email', user.email)
+            from .models import Profile
+            profile = getattr(user, 'profile', None)
+            if profile is not None:
+                initial.setdefault('contact', profile._contact)
+                initial.setdefault('marital_status', profile.marital_status)
+                initial.setdefault('christened', profile.christened)
+                initial.setdefault('confirmed', profile.confirmed)
+                initial.setdefault('joined_date', profile.joined_date)
+                initial.setdefault('dob', profile.dob)
+                initial.setdefault('profession_c', profile.profession_c)
+                initial.setdefault('profession_o', profile.profession_o)
+                initial.setdefault('neighborhood', profile.neighborhood)
+                initial.setdefault('department', profile.department)
+        kwargs['initial'] = initial
+        super().__init__(*args, **kwargs)
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        qs = CustomUser.objects.filter(email=email)
+        if self.user is not None:
+            qs = qs.exclude(pk=self.user.pk)
+        if qs.exists():
+            raise forms.ValidationError(_("Cet email est déjà utilisé."))
+        return email
+
+    def save(self):
+        from .models import Profile
+        user = self.user
+        cd = self.cleaned_data
+        user.first_name = cd['first_name']
+        user.last_name = cd.get('last_name', '')
+        user.email = cd['email']
+        user.save()
+        profile, _created = Profile.objects.get_or_create(user=user)
+        profile._contact = cd.get('contact') or None
+        profile.marital_status = cd.get('marital_status') or profile.marital_status
+        profile.christened = cd.get('christened') or False
+        profile.confirmed = cd.get('confirmed') or False
+        profile.joined_date = cd.get('joined_date')
+        profile.dob = cd.get('dob')
+        profile.profession_c = cd.get('profession_c') or ''
+        profile.profession_o = cd.get('profession_o') or ''
+        profile.neighborhood = cd.get('neighborhood') or ''
+        profile.department = cd.get('department') or ''
+        profile.save()
+        return user
+
+
 class SetNewPasswordForm(forms.Form):
     new_password = forms.CharField(max_length=100, widget=forms.PasswordInput(attrs={"class": f"{input_class_password}", "placeholder": "••••••••"}), label=_("New Password"))
     confirm_password = forms.CharField(max_length=100, widget=forms.PasswordInput(attrs={"class": f"{input_class_password}", "placeholder": "••••••••"}), label=_("Confirm New Password"))

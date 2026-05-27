@@ -1,4 +1,5 @@
 {% extends "base/base.html" %}
+{% load i18n %}
 {% block title %}Members - Ma Chorale{% endblock %}
 {% block content %}
 {% include "../components/alert/message.html" %}
@@ -82,9 +83,14 @@
                     </td>
                     <td class="px-6 py-5 text-right">
                     <div class="flex items-center justify-end gap-2">
-                    {% if current_membership.is_admin %}
-                    <a href="{% url 'member_role_edit' slug=slug user_id=member.id %}" class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg active:scale-95 transition-all duration-150">
+                    {% if current_membership.is_admin or current_membership.role == 'secretary' %}
+                    <a href="{% url 'member_edit' slug=slug user_id=member.id %}" class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg active:scale-95 transition-all duration-150" title="{% translate 'Modifier la fiche' %}">
                     <span class="material-symbols-outlined text-lg">edit</span>
+                    </a>
+                    {% endif %}
+                    {% if current_membership.is_admin %}
+                    <a href="{% url 'member_role_edit' slug=slug user_id=member.id %}" class="p-2 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg active:scale-95 transition-all duration-150" title="{% translate 'Modifier le rôle' %}">
+                    <span class="material-symbols-outlined text-lg">admin_panel_settings</span>
                     </a>
                     {% endif %}
                     <button class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg active:scale-95 transition-all duration-150">

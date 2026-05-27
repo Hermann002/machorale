@@ -1,0 +1,62 @@
+{% load i18n %}
+<form method="post" action="{{ action_url }}"
+      hx-post="{{ action_url }}" hx-target="#modal" hx-swap="innerHTML"
+      class="space-y-4">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl text-sm">{{ form.non_field_errors }}</div>
+    {% endif %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium mb-2">{% translate "Membre" %}</label>
+            {{ form.member }} {{ form.member.errors }}
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-2">{% translate "Type" %}</label>
+            {{ form.sanction_type }} {{ form.sanction_type.errors }}
+        </div>
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-2">{% translate "Motif" %}</label>
+        {{ form.reason }} {{ form.reason.errors }}
+    </div>
+    <div id="amount-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium mb-2">{% translate "Montant (XAF)" %}</label>
+            {{ form.amount }} {{ form.amount.errors }}
+        </div>
+        <label class="inline-flex items-center gap-2 pt-7">
+            {{ form.is_paid }}
+            <span class="text-sm">{% translate "Amende payée" %}</span>
+        </label>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium mb-2">{% translate "Date d'application" %}</label>
+            {{ form.applied_at }} {{ form.applied_at.errors }}
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-2">{% translate "Délai (optionnel)" %}</label>
+            {{ form.time_limit }} {{ form.time_limit.errors }}
+        </div>
+    </div>
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+        <button type="button" onclick="document.getElementById('modal').innerHTML='';"
+                class="text-sm font-semibold text-slate-500 hover:text-slate-700 px-4 py-2">{% translate "Annuler" %}</button>
+        <button type="submit"
+                class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-5 py-2.5 rounded-xl hover:bg-primary/90 active:scale-95 transition-all">
+            <span class="material-symbols-outlined text-base">save</span>
+            {% translate "Appliquer" %}
+        </button>
+    </div>
+</form>
+<script>
+(function() {
+    const select = document.querySelector('[data-sanction-type-select]');
+    const block  = document.getElementById('amount-fields');
+    if (!select || !block) return;
+    const toggle = () => { block.style.display = select.value === 'fine' ? '' : 'none'; };
+    select.addEventListener('change', toggle);
+    toggle();
+})();
+</script>

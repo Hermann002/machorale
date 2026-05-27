@@ -4,86 +4,88 @@
 <div id="sidebar-container">
   <div id="sidebar-backdrop" class="fixed inset-0 z-30 bg-black/40 md:hidden {% if not sidebar_open %}hidden{% endif %} h-full"></div>
   <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-300 shadow-xl md:static md:translate-x-0 md:shadow-none md:flex md:w-64 flex-shrink-0 flex flex-col bg-white dark:bg-gray-900 border-r border-[#e7ebf3] dark:border-gray-800 {% if sidebar_open %}translate-x-0{% else %}-translate-x-full{% endif %} h-full">
-    <div class="p-6 flex flex-col h-full justify-between">
-      <div>
+    <div class="p-6 flex flex-col h-full min-h-0">
+      {# Header sticky : logo + close + switcher de chorale (ne shrink jamais) #}
+      <div class="flex-shrink-0">
         <div class="flex items-center justify-between gap-3 mb-6">
-        <div class="flex items-center gap-3">
-          <div class="p-2 rounded-lg">
-            <a href="{% url 'home'%}">
-              <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-auto">
+          <div class="flex items-center gap-3">
+            <div class="p-2 rounded-lg">
+              <a href="{% url 'home'%}">
+                <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-8 w-auto">
+              </a>
+            </div>
+            <p class="text-xs text-[#4c669a] mt-1">{% translate "Admin Portal" %}</p>
+          </div>
+          <button hx-get="{% url 'sidebar_toggle' slug=slug %}?open=0" hx-target="#sidebar-container" hx-swap="outerHTML" class="md:hidden p-2 rounded-lg text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        {% if user_memberships and current_membership %}
+        <div class="relative mb-6" data-chorale-switcher>
+          <button type="button" data-switcher-toggle
+                  class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-[#e7ebf3] dark:border-gray-800 bg-[#f8f9fc] dark:bg-gray-950 hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-colors">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="material-symbols-outlined text-base text-[#4c669a]">groups</span>
+              <span class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ current_membership.chorale.name }}</span>
+            </div>
+            <span class="material-symbols-outlined text-base text-[#4c669a]" data-switcher-caret>expand_more</span>
+          </button>
+          <div data-switcher-menu hidden
+               class="absolute left-0 right-0 mt-2 z-50 rounded-xl border border-[#e7ebf3] dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
+            {% for m in user_memberships %}
+            <a href="{% url 'dashboard' slug=m.chorale.slug %}"
+               class="flex items-center justify-between gap-2 px-3 py-2.5 text-sm hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors
+                      {% if m.chorale.slug == current_membership.chorale.slug %}bg-primary/5 text-primary font-semibold{% else %}text-slate-700 dark:text-slate-300{% endif %}">
+              <span class="truncate">{{ m.chorale.name }}</span>
+              {% if m.is_admin %}
+                <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary/10 text-primary">Admin</span>
+              {% else %}
+                <span class="text-[10px] font-bold uppercase text-slate-400">{{ m.get_role_display }}</span>
+              {% endif %}
+            </a>
+            {% endfor %}
+            <a href="{% url 'create_chorale' %}"
+               class="flex items-center gap-2 px-3 py-2.5 text-sm text-[#4c669a] border-t border-[#e7ebf3] dark:border-gray-800 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+              <span class="material-symbols-outlined text-base">add</span>
+              {% translate "Créer une chorale" %}
             </a>
           </div>
-          <p class="text-xs text-[#4c669a] mt-1">{% translate "Admin Portal" %}</p>
         </div>
-        <button hx-get="{% url 'sidebar_toggle' slug=slug %}?open=0" hx-target="#sidebar-container" hx-swap="outerHTML" class="md:hidden p-2 rounded-lg text-[#4c669a] hover:bg-[#f8f9fc] dark:hover:bg-gray-800">
-          <span class="material-symbols-outlined">close</span>
-        </button>
+        <script>
+          (function () {
+            var root = document.querySelector('[data-chorale-switcher]');
+            if (!root) return;
+            var btn = root.querySelector('[data-switcher-toggle]');
+            var menu = root.querySelector('[data-switcher-menu]');
+            var caret = root.querySelector('[data-switcher-caret]');
+            if (!btn || !menu) return;
+            function close() {
+              menu.hidden = true;
+              if (caret) caret.textContent = 'expand_more';
+            }
+            btn.addEventListener('click', function (e) {
+              e.stopPropagation();
+              var isHidden = menu.hidden;
+              menu.hidden = !isHidden;
+              if (caret) caret.textContent = isHidden ? 'expand_less' : 'expand_more';
+            });
+            document.addEventListener('click', function (e) {
+              if (!root.contains(e.target)) close();
+            });
+          })();
+        </script>
+        {% endif %}
       </div>
 
-      {% if user_memberships and current_membership %}
-      <div class="relative mb-6" data-chorale-switcher>
-        <button type="button" data-switcher-toggle
-                class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-[#e7ebf3] dark:border-gray-800 bg-[#f8f9fc] dark:bg-gray-950 hover:bg-[#e7ebf3] dark:hover:bg-gray-800 transition-colors">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="material-symbols-outlined text-base text-[#4c669a]">groups</span>
-            <span class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ current_membership.chorale.name }}</span>
-          </div>
-          <span class="material-symbols-outlined text-base text-[#4c669a]" data-switcher-caret>expand_more</span>
-        </button>
-        <div data-switcher-menu hidden
-             class="absolute left-0 right-0 mt-2 z-50 rounded-xl border border-[#e7ebf3] dark:border-gray-800 bg-white dark:bg-gray-900 shadow-lg overflow-hidden">
-          {% for m in user_memberships %}
-          <a href="{% url 'dashboard' slug=m.chorale.slug %}"
-             class="flex items-center justify-between gap-2 px-3 py-2.5 text-sm hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors
-                    {% if m.chorale.slug == current_membership.chorale.slug %}bg-primary/5 text-primary font-semibold{% else %}text-slate-700 dark:text-slate-300{% endif %}">
-            <span class="truncate">{{ m.chorale.name }}</span>
-            {% if m.is_admin %}
-              <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary/10 text-primary">Admin</span>
-            {% else %}
-              <span class="text-[10px] font-bold uppercase text-slate-400">{{ m.get_role_display }}</span>
-            {% endif %}
-          </a>
-          {% endfor %}
-          <a href="{% url 'create_chorale' %}"
-             class="flex items-center gap-2 px-3 py-2.5 text-sm text-[#4c669a] border-t border-[#e7ebf3] dark:border-gray-800 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-            <span class="material-symbols-outlined text-base">add</span>
-            {% translate "Créer une chorale" %}
-          </a>
-        </div>
-      </div>
-      <script>
-        (function () {
-          var root = document.querySelector('[data-chorale-switcher]');
-          if (!root) return;
-          var btn = root.querySelector('[data-switcher-toggle]');
-          var menu = root.querySelector('[data-switcher-menu]');
-          var caret = root.querySelector('[data-switcher-caret]');
-          if (!btn || !menu) return;
-          function close() {
-            menu.hidden = true;
-            if (caret) caret.textContent = 'expand_more';
-          }
-          btn.addEventListener('click', function (e) {
-            e.stopPropagation();
-            var isHidden = menu.hidden;
-            menu.hidden = !isHidden;
-            if (caret) caret.textContent = isHidden ? 'expand_less' : 'expand_more';
-          });
-          document.addEventListener('click', function (e) {
-            if (!root.contains(e.target)) close();
-          });
-        })();
-      </script>
-      {% endif %}
-      <nav class="flex flex-col gap-2">
+      {# Zone nav scrollable : prend tout l'espace restant, défile si overflow #}
+      <nav class="flex-1 overflow-y-auto min-h-0 flex flex-col gap-2 mt-2 -mx-2 px-2">
         <a class="flex items-center gap-3 px-4 py-2.5 rounded-lg
-
         {% if request.resolver_match.url_name == 'dashboard' %}
           bg-primary text-white
         {% else %}
           text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
         {% endif %}
-        
         transition-all" hx-boost="true" href="{% url 'dashboard' slug=slug %}">
           <span class="material-symbols-outlined text-xl">dashboard</span>
           <span class="text-sm font-medium">{% translate "Dashboard" %}</span>
@@ -109,28 +111,24 @@
           <span class="text-sm font-medium">{% translate "Paiements" %}</span>
         </a>
         <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg
-
         {% if request.resolver_match.url_name == 'members' %}
           bg-primary text-white
         {% else %}
           text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
         {% endif %}
-        
         transition-all" hx-get="{% url 'members' slug=slug %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
           <span class="material-symbols-outlined text-xl">group</span>
           <span class="text-sm font-medium">{% translate "Membres" %}</span>
         </button>
         <a href="{% url 'events' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
-
         {% if request.resolver_match.url_name == 'events' %}
           bg-primary text-white
         {% else %}
           text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
         {% endif %}
-        
         transition-all" hx-get="{% url 'events' slug=slug %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
           <span class="material-symbols-outlined text-xl">event</span>
-          <span class="text-sm font-medium">{% translate "Calendrier" %}</span>
+          <span class="text-sm font-medium">{% translate "Événements" %}</span>
         </a>
         <a href="{% url 'absences' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
         {% if request.resolver_match.url_name == 'absences' or request.resolver_match.url_name == 'absence_bulk_create' or request.resolver_match.url_name == 'absence_edit' %}
@@ -162,52 +160,50 @@
           <span class="material-symbols-outlined text-xl">account_balance_wallet</span>
           <span class="text-sm font-medium">{% translate "Finances" %}</span>
         </a>
-        <a href="{% url 'events_list' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
-        {% if request.resolver_match.url_name == 'events_list' %}
+        {% if current_membership.is_admin %}
+        <a href="{% url 'activities' slug=slug %}" class="flex items-center gap-3 px-4 py-2.5 rounded-lg
+        {% if request.resolver_match.url_name == 'activities' %}
           bg-primary text-white
         {% else %}
           text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800
         {% endif %}
-        transition-all" hx-get="{% url 'events_list' slug=slug %}" hx-trigger="click" hx-target="body" hx-swap="innerHTML" hx-push-url="true">
-          <span class="material-symbols-outlined text-xl">event_list</span>
-          <span class="text-sm font-medium">{% translate "Evénements" %}</span>
-        </a>
-        <button class="flex items-center gap-3 px-4 py-2.5 rounded-lg text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800 opacity-50 cursor-not-allowed pointer-events-none transition-all"
-        disabled>
+        transition-all" hx-boost="true">
           <span class="material-symbols-outlined text-xl">source_notes</span>
           <span class="text-sm font-medium">{% translate "Activités" %}</span>
-        </button>
+        </a>
+        {% endif %}
       </nav>
+
+      {# Footer sticky : boutons toujours visibles, même si la nav scrolle #}
+      <div class="flex-shrink-0 pt-6 mt-4 border-t border-[#e7ebf3] dark:border-gray-800">
+        <button
+          hx-get="{% url 'member_popup' slug=slug %}"
+          hx-target="body"
+          hx-swap="beforeend"
+          hx-trigger="click"
+          class="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
+          <span class="material-symbols-outlined text-base">person_add</span>
+          {% translate "Ajouter un membre" %}
+        </button>
+        <a href="{% url 'logout' %}"
+           class="mt-3 w-full flex items-center justify-center gap-2 border border-[#e7ebf3] dark:border-gray-700 text-[#4c669a] dark:text-slate-400 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#e7ebf3] dark:hover:bg-gray-800 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
+          <span class="material-symbols-outlined text-base">logout</span>
+          {% translate "Déconnexion" %}
+        </a>
+        {% get_current_language as CURRENT_LANGUAGE %}
+        {% get_available_languages as AVAILABLE_LANGUAGES %}
+        <form action="{% url 'set_language' %}" method="post" data-no-loading class="mt-3 flex items-center justify-center gap-1 text-xs">
+          {% csrf_token %}
+          <input name="next" type="hidden" value="{{ redirect_to|default:request.get_full_path }}">
+          {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+            <button type="submit" name="language" value="{{ lang_code }}"
+                    class="px-2 py-1 rounded {% if lang_code == CURRENT_LANGUAGE %}bg-primary text-white{% else %}text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800{% endif %} transition-all uppercase">
+              {{ lang_code }}
+            </button>
+            {% if not forloop.last %}<span class="text-slate-400">|</span>{% endif %}
+          {% endfor %}
+        </form>
+      </div>
     </div>
-    <div class="mt-auto pt-6 border-t border-[#e7ebf3] dark:border-gray-800">
-      <button
-        hx-get="{% url 'member_popup' slug=slug %}"
-        hx-target="body"
-        hx-swap="beforeend"
-        hx-trigger="click"
-        class="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-xl text-sm font-semibold shadow-sm hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
-        <span class="material-symbols-outlined text-base">person_add</span>
-        {% translate "Ajouter un membre" %}
-      </button>
-      <a href="{% url 'logout' %}"
-         class="mt-3 w-full flex items-center justify-center gap-2 border border-[#e7ebf3] dark:border-gray-700 text-[#4c669a] dark:text-slate-400 py-2.5 rounded-xl text-sm font-semibold hover:bg-[#e7ebf3] dark:hover:bg-gray-800 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
-        <span class="material-symbols-outlined text-base">logout</span>
-        {% translate "Déconnexion" %}
-      </a>
-      {% get_current_language as CURRENT_LANGUAGE %}
-      {% get_available_languages as AVAILABLE_LANGUAGES %}
-      <form action="{% url 'set_language' %}" method="post" data-no-loading class="mt-3 flex items-center justify-center gap-1 text-xs">
-        {% csrf_token %}
-        <input name="next" type="hidden" value="{{ redirect_to|default:request.get_full_path }}">
-        {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
-          <button type="submit" name="language" value="{{ lang_code }}"
-                  class="px-2 py-1 rounded {% if lang_code == CURRENT_LANGUAGE %}bg-primary text-white{% else %}text-[#4c669a] hover:bg-[#e7ebf3] dark:hover:bg-gray-800{% endif %} transition-all uppercase">
-            {{ lang_code }}
-          </button>
-          {% if not forloop.last %}<span class="text-slate-400">|</span>{% endif %}
-        {% endfor %}
-      </form>
-    </div>
-  </div>
-</aside>
+  </aside>
 </div>

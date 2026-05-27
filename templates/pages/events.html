@@ -1,51 +1,103 @@
 {% extends "../base/base.html" %}
 {% load static %}
 {% load i18n %}
+{% load chorale_tags %}
 
-{% block title %}{% translate "Calendrier des événements" %}{% endblock %}
+{% block title %}{% translate "Événements" %}{% endblock %}
 
 {% block content %}
 {% include "../components/alert/message.html" %}
-{% comment %}
-Mobile-first :
-  - padding wrapper : p-3 → sm:p-6 → lg:p-8
-  - le bouton "Ajouter" est full-width sur mobile (cible tactile), auto sur sm+
-{% endcomment %}
 <div class="p-3 sm:p-6 lg:p-8">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6 sm:mb-8">
         <div>
-            <h2 class="text-xl sm:text-2xl font-bold tracking-tight">{% translate "Calendrier des événements" %}</h2>
-            <p class="text-[#4c669a] text-sm mt-1">{% translate "Consultez la liste des événements et les prochaines dates importantes." %}</p>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight">{% translate "Événements" %}</h2>
+            <p class="text-[#4c669a] text-sm mt-1">{% translate "Calendrier et liste complète des événements de la chorale." %}</p>
         </div>
-        {% if current_membership.is_admin or current_membership.role == 'secretary' %}
-        <a href="{% url 'event_create' slug=slug %}" class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150 w-full sm:w-auto">
-            <span class="material-symbols-outlined mr-2">add</span>
-            {% translate "Ajouter un événement" %}
-        </a>
+        <div class="flex items-center gap-3 flex-wrap">
+            {# Toggle vue grille / tableau — état persisté via ?view= #}
+            <div class="inline-flex rounded-xl border border-slate-200 dark:border-gray-700 overflow-hidden">
+                <a href="?view=grid"
+                   class="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors {% if view_mode == 'grid' %}bg-primary text-white{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800{% endif %}">
+                    <span class="material-symbols-outlined text-base">calendar_month</span>
+                    {% translate "Calendrier" %}
+                </a>
+                <a href="?view=table"
+                   class="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold transition-colors {% if view_mode == 'table' %}bg-primary text-white{% else %}text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800{% endif %}">
+                    <span class="material-symbols-outlined text-base">list</span>
+                    {% translate "Liste" %}
+                </a>
+            </div>
+            {% if can_create %}
+            <button type="button"
+                    hx-get="{% url 'event_create' slug=slug %}"
+                    hx-target="#modal" hx-swap="innerHTML"
+                    class="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 transition-all duration-150">
+                <span class="material-symbols-outlined mr-2">add</span>
+                {% translate "Ajouter un événement" %}
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if view_mode == 'table' %}
+    {# ── VUE TABLEAU ──────────────────────────────────────────────────────── #}
+    <div class="bg-white dark:bg-gray-900 rounded-3xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm overflow-hidden">
+        {% if events %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-[#e7ebf3] dark:border-gray-800 bg-slate-50 dark:bg-gray-950">
+                        <th class="text-left px-6 py-4 font-semibold text-slate-500 uppercase tracking-wide text-xs">{% translate "Titre" %}</th>
+                        <th class="text-left px-6 py-4 font-semibold text-slate-500 uppercase tracking-wide text-xs">{% translate "Type" %}</th>
+                        <th class="text-left px-6 py-4 font-semibold text-slate-500 uppercase tracking-wide text-xs">{% translate "Date" %}</th>
+                        <th class="text-left px-6 py-4 font-semibold text-slate-500 uppercase tracking-wide text-xs">{% translate "Lieu" %}</th>
+                        <th class="text-left px-6 py-4 font-semibold text-slate-500 uppercase tracking-wide text-xs">{% translate "Créé par" %}</th>
+                        <th class="text-left px-6 py-4 font-semibold text-slate-500 uppercase tracking-wide text-xs">{% translate "Finances" %}</th>
+                        <th class="px-6 py-4"></th>
+                    </tr>
+                </thead>
+                <tbody id="rows-list" class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
+                    {% for ev in events %}
+                    {% include "pages/_event_row.html" %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="px-6 py-16 text-center">
+            <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">event_busy</span>
+            <p class="mt-4 text-sm text-slate-500">{% translate "Aucun événement enregistré pour le moment." %}</p>
+            {% if can_create %}
+            <button type="button"
+                    hx-get="{% url 'event_create' slug=slug %}"
+                    hx-target="#modal" hx-swap="innerHTML"
+                    class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 active:opacity-90 transition-all duration-150">
+                <span class="material-symbols-outlined text-base">add</span>
+                {% translate "Créer le premier événement" %}
+            </button>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
 
+    {% else %}
+    {# ── VUE CALENDRIER (par défaut) ──────────────────────────────────────── #}
     <div class="grid grid-cols-1 xl:grid-cols-4 gap-6 xl:gap-8">
         <div class="xl:col-span-3">
             <div class="bg-white dark:bg-gray-900 rounded-xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-3 sm:p-6">
-                {% comment %}
-                Header : titre + nav.
-                  Mobile : titre + boutons icônes seuls (gain d'espace)
-                  sm+    : titre + boutons avec texte
-                {% endcomment %}
                 <div class="flex items-center justify-between mb-4 sm:mb-6 gap-2">
                     <div class="min-w-0">
                         <p class="text-xs sm:text-sm font-semibold text-slate-500 truncate">{{ current_month }} {{ current_year }}</p>
                         <h3 class="text-lg sm:text-xl font-bold">{% translate "Calendrier" %}</h3>
                     </div>
                     <div class="flex gap-1 sm:gap-2 shrink-0">
-                        <a href="?year={{ previous_month.year }}&month={{ previous_month.month }}"
+                        <a href="?view=grid&year={{ previous_month.year }}&month={{ previous_month.month }}"
                            class="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-gray-700 px-2 sm:px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150"
                            aria-label="{% translate 'Mois précédent' %}">
                             <span class="material-symbols-outlined text-base sm:hidden">chevron_left</span>
                             <span class="hidden sm:inline">{% translate "Précédent" %}</span>
                         </a>
-                        <a href="?year={{ next_month.year }}&month={{ next_month.month }}"
+                        <a href="?view=grid&year={{ next_month.year }}&month={{ next_month.month }}"
                            class="inline-flex items-center justify-center rounded-lg border border-slate-200 dark:border-gray-700 px-2 sm:px-4 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all duration-150"
                            aria-label="{% translate 'Mois suivant' %}">
                             <span class="hidden sm:inline">{% translate "Suivant" %}</span>
@@ -54,22 +106,12 @@ Mobile-first :
                     </div>
                 </div>
 
-                {% comment %}
-                Jours de la semaine.
-                  Mobile : on tronque à 1 lettre (L M M J V S D) via la 1ère lettre — pas idéal pour
-                  distinguer "Mar/Mer/Jeu", donc on garde 3 lettres mais texte plus petit.
-                {% endcomment %}
                 <div class="grid grid-cols-7 gap-1 sm:gap-2 text-center text-[10px] sm:text-xs font-bold text-[#4c669a] mb-2 sm:mb-4">
                     {% for weekday in weekdays %}
                         <div class="truncate">{{ weekday }}</div>
                     {% endfor %}
                 </div>
 
-                {% comment %}
-                Cellules du calendrier.
-                  Hauteur : aspect-square sur mobile (carrés ≈ 45px), puis min-h croissante
-                  à partir de sm. Padding et coins arrondis aussi adaptatifs.
-                {% endcomment %}
                 <div class="grid grid-cols-7 gap-1 sm:gap-2">
                     {% for week in calendar_weeks %}
                         {% for cell in week %}
@@ -78,19 +120,11 @@ Mobile-first :
                                     <div class="flex items-center justify-between sm:mb-2 xl:mb-3 gap-1">
                                         <span class="text-xs sm:text-sm font-semibold">{{ cell.day.day }}</span>
                                         {% if cell.events %}
-                                            {% comment %}
-                                            Mobile : badge compact (juste le count) — le mot "événements" ne tient pas.
-                                              sm+   : badge complet.
-                                            {% endcomment %}
                                             <span class="rounded-full bg-primary text-white px-1.5 sm:px-2 text-[9px] sm:text-[10px] leading-tight shrink-0">
                                                 {{ cell.events|length }}<span class="hidden sm:inline"> {% blocktranslate count n=cell.events|length %}événement{% plural %}événements{% endblocktranslate %}</span>
                                             </span>
                                         {% endif %}
                                     </div>
-                                    {% comment %}
-                                    Détails événements : cachés sur mobile (pas de place), visibles dès sm.
-                                      1 sur sm-md, 2 sur xl.
-                                    {% endcomment %}
                                     <div class="hidden sm:block flex-1 overflow-hidden">
                                         {% for event in cell.events|slice:":2" %}
                                             <a href="{% url 'event_detail' slug=slug event_id=event.id %}"
@@ -100,10 +134,6 @@ Mobile-first :
                                             </a>
                                         {% endfor %}
                                     </div>
-                                    {% comment %}
-                                    Mobile uniquement : la cellule entière est cliquable s'il y a 1 événement.
-                                      Pour plus, l'utilisateur consulte la sidebar "Prochains événements".
-                                    {% endcomment %}
                                     {% if cell.events|length == 1 %}
                                         <a href="{% url 'event_detail' slug=slug event_id=cell.events.0.id %}"
                                            class="sm:hidden absolute inset-0 rounded-lg" aria-label="{{ cell.events.0.title }}"></a>
@@ -138,5 +168,7 @@ Mobile-first :
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
+<div id="modal"></div>
 {% endblock %}

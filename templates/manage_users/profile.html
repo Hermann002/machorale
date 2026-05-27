@@ -1,0 +1,53 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}{% translate "Mon profil" %}{% endblock %}
+
+{% block content %}
+{% include "../components/alert/message.html" %}
+<div class="p-3 sm:p-6 lg:p-8 max-w-4xl mx-auto">
+    <div class="flex items-center gap-4 mb-6">
+        <div class="size-16 rounded-full bg-primary/10 overflow-hidden ring-2 ring-white dark:ring-gray-800 flex-shrink-0">
+            <img class="w-full h-full object-cover" src="{% static 'icons/cat.png' %}" alt="Avatar"/>
+        </div>
+        <div>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight">{{ viewed_user.get_full_name|default:viewed_user.username }}</h2>
+            <p class="text-[#4c669a] text-sm">{{ viewed_user.email }}</p>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded-3xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm p-6 sm:p-8">
+        <h3 class="font-bold text-lg mb-1">{% translate "Mes informations" %}</h3>
+        <p class="text-xs text-slate-500 mb-4">{% translate "Modifiez ici vos informations personnelles." %}</p>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl mb-4 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for field in form %}
+                <div class="{% if field.name == 'christened' or field.name == 'confirmed' %}flex items-center gap-2 mt-2{% endif %}">
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <p class="text-xs text-red-600 mt-1">{{ field.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="submit"
+                        class="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 shadow-md shadow-primary/20 transition-all">
+                    {% translate "Enregistrer les modifications" %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

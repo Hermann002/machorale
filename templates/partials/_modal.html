@@ -1,0 +1,21 @@
+{% load i18n %}
+{# Modal réutilisable. Variables attendues : modal_title, modal_body_template
+   (path d'un template à inclure). Le contenu inclus doit fournir <form> + boutons. #}
+<div id="modal-backdrop"
+     class="fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 sm:p-8 overflow-y-auto"
+     onclick="if (event.target === this) document.getElementById('modal').innerHTML = '';">
+    <div class="bg-white dark:bg-gray-900 rounded-3xl border border-[#cfd7e7] dark:border-gray-800 shadow-2xl w-full max-w-3xl my-4 sm:my-auto">
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="font-bold text-lg">{{ modal_title|default:"Action" }}</h3>
+            <button type="button"
+                    onclick="document.getElementById('modal').innerHTML = '';"
+                    class="p-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                    aria-label="{% translate 'Fermer' %}">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6">
+            {% include modal_body_template %}
+        </div>
+    </div>
+</div>

@@ -1,30 +1,93 @@
 {% load static %}
+{% load i18n %}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 <script src="{% static 'js/main.js' %}"></script>
 <script>
   // ── Barre de progression HTMX globale ──────────────────────────────────────
-  // Un seul point de contrôle pour tous les appels HTMX, au lieu d'instrumenter
-  // chaque élément individuellement (pattern Intercepteur).
   (function () {
     const bar = document.getElementById('htmx-progress');
-    if (!bar) return;
+    if (!bar || typeof htmx === 'undefined') return;
     htmx.on('htmx:beforeRequest', () => { bar.style.opacity = '1'; });
     htmx.on('htmx:afterRequest',  () => { bar.style.opacity = '0'; });
   })();
 
   // ── Loading state sur les formulaires classiques ───────────────────────────
-  // Désactive le bouton submit et affiche un spinner pour éviter les doubles soumissions.
+  // Préserve le markup original du bouton (avec ses classes Tailwind) en
+  // injectant un span spinner devant le contenu existant, plutôt qu'en
+  // remplaçant innerHTML — ce qui cassait le styling du bouton (login, etc.).
+  // Restauration via 'pageshow' : retour navigateur après échec doit ré-armer.
   // Ajouter data-no-loading au <form> pour exclure un formulaire.
+  function restoreButton(btn) {
+    if (!btn) return;
+    if (btn.dataset.loadingOriginal !== undefined) {
+      btn.innerHTML = btn.dataset.loadingOriginal;
+      delete btn.dataset.loadingOriginal;
+    }
+    btn.disabled = false;
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('form:not([data-no-loading])').forEach(function (form) {
       form.addEventListener('submit', function () {
         const btn = form.querySelector('button[type=submit]');
         if (!btn || btn.disabled) return;
+        btn.dataset.loadingOriginal = btn.innerHTML;
         btn.disabled = true;
-        btn.innerHTML = '<span style="display:inline-block;animation:spin 1s linear infinite;margin-right:6px">⟳</span> Enregistrement…';
+        const spinner = '<span class="dashboard-spinner" aria-hidden="true"></span>';
+        btn.innerHTML = spinner + ' <span>{% translate "En cours…" %}</span>';
       });
     });
   });
+
+  // Le bfcache (back/forward) restaure le DOM tel quel — on doit ré-armer les
+  // boutons sinon ils restent disabled au retour arrière.
+  window.addEventListener('pageshow', function () {
+    document.querySelectorAll('button[type=submit][data-loading-original]').forEach(restoreButton);
+  });
+
+  // HTMX : re-armer après chaque réponse (modal qui revient avec erreurs, etc.)
+  if (typeof htmx !== 'undefined') {
+    htmx.on('htmx:afterSwap', function () {
+      document.querySelectorAll('button[type=submit][data-loading-original]').forEach(restoreButton);
+    });
+  }
+
+  // ── Modal HTMX : événement 'closeModal' déclenché par le serveur via HX-Trigger ─
+  // Quand une création AJAX réussit, la vue renvoie HX-Trigger: closeModal et HTMX
+  // dispatch cet event sur document.body. On vide #modal pour fermer la modale.
+  document.body.addEventListener('closeModal', function () {
+    const modal = document.getElementById('modal');
+    if (modal) modal.innerHTML = '';
+  });
+
+  // Touche Escape ferme la modale.
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('modal');
+      if (modal && modal.innerHTML.trim() !== '') modal.innerHTML = '';
+    }
+  });
 </script>
-<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .dashboard-spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    margin-right: 0.4em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: -0.15em;
+  }
+  /* HTMX indicator class : active automatiquement sur les éléments hx-* */
+  .htmx-request .htmx-indicator { opacity: 1; }
+  .htmx-indicator { opacity: 0; transition: opacity 200ms ease-in; }
+  button.htmx-request, a.htmx-request {
+    opacity: 0.7;
+    pointer-events: none;
+    cursor: wait;
+  }
+</style>
 {% block extra_js %}{% endblock %}

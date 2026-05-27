@@ -1,9 +1,33 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView, ListView
-from .forms import CreateChoraleForm, AddMemberForm, ConfChoraleForm, MemberRoleForm
+from .forms import CreateChoraleForm, AddMemberForm, ConfChoraleForm, MemberRoleForm, MemberProfileForm
 from django.contrib import messages
 from django.urls import reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
+from django.template.loader import render_to_string
+
+
+def _is_htmx(request):
+    """True si la requête vient de HTMX (header HX-Request)."""
+    return request.headers.get('HX-Request') == 'true'
+
+
+def _htmx_row_response(request, row_template, ctx):
+    """Réponse HTMX standard pour une création réussie :
+    renvoie le HTML du row, instruit HTMX d'insérer dans #rows-list et de
+    déclencher l'event 'closeModal' (JS global vide #modal)."""
+    html = render_to_string(row_template, ctx, request=request)
+    resp = HttpResponse(html)
+    resp['HX-Retarget'] = '#rows-list'
+    resp['HX-Reswap'] = 'afterbegin'
+    resp['HX-Trigger'] = 'closeModal'
+    return resp
+
+
+def _htmx_modal_response(request, modal_title, body_template, ctx):
+    """Réponse HTMX pour afficher/re-render une modale (GET ou POST avec erreurs)."""
+    ctx = {**ctx, 'modal_title': modal_title, 'modal_body_template': body_template}
+    return render(request, 'partials/_modal.html', ctx)
 from formtools.wizard.views import SessionWizardView
 from django.core.files.storage import FileSystemStorage
 from django.conf import settings
@@ -243,12 +267,31 @@ class EventListView(ChoraleRequireMixin, TemplateView):
     template_name = "pages/events.html"
 
     def get(self, request, slug, *args, **kwargs):
-        today = timezone.localtime().date()
-        year = int(request.GET.get("year", today.year))
-        month = int(request.GET.get("month", today.month))
+        view_mode = request.GET.get('view', 'grid')
+        if view_mode not in ('grid', 'table'):
+            view_mode = 'grid'
 
         event_queryset = ChoraleEvent.objects.filter(chorale=self.chorale)
         upcoming_events = event_queryset.filter(date__gte=timezone.now()).order_by('date')[:6]
+        can_create = self.membership.is_admin or self.membership.role == Membership.ROLE_SECRETARY
+
+        context = {
+            "page_title": _("Events calendar"),
+            "view_mode": view_mode,
+            "upcoming_events": upcoming_events,
+            "can_create": can_create,
+            "slug": self.chorale.slug,
+        }
+
+        if view_mode == 'table':
+            context["events"] = (event_queryset
+                                 .select_related('created_by')
+                                 .order_by('-date'))
+            return render(request, self.template_name, context)
+
+        today = timezone.localtime().date()
+        year = int(request.GET.get("year", today.year))
+        month = int(request.GET.get("month", today.month))
         month_events = event_queryset.filter(date__year=year, date__month=month).order_by('date')
 
         event_calendar = {}
@@ -280,17 +323,14 @@ class EventListView(ChoraleRequireMixin, TemplateView):
         previous_month = date(year, month, 1) - timedelta(days=1)
         next_month = date(year, month, days_in_month) + timedelta(days=1)
 
-        context = {
-            "page_title": _("Events calendar"),
+        context.update({
             "calendar_weeks": weeks,
             "weekdays": [_("Mon"), _("Tue"), _("Wed"), _("Thu"), _("Fri"), _("Sat"), _("Sun")],
             "current_month": calendar.month_name[month],
             "current_year": year,
             "previous_month": previous_month,
             "next_month": next_month,
-            "upcoming_events": upcoming_events,
-            "slug": self.chorale.slug,
-        }
+        })
         return render(request, self.template_name, context)
 
 class CreateEventView(RateLimitedMixin, SecretaryOrAdminRequiredMixin, TemplateView):
@@ -299,9 +339,18 @@ class CreateEventView(RateLimitedMixin, SecretaryOrAdminRequiredMixin, TemplateV
     permission_denied_message = "Accès réservé à l'admin ou au secrétaire de la chorale."
     rl_rate = '30/m'
 
+    def _modal_ctx(self, form):
+        return {
+            'form': form, 'slug': self.chorale.slug,
+            'action_url': reverse('event_create', kwargs={'slug': self.chorale.slug}),
+        }
+
     def get(self, request, slug, *args, **kwargs):
         from .forms import ChoraleEventForm
         form = ChoraleEventForm()
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Nouvel événement"),
+                'pages/_event_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {"form": form, "slug": self.chorale.slug})
 
     def post(self, request, slug, *args, **kwargs):
@@ -322,9 +371,19 @@ class CreateEventView(RateLimitedMixin, SecretaryOrAdminRequiredMixin, TemplateV
                 request=request,
             )
 
+            if _is_htmx(request):
+                can_create = self.membership.is_admin or self.membership.role == Membership.ROLE_SECRETARY
+                return _htmx_row_response(request,
+                    'pages/_event_row.html',
+                    {'ev': event, 'slug': self.chorale.slug,
+                     'can_create': can_create,
+                     'current_membership': self.membership})
             messages.success(request, _("The event has been created successfully."))
             return redirect(reverse('events', kwargs={"slug": self.chorale.slug}))
 
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Nouvel événement"),
+                'pages/_event_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {"form": form, "slug": self.chorale.slug})
 
 class EventDetailView(ChoraleRequireMixin, TemplateView):
@@ -333,20 +392,6 @@ class EventDetailView(ChoraleRequireMixin, TemplateView):
     def get(self, request, slug, event_id, *args, **kwargs):
         event = get_object_or_404(ChoraleEvent, id=event_id, chorale=self.chorale)
         return render(request, self.template_name, {"event": event, "slug": self.chorale.slug})
-
-class EventTableView(ChoraleRequireMixin, TemplateView):
-    template_name = "pages/events_list.html"
-
-    def get(self, request, slug, *args, **kwargs):
-        events = ChoraleEvent.objects.filter(
-            chorale=self.chorale
-        ).select_related('created_by').order_by('-date')
-        can_create = self.membership.is_admin or self.membership.role == Membership.ROLE_SECRETARY
-        return render(request, self.template_name, {
-            'events': events,
-            'slug': self.chorale.slug,
-            'can_create': can_create,
-        })
 
 class EventUpdateView(RateLimitedMixin, SecretaryOrAdminRequiredMixin, TemplateView):
     template_name = "pages/event_form.html"
@@ -419,9 +464,18 @@ class ContributionCreateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateV
     template_name = "pages/treasurer/contribution_form.html"
     rl_rate = '20/m'
 
+    def _modal_ctx(self, form):
+        return {
+            'form': form, 'slug': self.chorale.slug,
+            'action_url': reverse('contribution_create', kwargs={'slug': self.chorale.slug}),
+        }
+
     def get(self, request, slug, *args, **kwargs):
         from .forms import ContributionForm
         form = ContributionForm(chorale=self.chorale)
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Nouveau type de cotisation"),
+                'pages/treasurer/_contribution_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {
             'form': form, 'slug': self.chorale.slug, 'is_edit': False,
         })
@@ -433,13 +487,22 @@ class ContributionCreateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateV
             contribution = form.save(commit=False)
             contribution.chorale = self.chorale  # ne JAMAIS faire confiance au form pour ça
             contribution.save()
+            contribution.collected = 0  # row template attend cet attribut
             ActivityEvent.log(
                 chorale=self.chorale, user=request.user, event_type='other',
                 description=f"Type de cotisation créé : {contribution.title}",
                 obj=contribution, request=request,
             )
+            if _is_htmx(request):
+                return _htmx_row_response(request,
+                    'pages/treasurer/_contribution_row.html',
+                    {'c': contribution, 'slug': self.chorale.slug,
+                     'current_membership': self.membership})
             messages.success(request, _("Contribution type created."))
             return redirect(reverse('contributions', kwargs={'slug': self.chorale.slug}))
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Nouveau type de cotisation"),
+                'pages/treasurer/_contribution_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {
             'form': form, 'slug': self.chorale.slug, 'is_edit': False,
         })
@@ -533,9 +596,18 @@ class MemberContributionCreateView(RateLimitedMixin, TreasurerRequiredMixin, Tem
     template_name = "pages/treasurer/payment_form.html"
     rl_rate = '20/m'
 
+    def _modal_ctx(self, form):
+        return {
+            'form': form, 'slug': self.chorale.slug,
+            'action_url': reverse('payment_create', kwargs={'slug': self.chorale.slug}),
+        }
+
     def get(self, request, slug, *args, **kwargs):
         from .forms import MemberContributionForm
         form = MemberContributionForm(chorale=self.chorale)
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Enregistrer un paiement"),
+                'pages/treasurer/_payment_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {
             'form': form, 'slug': self.chorale.slug,
         })
@@ -545,8 +617,7 @@ class MemberContributionCreateView(RateLimitedMixin, TreasurerRequiredMixin, Tem
         form = MemberContributionForm(request.POST, chorale=self.chorale)
         if form.is_valid():
             try:
-                # On délègue au service : centralise validation métier + audit
-                ContributionService.record_payment(
+                payment = ContributionService.record_payment(
                     contribution=form.cleaned_data['contribution'],
                     member=form.cleaned_data['member'],
                     amount=form.cleaned_data['amount'],
@@ -557,11 +628,22 @@ class MemberContributionCreateView(RateLimitedMixin, TreasurerRequiredMixin, Tem
                 )
             except DjangoValidationError as e:
                 form.add_error(None, e.message)
+                if _is_htmx(request):
+                    return _htmx_modal_response(request, _("Enregistrer un paiement"),
+                        'pages/treasurer/_payment_form_modal.html', self._modal_ctx(form))
                 return render(request, self.template_name, {
                     'form': form, 'slug': self.chorale.slug,
                 })
+            if _is_htmx(request):
+                return _htmx_row_response(request,
+                    'pages/treasurer/_payment_row.html',
+                    {'p': payment, 'slug': self.chorale.slug,
+                     'current_membership': self.membership})
             messages.success(request, _("Payment recorded."))
             return redirect(reverse('payments', kwargs={'slug': self.chorale.slug}))
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Enregistrer un paiement"),
+                'pages/treasurer/_payment_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {
             'form': form, 'slug': self.chorale.slug,
         })
@@ -587,9 +669,18 @@ class CashFlowCreateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateView)
     template_name = "pages/treasurer/cashflow_form.html"
     rl_rate = '20/m'
 
+    def _modal_ctx(self, form):
+        return {
+            'form': form, 'slug': self.chorale.slug,
+            'action_url': reverse('cashflow_create', kwargs={'slug': self.chorale.slug}),
+        }
+
     def get(self, request, slug, *args, **kwargs):
         from .forms import CashFlowForm
         form = CashFlowForm()
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Nouveau mouvement de caisse"),
+                'pages/treasurer/_cashflow_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {
             'form': form, 'slug': self.chorale.slug, 'is_edit': False,
         })
@@ -610,8 +701,16 @@ class CashFlowCreateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateView)
                 ),
                 obj=flow, request=request,
             )
+            if _is_htmx(request):
+                return _htmx_row_response(request,
+                    'pages/treasurer/_cashflow_row.html',
+                    {'f': flow, 'slug': self.chorale.slug,
+                     'current_membership': self.membership})
             messages.success(request, _("Cash flow entry recorded."))
             return redirect(reverse('cashflow', kwargs={'slug': self.chorale.slug}))
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Nouveau mouvement de caisse"),
+                'pages/treasurer/_cashflow_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {
             'form': form, 'slug': self.chorale.slug, 'is_edit': False,
         })
@@ -819,9 +918,18 @@ class SanctionCreateView(RateLimitedMixin, CensorRequiredMixin, TemplateView):
     template_name = "pages/censor/sanction_form.html"
     rl_rate = '10/m'
 
+    def _modal_ctx(self, form):
+        return {
+            'form': form, 'slug': self.chorale.slug,
+            'action_url': reverse('sanction_create', kwargs={'slug': self.chorale.slug}),
+        }
+
     def get(self, request, slug, *args, **kwargs):
         from .forms import SanctionForm
         form = SanctionForm(chorale=self.chorale)
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Nouvelle sanction"),
+                'pages/censor/_sanction_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {
             'form': form, 'slug': self.chorale.slug, 'is_edit': False,
         })
@@ -831,7 +939,7 @@ class SanctionCreateView(RateLimitedMixin, CensorRequiredMixin, TemplateView):
         form = SanctionForm(request.POST, chorale=self.chorale)
         if form.is_valid():
             try:
-                SanctionService.apply(
+                sanction = SanctionService.apply(
                     chorale=self.chorale,
                     member=form.cleaned_data['member'],
                     sanction_type=form.cleaned_data['sanction_type'],
@@ -844,12 +952,23 @@ class SanctionCreateView(RateLimitedMixin, CensorRequiredMixin, TemplateView):
                 )
             except DjangoValidationError as e:
                 form.add_error(None, e.message)
+                if _is_htmx(request):
+                    return _htmx_modal_response(request, _("Nouvelle sanction"),
+                        'pages/censor/_sanction_form_modal.html', self._modal_ctx(form))
                 return render(request, self.template_name, {
                     'form': form, 'slug': self.chorale.slug, 'is_edit': False,
                 })
+            if _is_htmx(request):
+                return _htmx_row_response(request,
+                    'pages/censor/_sanction_row.html',
+                    {'s': sanction, 'slug': self.chorale.slug,
+                     'current_membership': self.membership})
             messages.success(request, _("Sanction recorded."))
             return redirect(reverse('sanctions', kwargs={'slug': self.chorale.slug}))
 
+        if _is_htmx(request):
+            return _htmx_modal_response(request, _("Nouvelle sanction"),
+                'pages/censor/_sanction_form_modal.html', self._modal_ctx(form))
         return render(request, self.template_name, {
             'form': form, 'slug': self.chorale.slug, 'is_edit': False,
         })
@@ -988,6 +1107,16 @@ class MemberPopupView(RateLimitedMixin, ChoraleRequireMixin, TemplateView):
                     )
 
                 role_label = dict(self.ASSIGNABLE_ROLE_CHOICES).get(role, role)
+                ActivityEvent.log(
+                    chorale=chorale,
+                    user=request.user,
+                    event_type='person_add',
+                    description=f"{member.get_full_name() or member.username} ajouté(e) "
+                                f"comme {role_label}",
+                    obj=member,
+                    metadata={'role': role, 'member_id': member.id},
+                    request=request,
+                )
                 messages.success(request, _("%(name)s has been added as %(role)s.") % {
                     'name': member.get_full_name(),
                     'role': role_label,
@@ -1040,6 +1169,99 @@ class ChoraleSelectView(LoginRequiredMixin, TemplateView):
 
         request.session['active_chorale_slug'] = slug
         return redirect(reverse('dashboard', kwargs={'slug': slug}))
+
+
+class EditMemberProfileView(SecretaryOrAdminRequiredMixin, TemplateView):
+    """Édition de la fiche d'un membre (CustomUser + Profile) par admin ou secrétaire.
+
+    Le rôle Membership.role n'est PAS modifié ici. Seul l'admin peut éditer
+    le rôle, et il le fait via UpdateMemberRoleView (lien affiché conditionnellement
+    dans le template pour les admins).
+    """
+    template_name = "pages/member_edit.html"
+    form_class = MemberProfileForm
+
+    def _get_target_membership(self, user_id):
+        return get_object_or_404(
+            Membership.objects.select_related('user', 'user__profile'),
+            user_id=user_id,
+            chorale=self.chorale,
+        )
+
+    def get(self, request, slug, user_id, *args, **kwargs):
+        target = self._get_target_membership(user_id)
+        form = self.form_class(user=target.user)
+        role_form = MemberRoleForm(instance=target) if self.membership.is_admin else None
+        return render(request, self.template_name, {
+            'form': form,
+            'role_form': role_form,
+            'target_membership': target,
+            'member': target.user,
+            'slug': self.chorale.slug,
+        })
+
+    def post(self, request, slug, user_id, *args, **kwargs):
+        target = self._get_target_membership(user_id)
+        form = self.form_class(request.POST, user=target.user)
+        if form.is_valid():
+            form.save()
+            ActivityEvent.log(
+                chorale=self.chorale, user=request.user, event_type='other',
+                description=f"Fiche modifiée pour "
+                            f"{target.user.get_full_name() or target.user.username}",
+                obj=target.user, request=request,
+            )
+            messages.success(request, _("Member profile updated."))
+            return redirect(reverse('members', kwargs={'slug': self.chorale.slug}))
+        role_form = MemberRoleForm(instance=target) if self.membership.is_admin else None
+        return render(request, self.template_name, {
+            'form': form,
+            'role_form': role_form,
+            'target_membership': target,
+            'member': target.user,
+            'slug': self.chorale.slug,
+        })
+
+
+class ActivityListView(ChoraleRequireMixin, ListView):
+    """Journal d'activités de la chorale. Restreint aux admins via EventManager.for_chorale.
+
+    Pour les non-admins, le queryset est vide (cohérent avec le mode audit log).
+    Filtres GET : event_type, important, q (recherche sur description).
+    """
+    template_name = "pages/activities.html"
+    context_object_name = "activities"
+    paginate_by = 25
+
+    def get_queryset(self):
+        qs = ActivityEvent.objects.for_chorale(self.chorale, self.request.user)
+        event_type = self.request.GET.get('event_type', '').strip()
+        important = self.request.GET.get('important')
+        q = self.request.GET.get('q', '').strip()
+        if event_type:
+            qs = qs.filter(event_type=event_type)
+        if important:
+            qs = qs.filter(is_important=True)
+        if q:
+            qs = qs.filter(
+                Q(description__icontains=q)
+                | Q(short_description__icontains=q)
+                | Q(user__first_name__icontains=q)
+                | Q(user__last_name__icontains=q)
+                | Q(user__username__icontains=q)
+            )
+        return qs.select_related('user')
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['page_title'] = _("Activities")
+        ctx['slug'] = self.chorale.slug
+        ctx['event_types'] = ActivityEvent.EVENT_TYPES
+        ctx['filter_event_type'] = self.request.GET.get('event_type', '')
+        ctx['filter_important'] = bool(self.request.GET.get('important'))
+        ctx['filter_q'] = self.request.GET.get('q', '')
+        ctx['is_admin_view'] = self.membership.is_admin
+        return ctx
 
 
 @login_required

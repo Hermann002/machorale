@@ -1,0 +1,9 @@
+{% load i18n %}
+<tr class="hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+    <td class="px-6 py-4 text-slate-600">{{ p.paid_at|date:"d/m/Y" }}</td>
+    <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white">{{ p.member.get_full_name|default:p.member.username }}</td>
+    <td class="px-6 py-4 text-slate-600">{{ p.contribution.title }}</td>
+    <td class="px-6 py-4 text-emerald-600 dark:text-emerald-400 font-medium">{{ p.amount }} XAF</td>
+    <td class="px-6 py-4 text-slate-500">{{ p.note|default:"—" }}</td>
+    <td class="px-6 py-4 text-slate-500 text-xs">{{ p.recorded_by.username|default:"—" }}</td>
+</tr>

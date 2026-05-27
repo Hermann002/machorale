@@ -47,19 +47,20 @@
             <!-- Séparateur vertical -->
             <div class="w-px h-6 bg-[#e7ebf3] dark:bg-gray-800 hidden sm:block"></div>
             
-            <!-- Profil utilisateur -->
-            <div class="flex items-center gap-2 sm:gap-3 pl-3 sm:pl-6 border-l border-[#e7ebf3] dark:border-gray-800">
+            <!-- Profil utilisateur (cliquable -> page profil) -->
+            <a href="{% url 'profile' %}"
+               class="flex items-center gap-2 sm:gap-3 pl-3 sm:pl-6 border-l border-[#e7ebf3] dark:border-gray-800 rounded-r-lg px-2 py-1 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 active:scale-[0.98] transition-all duration-150">
                 <div class="hidden sm:block text-right min-w-0">
                     <p class="text-sm font-bold leading-none truncate">{{ request.user.first_name }} {{ request.user.last_name }}</p>
-                    <p class="text-[10px] text-[#4c669a] uppercase tracking-wider mt-0.5 hidden sm:block">{% translate "Administrateur de chorale" %}</p>
+                    <p class="text-[10px] text-[#4c669a] uppercase tracking-wider mt-0.5 hidden sm:block">{% translate "Mon profil" %}</p>
                 </div>
                 <div class="size-8 sm:size-9 rounded-full bg-primary/10 overflow-hidden ring-2 ring-white dark:ring-gray-800 flex-shrink-0">
-                    <img 
-                        class="w-full h-full object-cover" 
-                        src="{% static 'icons/cat.png' %}" 
+                    <img
+                        class="w-full h-full object-cover"
+                        src="{% static 'icons/cat.png' %}"
                         alt="User profile"
                     />
                 </div>
-            </div>
+            </a>
         </div>
     </header>

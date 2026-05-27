@@ -18,10 +18,13 @@
                 Voir les paiements
             </a>
             {% if current_membership.is_admin or current_membership.role == 'treasurer' %}
-            <a href="{% url 'contribution_create' slug=slug %}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 transition-all duration-150">
+            <button type="button"
+                    hx-get="{% url 'contribution_create' slug=slug %}"
+                    hx-target="#modal" hx-swap="innerHTML"
+                    class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 hover:shadow-md hover:shadow-primary/20 active:scale-95 transition-all duration-150">
                 <span class="material-symbols-outlined text-base">add</span>
                 Nouveau type
-            </a>
+            </button>
             {% endif %}
         </div>
     </div>
@@ -40,36 +43,9 @@
                         <th class="px-6 py-4"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
+                <tbody id="rows-list" class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
                     {% for c in contributions %}
-                    <tr class="hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-                        <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white">{{ c.title }}</td>
-                        <td class="px-6 py-4">{{ c.amount }} XAF</td>
-                        <td class="px-6 py-4 text-emerald-600 dark:text-emerald-400 font-medium">{{ c.collected|default:0 }} XAF</td>
-                        <td class="px-6 py-4 text-slate-500">{% if c.target_amount %}{{ c.target_amount }} XAF{% else %}—{% endif %}</td>
-                        <td class="px-6 py-4">
-                            {% if c.is_active %}
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Actif</span>
-                            {% else %}
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">Archivé</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            {% if current_membership.is_admin or current_membership.role == 'treasurer' %}
-                            <div class="flex items-center justify-end gap-2">
-                                <a href="{% url 'contribution_edit' slug=slug contribution_id=c.id %}" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Modifier">
-                                    <span class="material-symbols-outlined text-base">edit</span>
-                                </a>
-                                <form method="post" action="{% url 'contribution_delete' slug=slug contribution_id=c.id %}" onsubmit="return confirm('Supprimer ce type de cotisation ? Les paiements liés seront aussi supprimés.');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Supprimer">
-                                        <span class="material-symbols-outlined text-base">delete</span>
-                                    </button>
-                                </form>
-                            </div>
-                            {% endif %}
-                        </td>
-                    </tr>
+                    {% include "pages/treasurer/_contribution_row.html" %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -79,12 +55,16 @@
             <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700">payments</span>
             <p class="text-slate-500 mt-4">Aucun type de cotisation pour l'instant.</p>
             {% if current_membership.is_admin or current_membership.role == 'treasurer' %}
-            <a href="{% url 'contribution_create' slug=slug %}" class="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-primary hover:underline">
+            <button type="button"
+                    hx-get="{% url 'contribution_create' slug=slug %}"
+                    hx-target="#modal" hx-swap="innerHTML"
+                    class="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-primary hover:underline">
                 Créer le premier type →
-            </a>
+            </button>
             {% endif %}
         </div>
         {% endif %}
     </div>
 </div>
+<div id="modal"></div>
 {% endblock %}

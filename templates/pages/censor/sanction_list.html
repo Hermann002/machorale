@@ -13,10 +13,13 @@
             <p class="text-[#4c669a] text-sm mt-1">Avertissements, amendes et suspensions appliqués aux membres.</p>
         </div>
         {% if current_membership.is_admin or current_membership.role == 'censor' %}
-        <a href="{% url 'sanction_create' slug=slug %}" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 active:scale-95 transition-all duration-150">
+        <button type="button"
+                hx-get="{% url 'sanction_create' slug=slug %}"
+                hx-target="#modal" hx-swap="innerHTML"
+                class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-primary px-4 py-2 rounded-xl hover:bg-primary/90 active:scale-95 transition-all duration-150">
             <span class="material-symbols-outlined text-base">add</span>
             Nouvelle sanction
-        </a>
+        </button>
         {% endif %}
     </div>
 
@@ -56,53 +59,9 @@
                         <th class="px-6 py-4"></th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
+                <tbody id="rows-list" class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
                     {% for s in sanctions %}
-                    <tr class="hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
-                        <td class="px-6 py-4 text-slate-600">{{ s.applied_at|date:"d/m/Y" }}</td>
-                        <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white">{{ s.member.get_full_name|default:s.member.username }}</td>
-                        <td class="px-6 py-4">
-                            {% if s.sanction_type == 'warning' %}
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">Avertissement</span>
-                            {% elif s.sanction_type == 'fine' %}
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300">Amende</span>
-                            {% else %}
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">Suspension</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 text-slate-500 truncate max-w-xs">{{ s.reason }}</td>
-                        <td class="px-6 py-4 text-slate-700">{% if s.amount %}{{ s.amount }} XAF{% else %}—{% endif %}</td>
-                        <td class="px-6 py-4">
-                            {% if s.is_active %}
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">Active</span>
-                            {% else %}
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">Clôturée</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                            {% if current_membership.is_admin or current_membership.role == 'censor' %}
-                            <div class="flex items-center justify-end gap-2">
-                                {% if s.is_active %}
-                                <form method="post" action="{% url 'sanction_lift' slug=slug sanction_id=s.id %}" class="inline" onsubmit="return confirm('Lever cette sanction ?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="p-2 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors" title="Lever">
-                                        <span class="material-symbols-outlined text-base">check_circle</span>
-                                    </button>
-                                </form>
-                                {% endif %}
-                                <a href="{% url 'sanction_edit' slug=slug sanction_id=s.id %}" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Modifier">
-                                    <span class="material-symbols-outlined text-base">edit</span>
-                                </a>
-                                <form method="post" action="{% url 'sanction_delete' slug=slug sanction_id=s.id %}" class="inline" onsubmit="return confirm('Supprimer cette sanction ?');">
-                                    {% csrf_token %}
-                                    <button type="submit" class="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Supprimer">
-                                        <span class="material-symbols-outlined text-base">delete</span>
-                                    </button>
-                                </form>
-                            </div>
-                            {% endif %}
-                        </td>
-                    </tr>
+                    {% include "pages/censor/_sanction_row.html" %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -112,12 +71,16 @@
             <span class="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700">gavel</span>
             <p class="text-slate-500 mt-4">Aucune sanction appliquée.</p>
             {% if current_membership.is_admin or current_membership.role == 'censor' %}
-            <a href="{% url 'sanction_create' slug=slug %}" class="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-primary hover:underline">
+            <button type="button"
+                    hx-get="{% url 'sanction_create' slug=slug %}"
+                    hx-target="#modal" hx-swap="innerHTML"
+                    class="inline-flex items-center gap-2 mt-4 text-sm font-semibold text-primary hover:underline">
                 Créer une sanction →
-            </a>
+            </button>
             {% endif %}
         </div>
         {% endif %}
     </div>
 </div>
+<div id="modal"></div>
 {% endblock %}

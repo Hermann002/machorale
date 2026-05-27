@@ -1,0 +1,117 @@
+{% extends "../base/base.html" %}
+{% load static %}
+{% load i18n %}
+{% load chorale_tags %}
+
+{% block title %}{% translate "Activités" %}{% endblock %}
+
+{% block content %}
+{% include "../components/alert/message.html" %}
+<div class="p-3 sm:p-6 lg:p-8">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between mb-6 sm:mb-8">
+        <div>
+            <h2 class="text-xl sm:text-2xl font-bold tracking-tight">{% translate "Activités" %}</h2>
+            <p class="text-[#4c669a] text-sm mt-1">{% translate "Journal complet des actions effectuées sur la chorale." %}</p>
+        </div>
+    </div>
+
+    {# Filtres : formulaire GET, persistance via query string #}
+    <form method="get" class="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-slate-200 dark:border-gray-800 shadow-sm mb-6 flex flex-col lg:flex-row gap-3 lg:items-end">
+        <div class="flex-1 min-w-0">
+            <label for="event_type" class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">{% translate "Type" %}</label>
+            <select name="event_type" id="event_type"
+                    class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm">
+                <option value="">{% translate "Tous les types" %}</option>
+                {% for value, label in event_types %}
+                <option value="{{ value }}" {% if filter_event_type == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="flex-1 min-w-0">
+            <label for="q" class="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">{% translate "Recherche" %}</label>
+            <input type="search" name="q" id="q" value="{{ filter_q }}"
+                   placeholder="{% translate 'Description ou nom de membre…' %}"
+                   class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 text-sm">
+        </div>
+        <label class="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+            <input type="checkbox" name="important" value="1" {% if filter_important %}checked{% endif %}
+                   class="h-5 w-5 rounded text-primary focus:ring-primary/40">
+            {% translate "Importantes uniquement" %}
+        </label>
+        <div class="flex gap-2">
+            <button type="submit"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 active:scale-95 transition-all duration-150">
+                <span class="material-symbols-outlined text-base">filter_alt</span>
+                {% translate "Filtrer" %}
+            </button>
+            <a href="{% url 'activities' slug=slug %}"
+               class="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 dark:border-gray-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-150">
+                {% translate "Effacer" %}
+            </a>
+        </div>
+    </form>
+
+    {% if not is_admin_view %}
+    <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6 text-sm text-amber-900 dark:text-amber-200">
+        <span class="material-symbols-outlined align-middle text-base mr-1">lock</span>
+        {% translate "Seul l'administrateur de la chorale peut consulter le journal complet." %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white dark:bg-gray-900 rounded-3xl border border-[#cfd7e7] dark:border-gray-800 shadow-sm overflow-hidden">
+        {% if activities %}
+        <div class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
+            {% for event in activities %}
+            <div class="flex items-center gap-4 px-6 py-4 hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+                <div class="size-10 flex items-center justify-center rounded-lg {{ event.event_type|activity_icon_color }} shrink-0">
+                    <span class="material-symbols-outlined">{{ event.event_type|activity_icon }}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-900 dark:text-white">
+                        {{ event.short_description|default:event.description }}
+                        {% if event.is_important %}
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 ml-1 align-middle">{% translate "Important" %}</span>
+                        {% endif %}
+                    </p>
+                    <p class="text-xs text-[#4c669a] mt-0.5 truncate">{{ event.description }}</p>
+                    {% if event.user %}
+                    <p class="text-[11px] text-slate-400 mt-0.5">{% translate "Par" %} {{ event.user.get_full_name|default:event.user.username }}</p>
+                    {% endif %}
+                </div>
+                <div class="text-xs text-[#4c669a] whitespace-nowrap">{{ event.timestamp|date:'d M Y H:i' }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="bg-slate-50 dark:bg-slate-900/30 px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <p class="text-xs font-medium text-slate-500">
+                {% blocktranslate with start=page_obj.start_index end=page_obj.end_index total=page_obj.paginator.count %}{{ start }}-{{ end }} sur {{ total }}{% endblocktranslate %}
+            </p>
+            <div class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if filter_event_type %}&event_type={{ filter_event_type }}{% endif %}{% if filter_important %}&important=1{% endif %}{% if filter_q %}&q={{ filter_q }}{% endif %}"
+                   class="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </a>
+                {% endif %}
+                <span class="size-8 rounded-md bg-primary text-white text-xs font-bold flex items-center justify-center">{{ page_obj.number }}</span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if filter_event_type %}&event_type={{ filter_event_type }}{% endif %}{% if filter_important %}&important=1{% endif %}{% if filter_q %}&q={{ filter_q }}{% endif %}"
+                   class="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-white dark:hover:bg-slate-800 transition-all">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="px-6 py-16 text-center">
+            <span class="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600">history</span>
+            <p class="mt-4 text-sm text-slate-500">{% translate "Aucune activité à afficher pour ces filtres." %}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

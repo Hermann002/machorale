@@ -3,7 +3,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .models import Chorale, ChoraleEvent, Contribution, MemberContribution, CashFlow, Absence, Sanction, Membership
-from manage_users.models import CustomUser
+from manage_users.models import CustomUser, Profile
 
 # Classe Tailwind partagée pour les inputs/selects des forms du tableau de bord.
 # Mutualisée pour éviter le drift visuel et garder un seul endroit à modifier
@@ -377,6 +377,105 @@ class MemberRoleForm(forms.ModelForm):
                 "class": "w-full appearance-none px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium text-on-surface cursor-pointer",
             }),
         }
+
+
+class MemberProfileForm(forms.Form):
+    """Édition combinée des champs CustomUser + Profile d'un membre.
+    Pour usage par l'admin/secrétaire qui modifie la fiche d'un autre membre.
+    Le rôle Membership n'est PAS exposé ici — séparé dans MemberRoleForm.
+    """
+
+    first_name = forms.CharField(max_length=150, required=True,
+        label=_("Prénom"),
+        widget=forms.TextInput(attrs={'class': DASHBOARD_FIELD_CLASS}))
+    last_name = forms.CharField(max_length=150, required=False,
+        label=_("Nom"),
+        widget=forms.TextInput(attrs={'class': DASHBOARD_FIELD_CLASS}))
+    email = forms.EmailField(required=True, label=_("Email"),
+        widget=forms.EmailInput(attrs={'class': DASHBOARD_FIELD_CLASS}))
+    contact = forms.CharField(max_length=15, required=False,
+        label=_("Téléphone"),
+        widget=forms.TextInput(attrs={
+            'class': DASHBOARD_FIELD_CLASS,
+            'placeholder': _("+237 6XX XXX XXX"),
+        }))
+    marital_status = forms.ChoiceField(required=False,
+        label=_("Statut matrimonial"),
+        choices=Profile.MARITAL_STATUS_CHOICE,
+        widget=forms.Select(attrs={'class': DASHBOARD_FIELD_CLASS}))
+    christened = forms.BooleanField(required=False, label=_("Baptisé(e)"),
+        widget=forms.CheckboxInput(attrs={'class': 'h-5 w-5 rounded text-primary'}))
+    confirmed = forms.BooleanField(required=False, label=_("Confirmé(e)"),
+        widget=forms.CheckboxInput(attrs={'class': 'h-5 w-5 rounded text-primary'}))
+    joined_date = forms.DateField(required=False, label=_("Date d'adhésion"),
+        widget=forms.DateInput(attrs={'class': DASHBOARD_FIELD_CLASS, 'type': 'date'}))
+    dob = forms.DateField(required=False, label=_("Date de naissance"),
+        widget=forms.DateInput(attrs={'class': DASHBOARD_FIELD_CLASS, 'type': 'date'}))
+    profession_c = forms.ChoiceField(required=False,
+        label=_("Profession"),
+        choices=[('', '---')] + list(Profile.PROFESSION_CHOICES),
+        widget=forms.Select(attrs={'class': DASHBOARD_FIELD_CLASS}))
+    profession_o = forms.CharField(max_length=100, required=False,
+        label=_("Profession (autre)"),
+        widget=forms.TextInput(attrs={'class': DASHBOARD_FIELD_CLASS}))
+    neighborhood = forms.CharField(max_length=100, required=False,
+        label=_("Quartier"),
+        widget=forms.TextInput(attrs={'class': DASHBOARD_FIELD_CLASS}))
+    department = forms.CharField(max_length=100, required=False,
+        label=_("Département"),
+        widget=forms.TextInput(attrs={'class': DASHBOARD_FIELD_CLASS}))
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        initial = kwargs.pop('initial', {}) or {}
+        if user is not None:
+            initial.setdefault('first_name', user.first_name)
+            initial.setdefault('last_name', user.last_name)
+            initial.setdefault('email', user.email)
+            profile = getattr(user, 'profile', None)
+            if profile is not None:
+                initial.setdefault('contact', profile._contact)
+                initial.setdefault('marital_status', profile.marital_status)
+                initial.setdefault('christened', profile.christened)
+                initial.setdefault('confirmed', profile.confirmed)
+                initial.setdefault('joined_date', profile.joined_date)
+                initial.setdefault('dob', profile.dob)
+                initial.setdefault('profession_c', profile.profession_c)
+                initial.setdefault('profession_o', profile.profession_o)
+                initial.setdefault('neighborhood', profile.neighborhood)
+                initial.setdefault('department', profile.department)
+        kwargs['initial'] = initial
+        super().__init__(*args, **kwargs)
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').strip().lower()
+        qs = CustomUser.objects.filter(email=email)
+        if self.user is not None:
+            qs = qs.exclude(pk=self.user.pk)
+        if qs.exists():
+            raise ValidationError(_("Cet email est déjà utilisé."))
+        return email
+
+    def save(self):
+        user = self.user
+        cd = self.cleaned_data
+        user.first_name = cd['first_name']
+        user.last_name = cd.get('last_name', '')
+        user.email = cd['email']
+        user.save()
+        profile, _created = Profile.objects.get_or_create(user=user)
+        profile._contact = cd.get('contact') or None
+        profile.marital_status = cd.get('marital_status') or profile.marital_status
+        profile.christened = cd.get('christened') or False
+        profile.confirmed = cd.get('confirmed') or False
+        profile.joined_date = cd.get('joined_date')
+        profile.dob = cd.get('dob')
+        profile.profession_c = cd.get('profession_c') or ''
+        profile.profession_o = cd.get('profession_o') or ''
+        profile.neighborhood = cd.get('neighborhood') or ''
+        profile.department = cd.get('department') or ''
+        profile.save()
+        return user
 
 
 # ── Trésorier ──────────────────────────────────────────────────────────────

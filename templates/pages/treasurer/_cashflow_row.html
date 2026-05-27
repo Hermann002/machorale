@@ -1,0 +1,23 @@
+{% load i18n %}
+<tr class="hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+    <td class="px-6 py-4 text-slate-600">{{ f.date|date:"d/m/Y" }}</td>
+    <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white">{{ f.title }}</td>
+    <td class="px-6 py-4">
+        {% if f.type_cash_flow == 'entree' %}
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">{% translate "Entrée" %}</span>
+        {% else %}
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300">{% translate "Sortie" %}</span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 font-medium {% if f.type_cash_flow == 'entree' %}text-emerald-600 dark:text-emerald-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+        {% if f.type_cash_flow == 'sortie' %}-{% endif %}{{ f.amount }} XAF
+    </td>
+    <td class="px-6 py-4 text-slate-500 truncate max-w-xs">{{ f.description|default:"—" }}</td>
+    <td class="px-6 py-4 text-right">
+        {% if current_membership.is_admin or current_membership.role == 'treasurer' %}
+        <a href="{% url 'cashflow_edit' slug=slug cashflow_id=f.id %}" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="{% translate 'Modifier' %}">
+            <span class="material-symbols-outlined text-base">edit</span>
+        </a>
+        {% endif %}
+    </td>
+</tr>

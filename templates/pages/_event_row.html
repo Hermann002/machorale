@@ -1,0 +1,49 @@
+{% load i18n %}
+{% load chorale_tags %}
+<tr class="hover:bg-[#f8f9fc] dark:hover:bg-gray-800 transition-colors">
+    <td class="px-6 py-4">
+        <div class="flex items-center gap-3">
+            <div class="size-9 flex items-center justify-center rounded-lg {{ ev.event_type|activity_icon_color }} shrink-0">
+                <span class="material-symbols-outlined text-base">event</span>
+            </div>
+            <span class="font-semibold text-slate-900 dark:text-white">{{ ev.title }}</span>
+        </div>
+    </td>
+    <td class="px-6 py-4">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold
+            {% if ev.event_type == 'practice' %}bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300
+            {% elif ev.event_type == 'meeting' %}bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300
+            {% elif ev.event_type == 'concert' %}bg-orange-50 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300
+            {% elif ev.event_type == 'assistance' %}bg-teal-50 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300
+            {% else %}bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300{% endif %}">
+            {{ ev.get_event_type_display }}
+        </span>
+    </td>
+    <td class="px-6 py-4 text-[#4c669a] dark:text-slate-400 whitespace-nowrap">{{ ev.date|date:'D j M Y @ H:i' }}</td>
+    <td class="px-6 py-4 text-slate-700 dark:text-slate-300">{{ ev.location }}</td>
+    <td class="px-6 py-4 text-slate-700 dark:text-slate-300">
+        {% if ev.created_by %}{{ ev.created_by.get_full_name|default:ev.created_by.username }}{% else %}<span class="text-slate-400">—</span>{% endif %}
+    </td>
+    <td class="px-6 py-4">
+        {% if ev.expenses or ev.income %}
+        <div class="flex flex-col gap-1 text-xs">
+            {% if ev.expenses %}<span class="text-red-600 font-medium">- {{ ev.expenses|floatformat:0 }} XAF</span>{% endif %}
+            {% if ev.income %}<span class="text-green-600 font-medium">+ {{ ev.income|floatformat:0 }} XAF</span>{% endif %}
+        </div>
+        {% else %}
+        <span class="text-slate-400 text-xs">—</span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 text-right">
+        <div class="flex items-center justify-end gap-2">
+            <a href="{% url 'event_detail' slug=slug event_id=ev.id %}" class="inline-flex items-center gap-1 text-primary text-xs font-semibold hover:underline">
+                {% translate "Voir" %} <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </a>
+            {% if can_create %}
+            <a href="{% url 'event_edit' slug=slug event_id=ev.id %}" class="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg active:scale-95 transition-all">
+                <span class="material-symbols-outlined text-base">edit</span>
+            </a>
+            {% endif %}
+        </div>
+    </td>
+</tr>
