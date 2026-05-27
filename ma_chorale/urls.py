@@ -62,6 +62,7 @@ urlpatterns = [
 
 urlpatterns += i18n_patterns(
     path('u/', include('manage_users.urls')),
+    path('', include('notifications.urls')),
     path('', include('landing.urls')),
     path('a/', include('manage_chorale.urls')),
     prefix_default_language=True,

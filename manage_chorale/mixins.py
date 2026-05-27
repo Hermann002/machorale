@@ -2,6 +2,46 @@ from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils.translation import gettext_lazy as _
+
+
+class RateLimitedMixin:
+    """Applique un rate limit sur les requêtes mutantes (POST par défaut).
+
+    Utilisation dans une vue :
+        class MyView(RateLimitedMixin, SomeOtherMixin, TemplateView):
+            rl_rate   = '10/m'          # surcharger si besoin
+            rl_key    = 'user_or_ip'    # 'ip' pour les vues publiques
+            rl_methods = ('POST',)      # ('GET', 'POST') pour les vues créant des objets sur GET
+
+    Le mixin doit être listé EN PREMIER dans les bases pour s'exécuter avant
+    les autres dispatch (auth, rôle, …).
+    Sur dépassement : message d'erreur Django + redirect vers la même URL (GET).
+    """
+
+    rl_rate: str = '20/m'
+    rl_key: str = 'user_or_ip'
+    rl_methods: tuple = ('POST',)
+
+    def dispatch(self, request, *args, **kwargs):
+        from django_ratelimit.core import is_ratelimited
+
+        if request.method in self.rl_methods:
+            limited = is_ratelimited(
+                request,
+                group=self.__class__.__name__,
+                key=self.rl_key,
+                rate=self.rl_rate,
+                increment=True,
+            )
+            if limited:
+                messages.error(
+                    request,
+                    _("Trop de requêtes. Veuillez patienter avant de réessayer."),
+                )
+                return redirect(request.get_full_path())
+
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ChoraleRequireMixin(LoginRequiredMixin):

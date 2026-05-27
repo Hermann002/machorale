@@ -7,3 +7,9 @@ media/
 CLAUDE.md
 cahier_des_charges.pdf
 status.md
+TESTS_MANUELS.md
+
+# Test runner
+test_results.sqlite3
+test_reports/
+.claude/*

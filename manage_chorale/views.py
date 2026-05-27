@@ -24,6 +24,7 @@ from .mixins import (
     CensorRequiredMixin,
     AdminRequiredMixin,
     SecretaryOrAdminRequiredMixin,
+    RateLimitedMixin,
 )
 from .services import get_dashboard_stats, ContributionService, SanctionService
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -104,7 +105,11 @@ TEMPLATES = {
 
 
     
-class CreateChoraleView(SessionWizardView):
+class CreateChoraleView(RateLimitedMixin, SessionWizardView):
+    # Création de chorale : lourde en DB (Chorale + Membership + slug).
+    # 5/h empêche le spam tout en laissant les cas légitimes passer.
+    rl_rate = '5/h'
+    rl_key = 'user_or_ip'
     form_list = FORMS
     file_storage = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, "temp"))
 
@@ -288,10 +293,11 @@ class EventListView(ChoraleRequireMixin, TemplateView):
         }
         return render(request, self.template_name, context)
 
-class CreateEventView(SecretaryOrAdminRequiredMixin, TemplateView):
+class CreateEventView(RateLimitedMixin, SecretaryOrAdminRequiredMixin, TemplateView):
     template_name = "pages/event_form.html"
     form_class = None
     permission_denied_message = "Accès réservé à l'admin ou au secrétaire de la chorale."
+    rl_rate = '30/m'
 
     def get(self, request, slug, *args, **kwargs):
         from .forms import ChoraleEventForm
@@ -342,10 +348,11 @@ class EventTableView(ChoraleRequireMixin, TemplateView):
             'can_create': can_create,
         })
 
-class EventUpdateView(SecretaryOrAdminRequiredMixin, TemplateView):
+class EventUpdateView(RateLimitedMixin, SecretaryOrAdminRequiredMixin, TemplateView):
     template_name = "pages/event_form.html"
     permission_denied_message = "Accès réservé à l'admin ou au secrétaire de la chorale."
     permission_denied_redirect = 'events'
+    rl_rate = '30/m'
 
     def get(self, request, slug, event_id, *args, **kwargs):
         from .forms import ChoraleEventForm
@@ -408,8 +415,9 @@ class ContributionListView(ChoraleRequireMixin, TemplateView):
         })
 
 
-class ContributionCreateView(TreasurerRequiredMixin, TemplateView):
+class ContributionCreateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateView):
     template_name = "pages/treasurer/contribution_form.html"
+    rl_rate = '20/m'
 
     def get(self, request, slug, *args, **kwargs):
         from .forms import ContributionForm
@@ -437,8 +445,9 @@ class ContributionCreateView(TreasurerRequiredMixin, TemplateView):
         })
 
 
-class ContributionUpdateView(TreasurerRequiredMixin, TemplateView):
+class ContributionUpdateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateView):
     template_name = "pages/treasurer/contribution_form.html"
+    rl_rate = '20/m'
 
     def _get_object(self, contribution_id):
         return get_object_or_404(Contribution, id=contribution_id, chorale=self.chorale)
@@ -520,8 +529,9 @@ class MemberContributionListView(ChoraleRequireMixin, TemplateView):
         })
 
 
-class MemberContributionCreateView(TreasurerRequiredMixin, TemplateView):
+class MemberContributionCreateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateView):
     template_name = "pages/treasurer/payment_form.html"
+    rl_rate = '20/m'
 
     def get(self, request, slug, *args, **kwargs):
         from .forms import MemberContributionForm
@@ -573,8 +583,9 @@ class CashFlowListView(ChoraleRequireMixin, TemplateView):
         })
 
 
-class CashFlowCreateView(TreasurerRequiredMixin, TemplateView):
+class CashFlowCreateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateView):
     template_name = "pages/treasurer/cashflow_form.html"
+    rl_rate = '20/m'
 
     def get(self, request, slug, *args, **kwargs):
         from .forms import CashFlowForm
@@ -606,8 +617,9 @@ class CashFlowCreateView(TreasurerRequiredMixin, TemplateView):
         })
 
 
-class CashFlowUpdateView(TreasurerRequiredMixin, TemplateView):
+class CashFlowUpdateView(RateLimitedMixin, TreasurerRequiredMixin, TemplateView):
     template_name = "pages/treasurer/cashflow_form.html"
+    rl_rate = '20/m'
 
     def _get_object(self, cashflow_id):
         return get_object_or_404(CashFlow, id=cashflow_id, chorale=self.chorale)
@@ -673,7 +685,7 @@ class AbsenceListView(ChoraleRequireMixin, TemplateView):
         })
 
 
-class AbsenceBulkCreateView(CensorRequiredMixin, TemplateView):
+class AbsenceBulkCreateView(RateLimitedMixin, CensorRequiredMixin, TemplateView):
     """Saisie en masse pour UNE rencontre.
 
     Comportement idempotent : un POST sur la même rencontre efface les absences
@@ -727,8 +739,9 @@ class AbsenceBulkCreateView(CensorRequiredMixin, TemplateView):
         })
 
 
-class AbsenceUpdateView(CensorRequiredMixin, TemplateView):
+class AbsenceUpdateView(RateLimitedMixin, CensorRequiredMixin, TemplateView):
     template_name = "pages/censor/absence_edit_form.html"
+    rl_rate = '20/m'
 
     def _get_object(self, absence_id):
         return get_object_or_404(Absence, id=absence_id, event__chorale=self.chorale)
@@ -802,8 +815,9 @@ class SanctionListView(ChoraleRequireMixin, TemplateView):
         })
 
 
-class SanctionCreateView(CensorRequiredMixin, TemplateView):
+class SanctionCreateView(RateLimitedMixin, CensorRequiredMixin, TemplateView):
     template_name = "pages/censor/sanction_form.html"
+    rl_rate = '10/m'
 
     def get(self, request, slug, *args, **kwargs):
         from .forms import SanctionForm
@@ -841,8 +855,9 @@ class SanctionCreateView(CensorRequiredMixin, TemplateView):
         })
 
 
-class SanctionUpdateView(CensorRequiredMixin, TemplateView):
+class SanctionUpdateView(RateLimitedMixin, CensorRequiredMixin, TemplateView):
     template_name = "pages/censor/sanction_form.html"
+    rl_rate = '20/m'
 
     def _get_object(self, sanction_id):
         return get_object_or_404(Sanction, id=sanction_id, chorale=self.chorale)
@@ -909,7 +924,10 @@ class SanctionDeleteView(CensorRequiredMixin, TemplateView):
         return redirect(reverse('sanctions', kwargs={'slug': kwargs.get('slug')}))
 
 
-class MemberPopupView(ChoraleRequireMixin, TemplateView):
+class MemberPopupView(RateLimitedMixin, ChoraleRequireMixin, TemplateView):
+    # Crée CustomUser + Profile + Membership par POST : vecteur de spam utilisateur.
+    rl_rate = '10/m'
+    rl_key = 'user_or_ip'
     template_name = "pages/member_popup.html"
     form_class = AddMemberForm
 

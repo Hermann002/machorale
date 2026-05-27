@@ -1,0 +1,167 @@
+{# Client WS + persistance API : point sur cloche + panneau avec liste. #}
+{% if current_membership %}
+
+<div id="notif-panel"
+     class="hidden fixed top-14 right-4 z-[10000] w-80 max-h-96 overflow-y-auto
+            bg-white dark:bg-gray-900 rounded-lg shadow-xl border
+            border-[#e7ebf3] dark:border-gray-800">
+    <div class="px-4 py-3 border-b border-[#e7ebf3] dark:border-gray-800 flex items-center justify-between">
+        <span class="font-bold text-sm">Notifications</span>
+        <span id="notif-unread-count" class="text-xs text-gray-500"></span>
+    </div>
+    <ul id="notif-list" class="divide-y divide-[#e7ebf3] dark:divide-gray-800">
+        <li id="notif-empty" class="px-4 py-6 text-sm text-center text-gray-500">
+            Aucune notification
+        </li>
+    </ul>
+</div>
+
+<script>
+(function () {
+    const slug = "{{ current_membership.chorale.slug|escapejs }}";
+    const apiList = "{% url 'notifications:list' slug=current_membership.chorale.slug %}";
+    const apiMarkRead = "{% url 'notifications:mark_read' slug=current_membership.chorale.slug %}";
+
+    const scheme = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${scheme}//${window.location.host}/ws/chorale/${slug}/notifications/`;
+
+    let ws = null;
+    let retryDelay = 1000;
+    const maxDelay = 30000;
+
+    const dot = document.getElementById("notif-bell-dot");
+    const bell = document.getElementById("notif-bell");
+    const panel = document.getElementById("notif-panel");
+    const list = document.getElementById("notif-list");
+    const empty = document.getElementById("notif-empty");
+    const countLabel = document.getElementById("notif-unread-count");
+
+    let notifications = [];   // [{id, title, body, created_at, read_at, ...}]
+    let unreadCount = 0;
+
+    // ----- CSRF (header pour POST) -----
+    function csrfToken() {
+        const m = document.cookie.match(/csrftoken=([^;]+)/);
+        return m ? m[1] : "";
+    }
+
+    // ----- Rendu -----
+    function render() {
+        [...list.querySelectorAll("li:not(#notif-empty)")].forEach(li => li.remove());
+
+        if (notifications.length === 0) {
+            empty.classList.remove("hidden");
+        } else {
+            empty.classList.add("hidden");
+            notifications.forEach(n => {
+                const li = document.createElement("li");
+                const unread = !n.read_at;
+                li.className = "px-4 py-3 " +
+                    (unread ? "bg-[#f5f8ff] dark:bg-gray-800/50 " : "") +
+                    "hover:bg-[#f8f9fc] dark:hover:bg-gray-800";
+                li.innerHTML = `
+                    <div class="font-bold text-sm">${escapeHtml(n.title)}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400">${escapeHtml(n.body)}</div>
+                    <div class="text-[10px] text-gray-400 mt-1">${formatTime(n.created_at)}</div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        countLabel.textContent = unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "";
+        if (dot) {
+            if (unreadCount > 0) dot.classList.remove("hidden");
+            else dot.classList.add("hidden");
+        }
+    }
+
+    function formatTime(iso) {
+        try { return new Date(iso).toLocaleString(); }
+        catch { return ""; }
+    }
+
+    // ----- Données -----
+    async function loadInitial() {
+        try {
+            const res = await fetch(apiList, { credentials: "same-origin" });
+            if (!res.ok) return;
+            const data = await res.json();
+            notifications = data.notifications || [];
+            unreadCount = data.unread || 0;
+            render();
+        } catch (e) {
+            console.error("[notif] fetch initial échoué", e);
+        }
+    }
+
+    async function markAllRead() {
+        try {
+            await fetch(apiMarkRead, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "X-CSRFToken": csrfToken() },
+            });
+            const now = new Date().toISOString();
+            notifications.forEach(n => { if (!n.read_at) n.read_at = now; });
+            unreadCount = 0;
+            render();
+        } catch (e) {
+            console.error("[notif] mark-read échoué", e);
+        }
+    }
+
+    function addFromWs(notif) {
+        // Dédup par id (WS peut arriver avant le fetch initial).
+        if (notifications.some(n => n.id === notif.id)) return;
+        notifications.unshift(notif);
+        if (notifications.length > 50) notifications.length = 50;
+        if (!notif.read_at) unreadCount += 1;
+        render();
+    }
+
+    // ----- Listeners -----
+    if (bell) {
+        bell.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const opening = panel.classList.contains("hidden");
+            panel.classList.toggle("hidden");
+            if (opening && unreadCount > 0) markAllRead();
+        });
+    }
+
+    document.addEventListener("click", (e) => {
+        if (!panel.contains(e.target) && e.target !== bell && !bell.contains(e.target)) {
+            panel.classList.add("hidden");
+        }
+    });
+
+    // ----- WS -----
+    function connect() {
+        ws = new WebSocket(wsUrl);
+        ws.onopen = () => { console.log("[WS] connecté"); retryDelay = 1000; };
+        ws.onmessage = (e) => {
+            let msg;
+            try { msg = JSON.parse(e.data); } catch { return; }
+            if (msg.type === "chorale_announcement" || msg.type === "notification") {
+                addFromWs(msg.message || {});
+            }
+        };
+        ws.onclose = (e) => {
+            console.warn(`[WS] fermé (${e.code}) — retry ${retryDelay}ms`);
+            setTimeout(connect, retryDelay);
+            retryDelay = Math.min(retryDelay * 2, maxDelay);
+        };
+        ws.onerror = (e) => { console.error("[WS] erreur", e); };
+    }
+
+    function escapeHtml(s) {
+        const div = document.createElement("div");
+        div.textContent = s || "";
+        return div.innerHTML;
+    }
+
+    loadInitial();
+    connect();
+})();
+</script>
+{% endif %}

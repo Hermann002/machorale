@@ -3,5 +3,8 @@ def websocket_urlpatterns():
     from notifications import consumers
 
     return [
-        re_path(r'ws/notifications/$', consumers.NotificationConsumer.as_asgi()),
+        re_path(
+            r'ws/chorale/(?P<slug>[\w-]+)/notifications/$',
+            consumers.NotificationConsumer.as_asgi(),
+        ),
     ]

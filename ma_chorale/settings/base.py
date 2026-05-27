@@ -31,6 +31,8 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,7 +44,6 @@ INSTALLED_APPS = [
     'notifications',
     'landing',
     'formtools',
-    'channels',
 ]
 
 MIDDLEWARE = [
@@ -76,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'ma_chorale.wsgi.application'
+# WSGI_APPLICATION = 'ma_chorale.wsgi.application'
 ASGI_APPLICATION = 'ma_chorale.asgi.application'
 
 
@@ -191,3 +192,12 @@ MEDIA_ROOT = BASE_DIR / "media"  # ou os.path.join(BASE_DIR, '
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # SENDGRID_API_KEY = config('SENDGRID_API_KEY')
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [config('REDIS_URL')],
+        },
+    },
+}

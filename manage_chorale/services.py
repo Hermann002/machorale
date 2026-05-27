@@ -62,7 +62,20 @@ class ContributionService:
 
         # Invalider le cache du dashboard : le solde a changé
         cache.delete(f"dashboard_stats:{contribution.chorale.id}")
-
+        from notifications.services import notify_chorale
+        notify_chorale(
+            contribution.chorale,
+            payload={
+                "title": "Nouveau paiement",
+                "body": (
+                    f"{member.get_full_name() or member.username} a payé "
+                    f"{amount} XAF pour « {contribution.title} »"
+                ),
+                "amount": str(amount),
+                "payment_id": payment.id,
+            },
+            kind="payment",
+        )
         return payment
 
 
@@ -117,6 +130,22 @@ class SanctionService:
         )
 
         cache.delete(f"dashboard_stats:{chorale.id}")
+
+        from notifications.services import notify_chorale
+        notify_chorale(
+            chorale,
+            payload={
+                "title": "Nouvelle sanction",
+                "body": (
+                    f"{sanction.get_sanction_type_display()} appliqué à "
+                    f"{member.get_full_name() or member.username}"
+                    + (f" ({amount} XAF)" if amount else "")
+                ),
+                "member_id": member.id,
+                "sanction_id": sanction.id,
+            },
+            kind="sanction",
+        )
         return sanction
 
     @staticmethod

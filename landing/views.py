@@ -5,8 +5,10 @@ from django.conf import settings
 from django.core.cache import cache
 from django.views import View
 from django.contrib.auth import login, logout
+from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from datetime import timedelta, date
 from uuid import uuid4
@@ -33,6 +35,18 @@ class DemoView(View):
     DEMO_LIFETIME_HOURS = 2
 
     def get(self, request):
+        from django_ratelimit.core import is_ratelimited
+        limited = is_ratelimited(
+            request,
+            group='DemoView',
+            key='ip',
+            rate='5/m',
+            increment=True,
+        )
+        if limited:
+            messages.error(request, _("Trop de requêtes. Veuillez patienter avant de réessayer."))
+            return redirect(reverse('home'))
+
         self._cleanup_expired_demo_users()
 
         if request.user.is_authenticated:
