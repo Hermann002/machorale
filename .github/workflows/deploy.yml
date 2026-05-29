@@ -105,6 +105,7 @@ jobs:
       - name: Rsync deployment/ to VPS
         run: |
           rsync -avz --delete \
+            -e "ssh -T -o LogLevel=ERROR" \
             --exclude='.env' \
             --exclude='*.old' \
             --exclude='data/' \
