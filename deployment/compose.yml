@@ -1,0 +1,74 @@
+# Définition réutilisable : variables communes aux 3 services
+x-app-env: &app-env
+  emailpassword: ${emailpassword}
+  emailuser: ${emailuser:-apikey}
+  emailhost: ${emailhost:-smtp.sendgrid.net}
+  emailport: ${emailport:-587}
+  emailuse_tls: ${emailuse_tls:-true}
+  defaultfromemail: ${defaultfromemail}
+  host: ${host}
+  port: ${port}
+  database: ${database}
+  user: ${user}
+  password: ${password}
+  REDIS_URL: ${REDIS_URL}
+  SECRET_KEY: ${SECRET_KEY}
+  ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+  DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
+
+# Base réutilisable image
+x-image: &image
+  image: ${REGISTRY:-machorale.lonem.ca:5000}/${IMAGE_NAME:-hermann002/machorale}:${TAG:-latest}
+
+services:
+  web:
+    <<: *image
+    container_name: ma_chorale_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment: *app-env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    stop_grace_period: 30s
+
+  celery:
+    <<: *image
+    container_name: celery_worker
+    restart: unless-stopped
+    command: ["celery", "-A", "ma_chorale", "worker", "--loglevel=info"]
+    depends_on:
+      web:
+        condition: service_healthy
+    environment: *app-env
+    networks:
+      - app-network
+
+  flower:
+    <<: *image
+    container_name: flower_monitor
+    restart: unless-stopped
+    command: ["celery", "-A", "ma_chorale", "flower", "--port=5555"]
+    # Plus de port exposé publiquement — accès via reverse proxy au module 6
+    expose:
+      - "5555"
+    depends_on:
+      celery:
+        condition: service_started
+    environment: *app-env
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+    external: true

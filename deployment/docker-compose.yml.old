@@ -1,0 +1,58 @@
+services:
+  web:
+    image: ${REGISTRY:-machorale.lonem.ca:5000}/${IMAGE_NAME:-hermann002/machorale}:${TAG:-latest}
+    container_name: ma_chorale_web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # Port interne, jamais exposé publiquement
+    environment:
+      - ENV_FILE=.env
+    volumes:
+      - ./data:/app/data  # Données persistantes (uploads, DB SQLite, etc.)
+      - ./logs:/app/logs  # Logs applicatifs
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    stop_grace_period: 30s  # Temps pour terminer les requêtes en cours
+
+  celery:
+    image: ${REGISTRY:-machorale.lonem.ca:5000}/${IMAGE_NAME:-hermann002/machorale}:${TAG:-latest}
+    container_name: celery_worker
+    command: ["celery", "-A", "ma_chorale", "worker", "--loglevel=info"]
+    depends_on:
+      - web
+    environment:
+      - ENV_FILE=.env
+    networks:
+      - app-network
+
+  flower:
+    image: ${REGISTRY:-machorale.lonem.ca:5000}/${IMAGE_NAME:-hermann002/machorale}:${TAG:-latest}
+    container_name: flower_monitor
+    command: ["celery", "-A", "ma_chorale", "flower"]
+    ports:
+      - "5555:5555"
+    depends_on:
+      - celery
+    environment:
+      - ENV_FILE=.env
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+    external: true
