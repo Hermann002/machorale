@@ -102,16 +102,14 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Rsync deployment/ to VPS
+      - name: Push deployment/ via scp
         run: |
-          rsync -avz --delete \
-            -e "ssh -T -o LogLevel=ERROR" \
-            --exclude='.env' \
-            --exclude='*.old' \
-            --exclude='data/' \
-            --exclude='logs/' \
-            --exclude='.deploy_previous_image' \
-            ./deployment/ \
+          ssh -T -o LogLevel=ERROR ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+            "mkdir -p /srv/ma_chorale/deployment"
+          scp -O -o LogLevel=ERROR \
+            ./deployment/compose.yml \
+            ./deployment/compose.prod.yml \
+            ./deployment/deploy.sh \
             ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/srv/ma_chorale/deployment/
 
       - name: Run deploy.sh on VPS
