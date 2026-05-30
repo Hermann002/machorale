@@ -1,6 +1,8 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from .services import chorale_group, user_group
+
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     """
@@ -17,10 +19,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             slug = session.get('active_chorale_slug')
 
         user_id = getattr(user, 'id', None) or 'anon'
-        self.group_name = f"user_{user_id}"
+        self.group_name = user_group(user_id)
         self.groups = [self.group_name]
         if slug:
-            self.groups.append(f"chorale_{slug}")
+            self.groups.append(chorale_group(slug))
 
         print(f"[WS] connect — user={user} groups={self.groups}")
 
