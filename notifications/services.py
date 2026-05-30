@@ -4,10 +4,34 @@ API sync pour persister + pousser des notifications WebSocket.
 Pattern : DB d'abord (source de vérité), WS ensuite (push temps réel).
 Si Channels indisponible, la notif reste en base et sera vue au prochain reload.
 """
+import hashlib
+
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
 from .models import Notification
+
+
+# Channels limite les noms de group à 100 chars ASCII alphanum/_/-/.
+# Au-delà, on hash le suffixe pour rester valide tout en restant déterministe.
+_GROUP_MAX_LEN = 100
+
+
+def _safe_group(prefix: str, suffix: str) -> str:
+    """Construit un nom de group < 100 chars. Hash si suffixe trop long."""
+    candidate = f"{prefix}_{suffix}"
+    if len(candidate) <= _GROUP_MAX_LEN:
+        return candidate
+    digest = hashlib.sha1(str(suffix).encode()).hexdigest()[:32]
+    return f"{prefix}_{digest}"
+
+
+def chorale_group(slug: str) -> str:
+    return _safe_group("chorale", slug)
+
+
+def user_group(user_id) -> str:
+    return _safe_group("user", str(user_id))
 
 
 def _serialize(notif: Notification) -> dict:
@@ -48,7 +72,7 @@ def notify_user(user, payload: dict, *, chorale=None, kind: str = "generic") -> 
         body=payload.get("body", ""),
         payload=payload,
     )
-    _push(f"user_{user_id}", "notify.message", _serialize(notif))
+    _push(user_group(user_id), "notify.message", _serialize(notif))
     return notif
 
 
@@ -80,7 +104,7 @@ def notify_chorale(chorale, payload: dict, *, kind: str = "generic"):
     # bulk_create avec PostgreSQL renseigne les id (>= Django 4).
     if notifs:
         _push(
-            f"chorale_{chorale.slug}",
+            chorale_group(chorale.slug),
             "chorale.announcement",
             _serialize(notifs[0]),
         )
