@@ -165,12 +165,12 @@ jobs:
       - name: Push deployment/ via scp
         run: |
           ssh -T -o LogLevel=ERROR ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "mkdir -p /srv/ma_chorale/deployment"
+            "mkdir -p /home/hermann/ma_chorale"
           scp -O -o LogLevel=ERROR \
             ./deployment/compose.yml \
             ./deployment/compose.prod.yml \
             ./deployment/deploy.sh \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/srv/ma_chorale/deployment/
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/hermann/ma_chorale/
 
       - name: Run deploy.sh on VPS
         uses: appleboy/ssh-action@v1.0.0
@@ -181,7 +181,7 @@ jobs:
           port: 22
           envs: TAG
           script: |
-            cd /srv/ma_chorale/deployment
+            cd /home/hermann/ma_chorale
             TAG="$TAG" bash deploy.sh
         env:
           TAG: ${{ github.ref_name }}

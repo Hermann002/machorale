@@ -1,11 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 
-# Lancé par le workflow GHA depuis /srv/ma_chorale/deployment/
-# Le rsync a déjà placé compose.yml, compose.prod.yml ici
-# .env existe (créé manuellement, jamais écrasé par rsync)
+# Lancé par le workflow GHA depuis /home/hermann/ma_chorale/
+# Le scp a déjà placé compose.yml, compose.prod.yml ici
+# .env existe (créé manuellement, jamais écrasé par scp)
 
 COMPOSE_FILES="-f compose.yml -f compose.prod.yml"
+
+# TAG est fourni par le workflow (github.ref_name). On REFUSE de deployer
+# sans tag explicite : sinon compose retombe sur ':latest' (reconstruit
+# uniquement sur main) et redeploie une vieille image en silence.
+: "${TAG:?TAG non defini — refus de deployer (eviterait de tirer ':latest' perime)}"
+export TAG
+echo "[0/6] Image ciblee : tag '$TAG'"
 
 echo "[1/6] Detection de l'image en prod..."
 CURRENT_IMAGE=$(docker inspect --format='{{.Config.Image}}' ma_chorale_web 2>/dev/null || echo "")
