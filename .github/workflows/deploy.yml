@@ -147,6 +147,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: push
     if: success()
+    # Serialize deploys: only one runs at a time on the VPS.
+    # Queue (do not cancel) so an in-progress prod recreate is never killed mid-way.
+    concurrency:
+      group: deploy-vps
+      cancel-in-progress: false
 
     steps:
       - name: Checkout repository
