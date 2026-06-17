@@ -302,7 +302,7 @@ class EventListView(ChoraleRequireMixin, TemplateView):
         first_weekday, days_in_month = calendar.monthrange(year, month)
         weeks = []
         week = []
-        for _ in range(first_weekday):
+        for _i in range(first_weekday):
             week.append(None)
 
         for day in range(1, days_in_month + 1):

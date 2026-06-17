@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render
 from .forms import UserRegisterForm, UserLoginForm, SetNewPasswordForm, ResetPasswordRequestForm, ProfileForm
 from django.http import HttpResponseRedirect
@@ -23,6 +24,8 @@ from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit.exceptions import Ratelimited
 
+logger = logging.getLogger(__name__)
+
 @method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True), name='dispatch') #TODO définir un template 
 class RegisterView(TemplateView):
     template_name = "landing/pages/register.html"
@@ -40,11 +43,12 @@ class RegisterView(TemplateView):
             otp_record, created = OtpCode.objects.get_or_create(user=user)
             code = otp_record.generate_new_code()
             try:
-                print("Attempting to send OTP email to {}".format(user.email))
                 send_code_to_user(email=user.email, code=code)
-            except Exception as e:
-                print(f"Error sending email: {e}")
-                raise(e)
+            except Exception:
+                # Un échec d'envoi (SMTP/broker indisponible) ne doit pas casser
+                # l'inscription : le compte est créé, l'utilisateur peut redemander
+                # un code depuis la page de vérification.
+                logger.exception("Échec d'envoi du code OTP à %s", user.email)
             cache.set(f"user_id", user.id)
             messages.success(request, _("Account created successfully! Please verify your email."))
             return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user.id}))
