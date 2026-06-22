@@ -17,3 +17,6 @@ channels==4.3.2
 uvicorn==0.47.0
 daphne==4.2.1
 channels-redis==4.3.0
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.4.0
+django-cors-headers==4.7.0

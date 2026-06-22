@@ -58,6 +58,8 @@ def set_language(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/setlang/', set_language, name='set_language'),
+    # API is locale-agnostic JSON: keep it OUT of i18n_patterns (no /fr//en/ prefix).
+    path('api/', include('api.urls')),
 ]
 
 urlpatterns += i18n_patterns(

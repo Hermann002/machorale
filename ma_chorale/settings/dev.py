@@ -2,6 +2,10 @@ from .base import *
 
 DEBUG = True
 
+# Dev only: accept any Host (localhost, 127.0.0.1, WSL IP, LAN IP for the mobile
+# app). Never used in prod — prod.py keeps the strict ALLOWED_HOSTS from .env.
+ALLOWED_HOSTS = ['*']
+
 WHITENOISE_AUTOREFRESH = DEBUG
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

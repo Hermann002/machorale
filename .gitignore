@@ -13,3 +13,4 @@ TESTS_MANUELS.md
 test_results.sqlite3
 test_reports/
 .claude/*
+FUTURE.md
