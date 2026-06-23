@@ -44,10 +44,14 @@ INSTALLED_APPS = [
     'notifications',
     'landing',
     'formtools',
+    'rest_framework',
+    'corsheaders',
+    'api',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -201,3 +205,48 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+# ---------------------------------------------------------------------------
+# REST API (Django REST Framework + SimpleJWT + CORS)
+# ---------------------------------------------------------------------------
+from datetime import timedelta  # noqa: E402
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'api.v1.pagination.DefaultPagination',
+    'PAGE_SIZE': 20,
+    'EXCEPTION_HANDLER': 'api.v1.exceptions.api_exception_handler',
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/min',
+        'user': '120/min',
+    },
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
+    'ROTATE_REFRESH_TOKENS': True,
+    'UPDATE_LAST_LOGIN': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# CORS — comma-separated origins in .env (CORS_ALLOWED_ORIGINS). Defaults to the
+# local dev origins. The mobile app (native) does not need CORS; this is for
+# browser-based clients only.
+CORS_ALLOWED_ORIGINS = [
+    o.strip()
+    for o in config(
+        'CORS_ALLOWED_ORIGINS',
+        default='http://localhost:8000,http://127.0.0.1:8000,http://localhost:19006',
+    ).split(',')
+    if o.strip()
+]
+CORS_URLS_REGEX = r'^/api/.*$'
