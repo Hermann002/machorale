@@ -1,4 +1,5 @@
 """Sprint 2 — chorale context & dashboard."""
+from drf_spectacular.utils import extend_schema
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -10,6 +11,7 @@ from .permissions import IsChoraleMember
 from .serializers import ChoraleSerializer, DashboardStatsSerializer
 
 
+@extend_schema(summary="Chorales of the current user", tags=["chorales"])
 class ChoraleListView(ListAPIView):
     """GET ``/chorales/`` — the chorales the authenticated user belongs to, each
     carrying *that user's* role/is_admin. Driven off ``Membership`` (the source
@@ -39,6 +41,11 @@ class DashboardView(APIView):
 
     permission_classes = [IsChoraleMember]
 
+    @extend_schema(
+        summary="Dashboard statistics of a chorale",
+        responses=DashboardStatsSerializer,
+        tags=["chorales"],
+    )
     def get(self, request, slug):
         stats = get_dashboard_stats(request.chorale.id)
         return Response(DashboardStatsSerializer(stats).data)

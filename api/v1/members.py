@@ -5,6 +5,7 @@ to its ``CustomUser`` + ``Profile``. Reads are open to any member; create / edit
 / remove are gated to secretary or admin (``IsSecretaryOrAdminOrReadOnly``).
 """
 from django.db.models import Q
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
@@ -34,9 +35,37 @@ class _MembersBase:
         return context
 
 
+@extend_schema(tags=["members"])
 class MemberListCreateView(_MembersBase, ListCreateAPIView):
     """GET ``/chorales/<slug>/members/`` — paginated, ``?search=`` by name/email,
     ``?role=`` filter. POST creates/invites a member (secretary/admin)."""
+
+    @extend_schema(
+        summary="List the members of a chorale",
+        parameters=[
+            OpenApiParameter(
+                "search",
+                str,
+                description="Filter by first/last name, username or email.",
+            ),
+            OpenApiParameter(
+                "role",
+                str,
+                description="Filter by role (member, secretary, treasurer, censor).",
+            ),
+        ],
+        responses=MemberSerializer(many=True),
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(
+        summary="Add a member to the chorale (secretary/admin)",
+        request=MemberCreateSerializer,
+        responses={201: MemberSerializer},
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
     def get_queryset(self):
         qs = (
@@ -82,6 +111,16 @@ class MemberListCreateView(_MembersBase, ListCreateAPIView):
         )
 
 
+@extend_schema(
+    tags=["members"],
+    summary="Retrieve / edit / remove a member",
+)
+@extend_schema(
+    methods=["PATCH"],
+    summary="Edit a member (secretary/admin; role elevation admin-only)",
+    request=MemberUpdateSerializer,
+    responses=MemberSerializer,
+)
 class MemberDetailView(_MembersBase, RetrieveUpdateDestroyAPIView):
     """GET/PATCH/DELETE ``/chorales/<slug>/members/<id>/`` (``id`` = membership
     id). PATCH edits role/name/contact (secretary/admin; role elevation

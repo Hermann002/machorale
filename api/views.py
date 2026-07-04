@@ -1,8 +1,10 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
 
 
+@extend_schema(exclude=True)
 @api_view(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"])
 @permission_classes([AllowAny])
 def api_not_found(request):

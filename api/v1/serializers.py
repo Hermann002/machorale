@@ -4,6 +4,7 @@ Serializers expose existing models — no business rules live here. Money fields
 are always ``DecimalField`` (never float). JSON keys are ``snake_case``.
 """
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from manage_chorale.models import Chorale, Membership
@@ -53,6 +54,7 @@ class UserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    @extend_schema_field(ProfileSerializer(allow_null=True))
     def get_profile(self, obj):
         profile = Profile.objects.filter(user=obj).first()
         if profile is None:
@@ -89,10 +91,12 @@ class ChoraleSerializer(serializers.ModelSerializer):
             return membership
         return self.context.get("membership")
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_role(self, obj):
         membership = self._membership(obj)
         return membership.role if membership else None
 
+    @extend_schema_field(serializers.BooleanField())
     def get_is_admin(self, obj):
         membership = self._membership(obj)
         return membership.is_admin if membership else False

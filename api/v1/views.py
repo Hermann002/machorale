@@ -1,4 +1,5 @@
 from django.utils.translation import gettext_lazy as _
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
@@ -12,6 +13,12 @@ from manage_users.models import CustomUser, OtpCode
 from manage_users.utils import send_code_to_user
 
 from . import ratelimit
+from .schema import (
+    DetailResponseSerializer,
+    ErrorResponseSerializer,
+    PingResponseSerializer,
+    TokenPairResponseSerializer,
+)
 from .serializers import (
     OtpRequestSerializer,
     OtpVerifySerializer,
@@ -19,6 +26,12 @@ from .serializers import (
 )
 
 
+@extend_schema(
+    summary="Liveness probe",
+    responses=PingResponseSerializer,
+    auth=[],
+    tags=["health"],
+)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def ping(request):
@@ -42,6 +55,13 @@ class OtpRequestView(APIView):
 
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        summary="Request an OTP login code by email",
+        request=OtpRequestSerializer,
+        responses={200: DetailResponseSerializer},
+        auth=[],
+        tags=["auth"],
+    )
     def post(self, request):
         ratelimit.enforce(
             request, group="api_otp_request", key=ratelimit.email_key, rate="5/m"
@@ -72,6 +92,16 @@ class OtpVerifyView(APIView):
 
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        summary="Verify the OTP code and obtain a JWT pair",
+        request=OtpVerifySerializer,
+        responses={
+            200: TokenPairResponseSerializer,
+            400: ErrorResponseSerializer,
+        },
+        auth=[],
+        tags=["auth"],
+    )
     def post(self, request):
         ratelimit.enforce(
             request, group="api_otp_verify", key=ratelimit.email_key, rate="5/m"
@@ -103,6 +133,7 @@ class OtpVerifyView(APIView):
         )
 
 
+@extend_schema(summary="Refresh the access token", tags=["auth"])
 class RefreshView(TokenRefreshView):
     """POST ``/auth/refresh/`` — body ``{refresh}`` → new ``{access}`` (and a
     rotated ``refresh`` since ``ROTATE_REFRESH_TOKENS`` is on). Public: the
@@ -116,5 +147,10 @@ class MeView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        summary="Current authenticated user",
+        responses=UserSerializer,
+        tags=["auth"],
+    )
     def get(self, request):
         return Response(UserSerializer(request.user).data)

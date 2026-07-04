@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'landing',
     'formtools',
     'rest_framework',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
     'corsheaders',
     'api',
 ]
@@ -227,6 +229,33 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '60/min',
         'user': '120/min',
+    },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# OpenAPI schema + Swagger UI (drf-spectacular). Docs served at /api/docs/,
+# raw schema at /api/schema/. SIDECAR = UI assets served from our own static
+# files (WhiteNoise), no CDN dependency.
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Ma Chorale API',
+    'DESCRIPTION': (
+        'REST API for the Ma Chorale application (choral group management: '
+        'members, dashboard, contributions, events). Authentication is '
+        'JWT (Bearer) obtained through the OTP-email flow '
+        '(`/api/v1/auth/otp/request/` then `/api/v1/auth/otp/verify/`).'
+    ),
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+    # Strip the /api/v1 prefix when grouping/naming operations.
+    'SCHEMA_PATH_PREFIX': r'/api/v1',
+    'COMPONENT_SPLIT_REQUEST': True,
+    # Two 'role' choice sets exist: the full Membership.ROLE_CHOICES and the
+    # API-assignable subset (no 'admin'). Name the subset explicitly.
+    'ENUM_NAME_OVERRIDES': {
+        'AssignableRoleEnum': 'api.v1.serializers.ASSIGNABLE_ROLES',
     },
 }
 
