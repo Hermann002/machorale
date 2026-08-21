@@ -72,7 +72,7 @@ class OtpRequestView(APIView):
 
         user = CustomUser.objects.filter(email=email).first()
         if user is not None:
-            otp_record, _created = OtpCode.objects.get_or_create(user=user)
+            otp_record = OtpCode.latest_for_user(user)
             code = otp_record.generate_new_code()
             send_code_to_user(email=user.email, code=code)
 

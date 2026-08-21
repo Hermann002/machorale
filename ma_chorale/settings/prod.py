@@ -41,7 +41,8 @@ WHITENOISE_AUTOREFRESH = DEBUG
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('emailhost')
 EMAIL_PORT = config('emailport')
-EMAIL_USE_TLS = config('emailusetls', default=True)
+# Key matches the compose env var (emailuse_tls); cast: decouple returns str.
+EMAIL_USE_TLS = config('emailuse_tls', default=True, cast=bool)
 EMAIL_HOST_USER = config('emailuser')
 EMAIL_HOST_PASSWORD = config('emailpassword')
 DEFAULT_FROM_EMAIL = config('defaultfromemail')

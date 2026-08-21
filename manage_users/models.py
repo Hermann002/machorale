@@ -104,11 +104,25 @@ class OtpCode(models.Model):
     expired_at = models.DateTimeField(blank=True, null=True)
     used = models.BooleanField(default=False)
 
+    @classmethod
+    def latest_for_user(cls, user):
+        """The user's most recent OTP row, or a fresh one if none exists.
+
+        Historically the resend flow created a new row per resend, so a user
+        may have several — ``get_or_create(user=...)`` would raise
+        ``MultipleObjectsReturned``. Always go through this instead.
+        """
+        otp = cls.objects.filter(user=user).order_by("-created_at", "-pk").first()
+        return otp if otp is not None else cls.objects.create(user=user)
+
     def generate_new_code(self):
         new_code = ""
         for _i in range(5):
             new_code += str(random.randint(1, 9))
         self.otp_code = new_code
+        # Reset the single-use flag: a row that already served a successful
+        # verification must accept the new code it now carries.
+        self.used = False
         self.created_at = timezone.now()
         self.expired_at = timezone.now() + timezone.timedelta(minutes=10)
         self.save()

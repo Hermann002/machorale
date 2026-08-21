@@ -55,6 +55,35 @@ def test_otp_request_email_case_insensitive(api_client, user):
     assert OtpCode.objects.filter(user=user).exists()
 
 
+def test_otp_request_with_multiple_otp_rows_no_500(api_client, user):
+    """Legacy state: the old web resend piled up one OtpCode row per resend.
+    The request endpoint must reuse the latest row, not crash."""
+    OtpCode.objects.create(user=user)
+    OtpCode.objects.create(user=user)
+    url = reverse("api:v1:otp_request")
+    resp = api_client.post(url, {"email": user.email}, format="json")
+    assert resp.status_code == 200
+    assert len(mail.outbox) == 1
+    assert OtpCode.objects.filter(user=user).count() == 2  # no new row either
+
+
+def test_otp_full_cycle_twice(api_client, user):
+    """Second login after a successful first one: the reused row must accept
+    the regenerated code (used flag reset)."""
+    request_url = reverse("api:v1:otp_request")
+    verify_url = reverse("api:v1:otp_verify")
+
+    for _round in range(2):
+        api_client.post(request_url, {"email": user.email}, format="json")
+        code = OtpCode.latest_for_user(user).otp_code
+        resp = api_client.post(
+            verify_url, {"email": user.email, "code": code}, format="json"
+        )
+        assert resp.status_code == 200
+        assert "access" in resp.json()
+        cache.clear()  # reset the per-email rate limit between rounds
+
+
 def test_otp_request_invalid_email_400(api_client, db):
     url = reverse("api:v1:otp_request")
     resp = api_client.post(url, {"email": "not-an-email"}, format="json")

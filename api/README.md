@@ -188,6 +188,114 @@ always bypasses).
 - DELETE logs `person_remove`. The **admin membership can't be removed** (403),
   nor can you remove **yourself** (400).
 
+### Sprint 4 — events
+| Method | Path                                      | Auth            | Description |
+|--------|-------------------------------------------|-----------------|-------------|
+| GET    | `/api/v1/chorales/<slug>/events/`         | member          | Paginated, ordered by date. `?month=YYYY-MM` **or** `?start=&end=` (YYYY-MM-DD, inclusive, each side optional), `?type=`. |
+| POST   | `/api/v1/chorales/<slug>/events/`         | secretary/admin | Create. Body: `{title, location, date, event_type?, description?, expenses?, income?}`. |
+| GET    | `/api/v1/chorales/<slug>/events/<id>/`    | member          | Event detail. |
+| PATCH  | `/api/v1/chorales/<slug>/events/<id>/`    | secretary/admin | Partial edit. |
+| DELETE | `/api/v1/chorales/<slug>/events/<id>/`    | secretary/admin | Delete (hard, like the web). |
+
+- `event_type` ∈ `practice|meeting|concert|assistance|other` (default `practice`).
+- **Date rule** (mirrors the web form): `date` can't be in the past — except a
+  PATCH that keeps the event's existing past date unchanged, so finances
+  (`expenses`/`income`) can be filled in after the event.
+- `expenses`/`income` are optional Decimals ≥ 0. `report_file` is **read-only**
+  for now — file upload lands with the meeting-reports sprint (multipart).
+- Bad filter values (`start`/`end`/`month`/`type`) → 400 with the error envelope.
+- Create/edit/delete are logged to the activity trail (same as the web views).
+
+**Event shape**
+```json
+{ "id": 7, "title": "Répétition générale", "description": "",
+  "location": "Paroisse", "date": "2026-07-10T18:00:00Z",
+  "event_type": "practice", "expenses": null, "income": null,
+  "report_file": null, "is_upcoming": true,
+  "created_at": "...", "updated_at": "..." }
+```
+
+### Sprint 5 — attendance
+| Method | Path                                              | Auth         | Description |
+|--------|---------------------------------------------------|--------------|-------------|
+| GET    | `/api/v1/chorales/<slug>/events/<id>/attendance/` | member       | Full attendance sheet: every membership with `present` + absence details. |
+| PUT    | `/api/v1/chorales/<slug>/events/<id>/attendance/` | censor/admin | Bulk **replace** the event's absentees. Returns the refreshed sheet. |
+| GET    | `/api/v1/chorales/<slug>/members/<id>/absences/`  | member       | Paginated absence history (newest event first) + `stats`. |
+
+- Attendance only exists for **tracked** event types (`practice`, `meeting`) —
+  other types → 400.
+- `Absence` is sparse (only absentees stored); the sheet derives `present` for
+  everyone else.
+- **PUT is an idempotent replace** (same semantics as the web bulk form): the
+  body is the *full* list of absentees; previous absences for the event are
+  wiped and recreated; `{"absences": []}` clears everything. Unlike the web
+  form, `reason` / `is_justified` are **per member**.
+- `member_id` in the PUT body = **membership id** (same addressing as the
+  members API). Unknown/foreign/duplicate members → 400, nothing persisted.
+- Writes invalidate the dashboard cache and log to the activity trail.
+
+**PUT body / sheet entry**
+```json
+// PUT body
+{ "absences": [
+    { "member_id": 4, "reason": "Maladie", "is_justified": true },
+    { "member_id": 9 } ] }
+// sheet entry (GET response = array of these)
+{ "membership_id": 4, "user_id": 12, "first_name": "Alice",
+  "last_name": "Mbarga", "username": "alice", "present": false,
+  "absence": { "id": 31, "reason": "Maladie", "is_justified": true } }
+```
+
+**Member history** — standard pagination envelope plus `stats`:
+```json
+{ "count": 3, "next": null, "previous": null,
+  "stats": { "total": 3, "justified": 1, "unjustified": 2 },
+  "results": [ { "id": 31, "event": { "id": 7, "title": "Répétition",
+                 "date": "...", "event_type": "practice" },
+                 "reason": "Maladie", "is_justified": true,
+                 "recorded_at": "..." } ] }
+```
+
+### Sprint 6 — contributions & finances
+| Method | Path                                                | Auth            | Description |
+|--------|-----------------------------------------------------|-----------------|-------------|
+| GET    | `/api/v1/chorales/<slug>/contributions/`            | member          | Catalogue (paginated, newest first), `?is_active=true|false`, each with `total_collected`. |
+| POST   | `/api/v1/chorales/<slug>/contributions/`            | treasurer/admin | Create a type. `{title, amount, target_amount?, description?, is_active?}`. |
+| GET    | `/api/v1/chorales/<slug>/contributions/<id>/`       | member          | Detail. |
+| PATCH  | `/api/v1/chorales/<slug>/contributions/<id>/`       | treasurer/admin | Edit. |
+| DELETE | `/api/v1/chorales/<slug>/contributions/<id>/`       | treasurer/admin | Delete (cascades to payments — prefer `is_active=false`). |
+| GET    | `/api/v1/chorales/<slug>/contributions/<id>/payments/` | member       | Payments of the type, `?member=<membership id>`. |
+| POST   | `/api/v1/chorales/<slug>/contributions/<id>/payments/` | treasurer/admin | Record a payment. `{member_id, amount?, paid_at?, note?}`. |
+| GET    | `/api/v1/chorales/<slug>/cashflows/`                | member          | Paginated + `totals`; `?type=entree|sortie`, `?start=&end=`. |
+| POST   | `/api/v1/chorales/<slug>/cashflows/`                | treasurer/admin | Create. `{title, type_cash_flow, amount, date?, description?}`. |
+| GET    | `/api/v1/chorales/<slug>/cashflows/<id>/`           | member          | Detail. |
+| PATCH  | `/api/v1/chorales/<slug>/cashflows/<id>/`           | treasurer/admin | Edit. **No DELETE** (web has none — use a counter-entry). |
+
+- All money is Decimal-as-string, 2 decimals, XAF. Amounts must be **> 0**.
+- **Payments are immutable** (no PATCH/DELETE): corrections are new rows —
+  matches the domain rule on `MemberContribution`.
+- Recording a payment goes through `ContributionService.record_payment`:
+  member-of-chorale validation, `amount` defaults to the type's expected
+  amount, activity log (`payment`, flagged important), dashboard-cache
+  invalidation, chorale notification.
+- `member_id` = **membership id** everywhere (same addressing as members API).
+- `title` unique per chorale → 400 on duplicate (scoped, checked pre-insert).
+- Cash flow `totals` = `{in, out, balance}` computed over the **whole filtered
+  set**, not just the page. Every finance write invalidates the dashboard
+  cache and logs to the activity trail.
+
+**Cash flow list envelope**
+```json
+{ "count": 3, "next": null, "previous": null,
+  "totals": { "in": "1500.25", "out": "300.05", "balance": "1200.20" },
+  "results": [ { "id": 5, "title": "Location salle",
+                 "type_cash_flow": "sortie", "amount": "300.05",
+                 "date": "2026-07-03", "description": "",
+                 "created_by": { "id": 2, "username": "tresorier",
+                                 "first_name": "", "last_name": "" },
+                 "created_at": "...", "updated_at": "..." } ] }
+```
+
 _(later sprints append here as endpoints land)_
 
 ## Changelog
@@ -205,3 +313,14 @@ _(later sprints append here as endpoints land)_
   role elevation admin-only; `person_add` / `person_remove` activity logged.
 - **Docs** — OpenAPI 3 schema + Swagger UI (drf-spectacular, sidecar assets)
   at `/api/docs/` and `/api/schema/`; all v1 endpoints annotated.
+- **Sprint 4** — Events CRUD under `chorales/<slug>/events/`: list with
+  month/range/type filters, detail, create/edit/delete (secretary/admin).
+  Past-date rule mirrors the web form; activity-logged.
+- **Sprint 5** — Attendance: sheet + idempotent bulk PUT on
+  `events/<id>/attendance/` (censor/admin, per-member reason/justified),
+  member history + stats on `members/<id>/absences/`. Dashboard cache
+  invalidated on write.
+- **Sprint 6** — Finances: contribution catalogue CRUD, immutable payments
+  through `ContributionService`, cash flow list/create/edit with running
+  `totals`. Treasurer/admin writes, Decimal-only money, dashboard cache
+  invalidated on every write.

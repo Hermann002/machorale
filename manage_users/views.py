@@ -40,7 +40,7 @@ class RegisterView(TemplateView):
             user = form.save(commit=False) 
             user.set_password(form.cleaned_data["password"])
             user.save()
-            otp_record, created = OtpCode.objects.get_or_create(user=user)
+            otp_record = OtpCode.latest_for_user(user)
             code = otp_record.generate_new_code()
             try:
                 send_code_to_user(email=user.email, code=code)
@@ -99,11 +99,20 @@ class VerifyEmailView(TemplateView):
     def post(self, request, user_id=None, *args, **kwargs):
         code = request.POST.get("otp_code")
         try:
-            otp_record = OtpCode.objects.get(otp_code=code)
+            # Scoped to the user being verified: a bare get(otp_code=...) can
+            # match another user's row or raise MultipleObjectsReturned on a
+            # 5-digit collision.
+            otp_record = (
+                OtpCode.objects.filter(user_id=user_id, otp_code=code)
+                .order_by("-created_at", "-pk")
+                .first()
+            )
+            if otp_record is None:
+                raise OtpCode.DoesNotExist
             user = otp_record.user
             if otp_record.otp_expired() or otp_record.used:
                 messages.error(request, _("OTP code has expired. Please request a new code."))
-                return render(request, self.template_name)
+                return render(request, self.template_name, {"user_id": user_id})
 
             if not user.is_verify:
                 user.is_verify = True
@@ -117,9 +126,8 @@ class VerifyEmailView(TemplateView):
                 messages.info(request, _("Email is already verified. Please log in."))
                 return HttpResponseRedirect(reverse("login"))
         except OtpCode.DoesNotExist:
-            print("No OTP record found for code:", code)
             messages.error(request, _("No OTP record found. Please request a new code."))
-            return render(request, self.template_name)
+            return render(request, self.template_name, {"user_id": user_id})
         except Ratelimited:
             messages.error(request, _("Rate limit reached, please wait 1 minute and retry."))
 
@@ -181,10 +189,9 @@ def resend_otp_views(request, user_id):
     try:
         user = CustomUser.objects.get(id=user_id)
         user_email = user.email
-        otp = OtpCode.objects.filter(user=user).last()
-        if otp and not otp.otp_expired():
-            otp.used = True
-        otp_record = OtpCode.objects.create(user=user)
+        # Reuse the latest row: generate_new_code overwrites the previous code
+        # (invalidating it) instead of piling up one row per resend.
+        otp_record = OtpCode.latest_for_user(user)
         code = otp_record.generate_new_code()
         send_code_to_user(email=user_email, code=code)
         messages.success(request, _("OTP code resent successfully! Please check your email."))

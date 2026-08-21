@@ -34,6 +34,15 @@ def test_openapi_schema_is_served(client):
         "/api/v1/chorales/{slug}/dashboard/",
         "/api/v1/chorales/{slug}/members/",
         "/api/v1/chorales/{slug}/members/{id}/",
+        "/api/v1/chorales/{slug}/events/",
+        "/api/v1/chorales/{slug}/events/{id}/",
+        "/api/v1/chorales/{slug}/events/{id}/attendance/",
+        "/api/v1/chorales/{slug}/members/{id}/absences/",
+        "/api/v1/chorales/{slug}/contributions/",
+        "/api/v1/chorales/{slug}/contributions/{id}/",
+        "/api/v1/chorales/{slug}/contributions/{id}/payments/",
+        "/api/v1/chorales/{slug}/cashflows/",
+        "/api/v1/chorales/{slug}/cashflows/{id}/",
     ):
         assert path in content, f"{path} missing from schema"
 
