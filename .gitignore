@@ -8,7 +8,8 @@ CLAUDE.md
 cahier_des_charges.pdf
 status.md
 TESTS_MANUELS.md
-
+test_smtp.py
+test-email.json
 # Test runner
 test_results.sqlite3
 test_reports/
