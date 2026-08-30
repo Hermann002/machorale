@@ -1,6 +1,12 @@
 import logging
 from django.shortcuts import render
-from .forms import UserRegisterForm, UserLoginForm, SetNewPasswordForm, ResetPasswordRequestForm, ProfileForm
+from .forms import (
+    UserRegisterForm,
+    UserLoginForm,
+    SetNewPasswordForm,
+    ResetPasswordRequestForm,
+    ProfileForm,
+)
 from django.http import HttpResponseRedirect
 from django.views.generic import TemplateView
 from django.contrib.auth import login, logout
@@ -9,7 +15,11 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
-from .utils import send_code_to_user, send_password_reset_link, resolve_post_login_redirect
+from .utils import (
+    send_code_to_user,
+    send_password_reset_link,
+    resolve_post_login_redirect,
+)
 from manage_users.models import OtpCode, CustomUser
 from django.views.generic.edit import UpdateView
 from django.core.exceptions import ObjectDoesNotExist
@@ -26,7 +36,10 @@ from django_ratelimit.exceptions import Ratelimited
 
 logger = logging.getLogger(__name__)
 
-@method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True), name='dispatch') #TODO définir un template 
+
+@method_decorator(
+    ratelimit(key="ip", rate="10/m", method="POST", block=True), name="dispatch"
+)  # TODO définir un template
 class RegisterView(TemplateView):
     template_name = "landing/pages/register.html"
 
@@ -37,7 +50,7 @@ class RegisterView(TemplateView):
     def post(self, request, *args, **kwargs):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False) 
+            user = form.save(commit=False)
             user.set_password(form.cleaned_data["password"])
             user.save()
             otp_record = OtpCode.latest_for_user(user)
@@ -50,11 +63,18 @@ class RegisterView(TemplateView):
                 # un code depuis la page de vérification.
                 logger.exception("Échec d'envoi du code OTP à %s", user.email)
             cache.set(f"user_id", user.id)
-            messages.success(request, _("Account created successfully! Please verify your email."))
-            return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user.id}))
+            messages.success(
+                request, _("Account created successfully! Please verify your email.")
+            )
+            return HttpResponseRedirect(
+                reverse("verify_email", kwargs={"user_id": user.id})
+            )
         return render(request, self.template_name, {"form": form})
 
-@method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True), name='dispatch')
+
+@method_decorator(
+    ratelimit(key="ip", rate="10/m", method="POST", block=True), name="dispatch"
+)
 class LoginView(TemplateView):
     template_name = "landing/pages/login.html"
 
@@ -62,12 +82,12 @@ class LoginView(TemplateView):
         if request.user.is_authenticated:
             messages.info(
                 request,
-                _("You're already logged in. Please log out first to switch accounts.")
+                _("You're already logged in. Please log out first to switch accounts."),
             )
             return HttpResponseRedirect("/")
         form = UserLoginForm()
         return render(request, self.template_name, {"form": form})
-    
+
     def post(self, request, *args, **kwargs):
         form = UserLoginForm(request.POST)
         if form.is_valid():
@@ -82,7 +102,10 @@ class LoginView(TemplateView):
             messages.error(request, _("Invalid username or password."))
         return render(request, self.template_name, {"form": form})
 
-@method_decorator(ratelimit(key='ip', rate='4/m', method='POST', block=True), name='dispatch')
+
+@method_decorator(
+    ratelimit(key="ip", rate="4/m", method="POST", block=True), name="dispatch"
+)
 class VerifyEmailView(TemplateView):
     template_name = "landing/pages/verify_email.html"
 
@@ -94,7 +117,6 @@ class VerifyEmailView(TemplateView):
         except CustomUser.DoesNotExist:
             messages.error(request, _("User not found! Please register first."))
             return HttpResponseRedirect(reverse("register"))
-
 
     def post(self, request, user_id=None, *args, **kwargs):
         code = request.POST.get("otp_code")
@@ -111,7 +133,9 @@ class VerifyEmailView(TemplateView):
                 raise OtpCode.DoesNotExist
             user = otp_record.user
             if otp_record.otp_expired() or otp_record.used:
-                messages.error(request, _("OTP code has expired. Please request a new code."))
+                messages.error(
+                    request, _("OTP code has expired. Please request a new code.")
+                )
                 return render(request, self.template_name, {"user_id": user_id})
 
             if not user.is_verify:
@@ -126,10 +150,15 @@ class VerifyEmailView(TemplateView):
                 messages.info(request, _("Email is already verified. Please log in."))
                 return HttpResponseRedirect(reverse("login"))
         except OtpCode.DoesNotExist:
-            messages.error(request, _("No OTP record found. Please request a new code."))
+            messages.error(
+                request, _("No OTP record found. Please request a new code.")
+            )
             return render(request, self.template_name, {"user_id": user_id})
         except Ratelimited:
-            messages.error(request, _("Rate limit reached, please wait 1 minute and retry."))
+            messages.error(
+                request, _("Rate limit reached, please wait 1 minute and retry.")
+            )
+
 
 class LogoutView(TemplateView):
     def get(self, request, *args, **kwargs):
@@ -143,17 +172,23 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     """Affichage + édition par l'utilisateur de ses propres infos."""
+
     template_name = "manage_users/profile.html"
 
     def _resolve_slug(self, request):
         """La base.html charge la navbar qui exige `slug` pour {% url 'dashboard' %}.
         On dérive le slug du contexte chorale courant (session > première membership).
         Retourne None si l'utilisateur n'a aucune chorale (navbar gère ce cas)."""
-        slug = request.session.get('active_chorale_slug')
+        slug = request.session.get("active_chorale_slug")
         if slug:
             return slug
         from manage_chorale.models import Membership
-        membership = Membership.objects.filter(user=request.user).select_related('chorale').first()
+
+        membership = (
+            Membership.objects.filter(user=request.user)
+            .select_related("chorale")
+            .first()
+        )
         return membership.chorale.slug if membership else None
 
     def get(self, request, *args, **kwargs):
@@ -162,11 +197,15 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             # Pas de chorale → renvoyer vers création (l'UI dashboard a besoin d'un slug)
             return HttpResponseRedirect(reverse("create_chorale"))
         form = ProfileForm(user=request.user)
-        return render(request, self.template_name, {
-            "form": form,
-            "viewed_user": request.user,
-            "slug": slug,
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "viewed_user": request.user,
+                "slug": slug,
+            },
+        )
 
     def post(self, request, *args, **kwargs):
         slug = self._resolve_slug(request)
@@ -177,15 +216,30 @@ class ProfileView(LoginRequiredMixin, TemplateView):
             form.save()
             messages.success(request, _("Profile updated."))
             return HttpResponseRedirect(reverse("profile"))
-        return render(request, self.template_name, {
-            "form": form,
-            "viewed_user": request.user,
-            "slug": slug,
-        })
-    
+        return render(
+            request,
+            self.template_name,
+            {
+                "form": form,
+                "viewed_user": request.user,
+                "slug": slug,
+            },
+        )
 
-@ratelimit(key='ip', rate='3/m', method='GET', block=True)
+
+@ratelimit(key="ip", rate="3/m", method="GET", block=False)
 def resend_otp_views(request, user_id):
+
+    if getattr(request, "limited", False):
+        messages.error(
+            request,
+            _(
+                "Limite de tentative dépassée. Veuillez patienter quelques minutes, puis reéssayez."
+            ),
+        )
+        return HttpResponseRedirect(
+            reverse("verify_email", kwargs={"user_id": user_id})
+        )
     try:
         user = CustomUser.objects.get(id=user_id)
         user_email = user.email
@@ -194,25 +248,30 @@ def resend_otp_views(request, user_id):
         otp_record = OtpCode.latest_for_user(user)
         code = otp_record.generate_new_code()
         send_code_to_user(email=user_email, code=code)
-        messages.success(request, _("OTP code resent successfully! Please check your email."))
+        messages.success(
+            request, _("OTP code resent successfully! Please check your email.")
+        )
     except CustomUser.DoesNotExist:
         messages.error(request, _("User not found."))
     except Ratelimited:
-        messages.error(request, _("Rate limit exceeded, please wait before trying again."))
+        messages.error(
+            request, _("Rate limit exceeded, please wait before trying again.")
+        )
     return HttpResponseRedirect(reverse("verify_email", kwargs={"user_id": user_id}))
+
 
 class ResetPasswordRequestView(TemplateView):
     template_name = "landing/pages/reset_password_request.html"
     form_class = ResetPasswordRequestForm
 
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key="ip", rate="5/m", method="POST", block=True))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         form = self.form_class()
         return render(request, self.template_name, {"form": form})
-    
+
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
         if form.is_valid():
@@ -222,23 +281,30 @@ class ResetPasswordRequestView(TemplateView):
                 uuidb64 = urlsafe_base64_encode(force_bytes(user.id))
                 token_generator = PasswordResetTokenGenerator()
                 token = token_generator.make_token(user)
-                print(f"Attempting to send password reset email to {email} with uidb64: {uuidb64} and token: {token}")
+                print(
+                    f"Attempting to send password reset email to {email} with uidb64: {uuidb64} and token: {token}"
+                )
                 send_password_reset_link(email, uuidb64, token)
-                messages.success(request, _("Password reset link sent! Please check your email."))
+                messages.success(
+                    request, _("Password reset link sent! Please check your email.")
+                )
                 return HttpResponseRedirect(reverse("reset_password_request"))
             except CustomUser.DoesNotExist:
                 messages.error(request, _("No account found with that email address."))
             except Ratelimited:
-                messages.error(request, _("Rate limit exceeded, please wait before trying again."))
+                messages.error(
+                    request, _("Rate limit exceeded, please wait before trying again.")
+                )
         else:
             messages.error(request, _("Please enter a valid email address."))
         return render(request, self.template_name, {"form": form})
-    
+
+
 class ResetPasswordConfirmView(TemplateView):
     template_name = "landing/pages/reset_password_confirm.html"
     form_class = SetNewPasswordForm
 
-    @method_decorator(ratelimit(key='ip', rate='5/m', method='POST', block=True))
+    @method_decorator(ratelimit(key="ip", rate="5/m", method="POST", block=True))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
@@ -251,7 +317,11 @@ class ResetPasswordConfirmView(TemplateView):
             token_generator = PasswordResetTokenGenerator()
             if token_generator.check_token(user, token):
                 form = self.form_class()
-                return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})
+                return render(
+                    request,
+                    self.template_name,
+                    {"form": form, "uidb64": uidb64, "token": token},
+                )
             messages.error(request, _("Invalid or expired password reset link."))
             return HttpResponseRedirect(reverse("reset_password_request"))
         except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
@@ -278,13 +348,27 @@ class ResetPasswordConfirmView(TemplateView):
             messages.error(request, _("Invalid password reset link."))
             return HttpResponseRedirect(reverse("reset_password_request"))
         except Ratelimited:
-            messages.error(request, _("Rate limit exceeded, please wait before trying again."))
-            return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})
+            messages.error(
+                request, _("Rate limit exceeded, please wait before trying again.")
+            )
+            return render(
+                request,
+                self.template_name,
+                {"form": form, "uidb64": uidb64, "token": token},
+            )
 
         if form.is_valid():
             user.password = make_password(form.cleaned_data.get("new_password"))
             user.save()
-            messages.success(request, _("Your password has been reset successfully! You can now log in."))
+            messages.success(
+                request,
+                _("Your password has been reset successfully! You can now log in."),
+            )
             return HttpResponseRedirect(reverse("login"))
 
-        return render(request, self.template_name, {"form": form, "uidb64": uidb64, "token": token})
+        return render(
+            request,
+            self.template_name,
+            {"form": form, "uidb64": uidb64, "token": token},
+        )
+

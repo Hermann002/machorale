@@ -12,90 +12,100 @@ import re
 def validate_international_phone(value):
     if value:
         # Regex pour format international : + suivi de chiffres (espaces optionnels)
-        if not re.match(r'^\+\d{1,3}[ \d]+$', value):
+        if not re.match(r"^\+\d{1,3}[ \d]+$", value):
             raise ValidationError(
-                _('Le numéro doit être au format international, ex: +237 77 123 45 67')
+                _("Le numéro doit être au format international, ex: +237 77 123 45 67")
             )
-        
+
+
 class Profile(models.Model):
-    user = models.OneToOneField('CustomUser', on_delete=models.CASCADE)
-    _contact = models.CharField(max_length=15, blank=True, null=True, validators=[validate_international_phone])
+    user = models.OneToOneField("CustomUser", on_delete=models.CASCADE)
+    _contact = models.CharField(
+        max_length=15, blank=True, null=True, validators=[validate_international_phone]
+    )
 
     MARITAL_STATUS_CHOICE = (
-        ('single', _('Single')),
-        ('married', _('Married')),
-        ('divorced', _('Divorced')),
-        ('widowed', _('Widowed')),
+        ("single", _("Single")),
+        ("married", _("Married")),
+        ("divorced", _("Divorced")),
+        ("widowed", _("Widowed")),
     )
-    marital_status = models.CharField(max_length=20, choices=MARITAL_STATUS_CHOICE, default='single')
+    marital_status = models.CharField(
+        max_length=20, choices=MARITAL_STATUS_CHOICE, default="single"
+    )
     christened = models.BooleanField(default=False)
     confirmed = models.BooleanField(default=False)
     joined_date = models.DateField(blank=True, null=True)
     dob = models.DateField(blank=True, null=True)
 
     PROFESSION_CHOICES = (
-        ('student', _('Student')),
-        ('computer_scientist', _('Computer scientist')),
-        ('nurse', _('Nurse')),
-        ('teacher', _('Teacher')),
-        ('engineer', _('Engineer')),
-        ('doctor', _('Doctor')),
-        ('lawyer', _('Lawyer')),
-        ('other', _('Other')),
+        ("student", _("Student")),
+        ("computer_scientist", _("Computer scientist")),
+        ("nurse", _("Nurse")),
+        ("teacher", _("Teacher")),
+        ("engineer", _("Engineer")),
+        ("doctor", _("Doctor")),
+        ("lawyer", _("Lawyer")),
+        ("other", _("Other")),
     )
-    profession_c = models.CharField(max_length=100, choices=PROFESSION_CHOICES, blank=True)
+    profession_c = models.CharField(
+        max_length=100, choices=PROFESSION_CHOICES, blank=True
+    )
     profession_o = models.CharField(max_length=100, blank=True)
     neighborhood = models.CharField(max_length=100, blank=True)
     department = models.CharField(max_length=100, blank=True)
 
     @property
     def profession(self):
-        if self.profession_c == 'other':
+        if self.profession_c == "other":
             return self.profession_o
-        return dict(self.PROFESSION_CHOICES).get(self.profession_c, '')
+        return dict(self.PROFESSION_CHOICES).get(self.profession_c, "")
+
 
 class CustomUser(AbstractUser):
     # Constantes héritées (les champs `role` et `chorale_role` sont supprimés ;
     # les valeurs vivent désormais sur manage_chorale.Membership). Gardées en
     # alias pour ne pas casser les imports historiques le temps du refactor.
-    ROLE_MEMBER = 'member'
-    ROLE_SUPERADMIN_CHORALE = 'super_admin_chorale'
+    email = models.EmailField(_("email address"), unique=True, blank=False, null=False)
+    ROLE_MEMBER = "member"
+    ROLE_SUPERADMIN_CHORALE = "super_admin_chorale"
 
     ROLE_CHOICES = [
-        (ROLE_MEMBER, _('Member')),
-        (ROLE_SUPERADMIN_CHORALE, _('Super Chorale Admin')),
+        (ROLE_MEMBER, _("Member")),
+        (ROLE_SUPERADMIN_CHORALE, _("Super Chorale Admin")),
     ]
 
-    CHORALE_ROLE_MEMBER = 'member'
-    CHORALE_ROLE_SECRETARY = 'secretary'
-    CHORALE_ROLE_TREASURER = 'treasurer'
-    CHORALE_ROLE_CENSOR = 'censor'
+    CHORALE_ROLE_MEMBER = "member"
+    CHORALE_ROLE_SECRETARY = "secretary"
+    CHORALE_ROLE_TREASURER = "treasurer"
+    CHORALE_ROLE_CENSOR = "censor"
 
     CHORALE_ROLE_CHOICES = [
-        (CHORALE_ROLE_MEMBER, _('Member')),
-        (CHORALE_ROLE_SECRETARY, _('Secretary')),
-        (CHORALE_ROLE_TREASURER, _('Treasurer')),
-        (CHORALE_ROLE_CENSOR, _('Censor')),
+        (CHORALE_ROLE_MEMBER, _("Member")),
+        (CHORALE_ROLE_SECRETARY, _("Secretary")),
+        (CHORALE_ROLE_TREASURER, _("Treasurer")),
+        (CHORALE_ROLE_CENSOR, _("Censor")),
     ]
 
     is_verify = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
-    
+
     def save(self, *args, **kwargs):
         if self.username:
             self.username = self.username.lower()
         if self.email:
             self.email = self.email.lower()
         super().save(*args, **kwargs)
-    
+
     class Meta:
-        ordering = ['date_joined']
+        ordering = ["date_joined"]
         indexes = [
-            models.Index(fields=['email']),
-            models.Index(fields=['username']),
+            models.Index(fields=["email"]),
+            models.Index(fields=["username"]),
         ]
+
 
 class OtpCode(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -127,13 +137,13 @@ class OtpCode(models.Model):
         self.expired_at = timezone.now() + timezone.timedelta(minutes=10)
         self.save()
         return self.otp_code
-    
+
     def verify_code(self, code):
         if self.used:
             return False
         if timezone.now() > self.expired_at:
             return False
-        
+
         is_valid = self.otp_code == code
         if is_valid:
             self.used = True
@@ -149,4 +159,3 @@ class OtpCode(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user.first_name}-passcode"
-
