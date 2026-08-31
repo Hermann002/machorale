@@ -1,4 +1,4 @@
-name: Build & Push Docker Image
+name: Build, Push & Deploy
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
       - develop
       - main
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
+
   pull_request:
     branches:
       - main
@@ -16,27 +17,39 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+
+  # =========================================================
+  # TESTS
+  # =========================================================
+
   test:
+    name: Run tests
     runs-on: ubuntu-latest
 
     services:
+
       postgres:
         image: postgres:16
         env:
           POSTGRES_DB: machorale
           POSTGRES_USER: machorale
           POSTGRES_PASSWORD: machorale
+
         ports:
           - 5432:5432
+
         options: >-
           --health-cmd "pg_isready -U machorale"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
       redis:
         image: redis:7
+
         ports:
           - 6379:6379
+
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -45,15 +58,19 @@ jobs:
 
     env:
       SECRET_KEY: test-secret-key-ci
+
       database: machorale
       user: machorale
       password: machorale
       host: localhost
       port: "5432"
+
       REDIS_URL: redis://localhost:6379/0
+
       ALLOWED_HOSTS: localhost,127.0.0.1
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -67,130 +84,251 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install gettext
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+
       - name: Compile translations
         run: |
-          sudo apt-get update && sudo apt-get install -y gettext
-          python manage.py compilemessages --settings=ma_chorale.settings.test
+          python manage.py compilemessages \
+            --settings=ma_chorale.settings.test
+
+      # Évite de déployer des modèles Django
+      # dont les migrations n'ont pas été créées.
+      - name: Check missing migrations
+        run: |
+          python manage.py makemigrations \
+            --check \
+            --dry-run \
+            --settings=ma_chorale.settings.test
 
       - name: Run tests
-        run: pytest
+        run: |
+          pytest
+
+
+  # =========================================================
+  # BUILD
+  # =========================================================
 
   build:
+    name: Build Docker image
     runs-on: ubuntu-latest
-    needs: test
+
+    needs:
+      - test
+
     outputs:
       tags: ${{ steps.meta.outputs.tags }}
       labels: ${{ steps.meta.outputs.labels }}
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract metadata
+      - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
+
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
           tags: |
             type=ref,event=branch
             type=ref,event=pr
+
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
+
             type=sha,prefix=sha-,format=short
+
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build image (no push)
+      - name: Build Docker image
         uses: docker/build-push-action@v5
+
         with:
           context: .
           file: ./Dockerfile
+
           push: false
+
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+
+  # =========================================================
+  # PUSH REGISTRY
+  # =========================================================
+
   push:
+    name: Push Docker image
     runs-on: ubuntu-latest
-    needs: build
+
+    needs:
+      - build
+
+    # Ne jamais push une image depuis une pull request.
     if: github.event_name != 'pull_request'
 
-    steps: 
+    steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to registry
+      - name: Login to Docker Registry
         uses: docker/login-action@v3
+
         with:
           registry: ${{ env.REGISTRY }}
+
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Push image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
+
         with:
           context: .
           file: ./Dockerfile
+
           push: true
+
           tags: ${{ needs.build.outputs.tags }}
           labels: ${{ needs.build.outputs.labels }}
+
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+
+  # =========================================================
+  # DEPLOY PRODUCTION
+  # =========================================================
+
   deploy:
+    name: Deploy production
     runs-on: ubuntu-latest
-    needs: push
-    if: success()
-    # Serialize deploys: only one runs at a time on the VPS.
-    # Queue (do not cancel) so an in-progress prod recreate is never killed mid-way.
+
+    needs:
+      - push
+
+    # Production uniquement depuis main.
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+
     concurrency:
-      group: deploy-vps
+
+      # Un seul déploiement VPS à la fois.
+      group: deploy-production-vps
+
+      # Ne pas interrompre un déploiement déjà commencé.
       cancel-in-progress: false
 
     steps:
+
+      # -----------------------------------------------------
+      # CHECKOUT
+      # -----------------------------------------------------
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up SSH key in agent
+
+      # -----------------------------------------------------
+      # SSH
+      # -----------------------------------------------------
+
+      - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.9.0
+
         with:
           ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
 
       - name: Add VPS to known_hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Push deployment/ via scp
+          ssh-keyscan \
+            -H "${{ secrets.VPS_HOST }}" \
+            >> ~/.ssh/known_hosts
+
+
+      # -----------------------------------------------------
+      # TRANSFERT DES FICHIERS
+      # -----------------------------------------------------
+
+      - name: Create deployment directory
         run: |
-          ssh -T -o LogLevel=ERROR ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
+          ssh \
+            -T \
+            -o LogLevel=ERROR \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
             "mkdir -p /home/hermann/ma_chorale"
-          scp -O -o LogLevel=ERROR \
-            ./deployment/compose.yml \
-            ./deployment/compose.prod.yml \
-            ./deployment/deploy.sh \
-            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/home/hermann/ma_chorale/
 
-      - name: Run deploy.sh on VPS
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: 22
-          envs: TAG
-          script: |
-            cd /home/hermann/ma_chorale
-            TAG="$TAG" bash deploy.sh
-        env:
-          TAG: ${{ github.ref_name }}
 
-      - name: Notify deployment
-        if: always()
-        run: echo "Deployment finished"
+      # -----------------------------------------------------
+      # PERMISSIONS
+      # -----------------------------------------------------
+
+      - name: Prepare deployment script
+        run: |
+          ssh \
+            -T \
+            -o LogLevel=ERROR \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "chmod +x /home/hermann/ma_chorale/deploy.sh"
+
+
+      # -----------------------------------------------------
+      # DEPLOY
+      # -----------------------------------------------------
+
+      - name: Run deployment
+        run: |
+          ssh \
+            -T \
+            -o LogLevel=ERROR \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "cd /home/hermann/ma_chorale && TAG='${{ github.ref_name }}' bash ./deploy.sh"
+
+
+      # -----------------------------------------------------
+      # VALIDATION
+      # -----------------------------------------------------
+
+      - name: Verify container
+        run: |
+          ssh \
+            -T \
+            -o LogLevel=ERROR \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "docker ps --filter name=ma_chorale_web"
+
+
+      # -----------------------------------------------------
+      # INFORMATION
+      # -----------------------------------------------------
+
+      - name: Deployment completed
+        if: success()
+        run: |
+          echo "Deployment completed successfully."
+
+
+      - name: Deployment failed
+        if: failure()
+        run: |
+          echo "Deployment failed."
