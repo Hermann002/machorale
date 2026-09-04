@@ -22,68 +22,68 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY')
+SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost").split(",")
 
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
-    'channels',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'manage_users',
-    'manage_chorale',
-    'notifications',
-    'landing',
-    'formtools',
-    'rest_framework',
-    'drf_spectacular',
-    'drf_spectacular_sidecar',
-    'corsheaders',
-    'api',
+    "daphne",
+    "channels",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "manage_users",
+    "manage_chorale",
+    "notifications",
+    "landing",
+    "formtools",
+    "rest_framework",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
+    "corsheaders",
+    "api",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'ma_chorale.urls'
+ROOT_URLCONF = "ma_chorale.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates" ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.template.context_processors.i18n',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'manage_chorale.context_processors.current_membership',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.template.context_processors.i18n",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "manage_chorale.context_processors.current_membership",
             ],
         },
     },
 ]
 
 # WSGI_APPLICATION = 'ma_chorale.wsgi.application'
-ASGI_APPLICATION = 'ma_chorale.asgi.application'
+ASGI_APPLICATION = "ma_chorale.asgi.application"
 
 
 # Database
@@ -97,23 +97,23 @@ ASGI_APPLICATION = 'ma_chorale.asgi.application'
 # }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('database'),
-        'USER': config('user'),
-        'PASSWORD': config('password'),
-        'HOST': config('host'),
-        'PORT': config('port', default='5432'),
-        'TEST': {
-            'NAME': 'test_postgres',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": config("database"),
+        "USER": config("user"),
+        "PASSWORD": config("password"),
+        "HOST": config("host"),
+        "PORT": config("port", default="5432"),
+        "TEST": {
+            "NAME": "test_postgres",
         },
     }
 }
 
-AUTH_USER_MODEL = 'manage_users.CustomUser'
+AUTH_USER_MODEL = "manage_users.CustomUser"
 
 AUTHENTICATION_BACKENDS = [
-    'manage_users.backends.CaseInsensitiveModelBackend',
+    "manage_users.backends.CaseInsensitiveModelBackend",
     # 'django.contrib.auth.backends.ModelBackend'
 ]
 
@@ -122,16 +122,16 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -139,28 +139,33 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'fr'
+LANGUAGE_CODE = "fr"
 
 LANGUAGES = [
-    ('fr', _('French')),
-    ('en', _('English')),
+    ("fr", _("French")),
+    ("en", _("English")),
 ]
 
 LOCALE_PATHS = [
-    BASE_DIR / 'locale',
+    BASE_DIR / "locale",
 ]
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
 USE_TZ = True
 
 
-CSRF_TRUSTED_ORIGINS = ['https://machorale.up.railway.app', 'http://localhost', 'http://127.0.0.1', "https://machorale.lonem.ca"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://machorale.up.railway.app",
+    "http://localhost",
+    "http://127.0.0.1",
+    "https://machorale.lonem.ca",
+]
 
 
-LOGIN_URL = reverse_lazy('login')
+LOGIN_URL = reverse_lazy("login")
 
 CACHES = {
     "default": {
@@ -168,7 +173,7 @@ CACHES = {
         "LOCATION": f"{config('REDIS_URL')}",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
+        },
     }
 }
 
@@ -178,7 +183,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 # URL utilisée dans les templates (ex: {% static 'js/main.js' %}
-STATIC_URL = '/static/'
+STATIC_URL = "/static/"
 
 # Dossiers où Django cherche les fichiers statiques (en plus de static/ dans chaque app)
 STATICFILES_DIRS = [
@@ -189,20 +194,20 @@ STATIC_ROOT = BASE_DIR / "staticfiles"  # ou os.path.join(BASE_DIR, 'staticfiles
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 WHITENOISE_MAX_AGE = 31536000
 
-MEDIA_URL = '/media/'
+MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"  # ou os.path.join(BASE_DIR, '
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # SENDGRID_API_KEY = config('SENDGRID_API_KEY')
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [config('REDIS_URL')],
+            "hosts": [config("REDIS_URL")],
         },
     },
 }
@@ -213,57 +218,53 @@ CHANNEL_LAYERS = {
 from datetime import timedelta  # noqa: E402
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-    'DEFAULT_PAGINATION_CLASS': 'api.v1.pagination.DefaultPagination',
-    'PAGE_SIZE': 20,
-    'EXCEPTION_HANDLER': 'api.v1.exceptions.api_exception_handler',
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/min',
-        'user': '120/min',
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_PAGINATION_CLASS": "api.v1.pagination.DefaultPagination",
+    "PAGE_SIZE": 20,
+    "EXCEPTION_HANDLER": "api.v1.exceptions.api_exception_handler",
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/min",
+        "user": "120/min",
     },
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # OpenAPI schema + Swagger UI (drf-spectacular). Docs served at /api/docs/,
 # raw schema at /api/schema/. SIDECAR = UI assets served from our own static
 # files (WhiteNoise), no CDN dependency.
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Ma Chorale API',
-    'DESCRIPTION': (
-        'REST API for the Ma Chorale application (choral group management: '
-        'members, dashboard, contributions, events). Authentication is '
-        'JWT (Bearer) obtained through the OTP-email flow '
-        '(`/api/v1/auth/otp/request/` then `/api/v1/auth/otp/verify/`).'
+    "TITLE": "Ma Chorale API",
+    "DESCRIPTION": (
+        "REST API for the Ma Chorale application (choral group management: "
+        "members, dashboard, contributions, events). Authentication is "
+        "JWT (Bearer) obtained through the OTP-email flow "
+        "(`/api/v1/auth/otp/request/` then `/api/v1/auth/otp/verify/`)."
     ),
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-    'SWAGGER_UI_DIST': 'SIDECAR',
-    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
-    'REDOC_DIST': 'SIDECAR',
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
     # Strip the /api/v1 prefix when grouping/naming operations.
-    'SCHEMA_PATH_PREFIX': r'/api/v1',
-    'COMPONENT_SPLIT_REQUEST': True,
+    "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "COMPONENT_SPLIT_REQUEST": True,
     # Two 'role' choice sets exist: the full Membership.ROLE_CHOICES and the
     # API-assignable subset (no 'admin'). Name the subset explicitly.
-    'ENUM_NAME_OVERRIDES': {
-        'AssignableRoleEnum': 'api.v1.serializers.ASSIGNABLE_ROLES',
+    "ENUM_NAME_OVERRIDES": {
+        "AssignableRoleEnum": "api.v1.serializers.ASSIGNABLE_ROLES",
     },
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),
-    'ROTATE_REFRESH_TOKENS': True,
-    'UPDATE_LAST_LOGIN': True,
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=14),
+    "ROTATE_REFRESH_TOKENS": True,
+    "UPDATE_LAST_LOGIN": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # CORS — comma-separated origins in .env (CORS_ALLOWED_ORIGINS). Defaults to the
@@ -272,9 +273,11 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     o.strip()
     for o in config(
-        'CORS_ALLOWED_ORIGINS',
-        default='http://localhost:8000,http://127.0.0.1:8000,http://localhost:19006',
-    ).split(',')
+        "CORS_ALLOWED_ORIGINS",
+        default="http://localhost:8000,http://127.0.0.1:8000,http://localhost:19006",
+    ).split(",")
     if o.strip()
 ]
-CORS_URLS_REGEX = r'^/api/.*$'
+CORS_URLS_REGEX = r"^/api/.*$"
+
+CSRF_FAILURE_VIEW = "manage_users.views.custom_csrf_failure"

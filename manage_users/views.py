@@ -1,5 +1,5 @@
 import logging
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from .forms import (
     UserRegisterForm,
     UserLoginForm,
@@ -35,6 +35,16 @@ from django_ratelimit.decorators import ratelimit
 from django_ratelimit.exceptions import Ratelimited
 
 logger = logging.getLogger(__name__)
+
+
+def custom_csrf_failure(request, reason=""):
+    messages.error(
+        request,
+        _(
+            "session expirée ou jeton de sécurité manquant. Veuillez rafraichir la page et reéssayer."
+        ),
+    )
+    return redirect("login")
 
 
 @method_decorator(
@@ -371,4 +381,3 @@ class ResetPasswordConfirmView(TemplateView):
             self.template_name,
             {"form": form, "uidb64": uidb64, "token": token},
         )
-

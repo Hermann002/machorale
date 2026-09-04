@@ -10,6 +10,7 @@ status.md
 TESTS_MANUELS.md
 test_smtp.py
 test-email.json
+luncher.sh
 # Test runner
 test_results.sqlite3
 test_reports/
