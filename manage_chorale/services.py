@@ -2,12 +2,21 @@ from decimal import Decimal
 
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db.models import Sum
+from django.db.models import Count, Sum
 from django.utils import timezone
 
-from django.db.models import Q
+from django.db.models import Q, Subquery, OuterRef
 
-from .models import Contribution, Chorale, ChoraleEvent, MemberContribution, CashFlow, Event, Sanction, Absence
+from .models import (
+    Contribution,
+    Chorale,
+    ChoraleEvent,
+    MemberContribution,
+    CashFlow,
+    Event,
+    Sanction,
+    Absence,
+)
 
 
 class ContributionService:
@@ -20,12 +29,22 @@ class ContributionService:
     """
 
     @staticmethod
-    def record_payment(*, contribution: Contribution, member, amount,
-                       recorded_by, paid_at=None, note: str = '', request=None) -> MemberContribution:
+    def record_payment(
+        *,
+        contribution: Contribution,
+        member,
+        amount,
+        recorded_by,
+        paid_at=None,
+        note: str = "",
+        request=None,
+    ) -> MemberContribution:
         # Garantie d'intégrité métier : on ne peut pas enregistrer un paiement
         # pour un user qui n'est pas membre de la chorale visée.
         if not contribution.chorale.members.filter(pk=member.pk).exists():
-            raise ValidationError("Ce membre n'appartient pas à la chorale de cette contribution.")
+            raise ValidationError(
+                "Ce membre n'appartient pas à la chorale de cette contribution."
+            )
 
         if amount is None:
             amount = contribution.amount
@@ -46,16 +65,16 @@ class ContributionService:
         Event.log(
             chorale=contribution.chorale,
             user=recorded_by,
-            event_type='payment',
+            event_type="payment",
             description=(
                 f"{member.get_full_name() or member.username} a payé "
                 f"{amount} XAF pour « {contribution.title} »"
             ),
             obj=payment,
             metadata={
-                'contribution_id': contribution.id,
-                'member_id': member.id,
-                'amount': str(amount),
+                "contribution_id": contribution.id,
+                "member_id": member.id,
+                "amount": str(amount),
             },
             request=request,
         )
@@ -63,6 +82,7 @@ class ContributionService:
         # Invalider le cache du dashboard : le solde a changé
         cache.delete(f"dashboard_stats:{contribution.chorale.id}")
         from notifications.services import notify_chorale
+
         notify_chorale(
             contribution.chorale,
             payload={
@@ -85,8 +105,18 @@ class SanctionService:
     """
 
     @staticmethod
-    def apply(*, chorale, member, sanction_type, reason, recorded_by,
-              amount=None, time_limit=None, applied_at=None, request=None) -> Sanction:
+    def apply(
+        *,
+        chorale,
+        member,
+        sanction_type,
+        reason,
+        recorded_by,
+        amount=None,
+        time_limit=None,
+        applied_at=None,
+        request=None,
+    ) -> Sanction:
         # Intégrité métier : ne pas sanctionner un user qui n'est pas dans la chorale
         if not chorale.members.filter(pk=member.pk).exists():
             raise ValidationError("Ce membre n'appartient pas à la chorale.")
@@ -94,7 +124,9 @@ class SanctionService:
         # Cohérence type ↔ amount : seules les amendes ont un montant
         if sanction_type == Sanction.SANCTION_FINE:
             if amount is None or Decimal(amount) <= 0:
-                raise ValidationError("Une amende requiert un montant strictement positif.")
+                raise ValidationError(
+                    "Une amende requiert un montant strictement positif."
+                )
         else:
             # Forcer la nullité : éviter qu'un warning porte par erreur un amount résiduel
             amount = None
@@ -114,7 +146,7 @@ class SanctionService:
         Event.log(
             chorale=chorale,
             user=recorded_by,
-            event_type='warning',
+            event_type="warning",
             description=(
                 f"{sanction.get_sanction_type_display()} appliqué à "
                 f"{member.get_full_name() or member.username}"
@@ -122,9 +154,9 @@ class SanctionService:
             ),
             obj=sanction,
             metadata={
-                'sanction_type': sanction_type,
-                'member_id': member.id,
-                'amount': str(amount) if amount else None,
+                "sanction_type": sanction_type,
+                "member_id": member.id,
+                "amount": str(amount) if amount else None,
             },
             request=request,
         )
@@ -132,6 +164,7 @@ class SanctionService:
         cache.delete(f"dashboard_stats:{chorale.id}")
 
         from notifications.services import notify_chorale
+
         notify_chorale(
             chorale,
             payload={
@@ -154,13 +187,16 @@ class SanctionService:
         if sanction.lifted_at is not None:
             raise ValidationError("Cette sanction est déjà levée.")
         sanction.lifted_at = timezone.now().date()
-        sanction.save(update_fields=['lifted_at', 'updated_at'])
+        sanction.save(update_fields=["lifted_at", "updated_at"])
 
         Event.log(
-            chorale=sanction.chorale, user=lifted_by, event_type='other',
+            chorale=sanction.chorale,
+            user=lifted_by,
+            event_type="other",
             description=f"Sanction levée : {sanction.get_sanction_type_display()} de "
-                        f"{sanction.member.get_full_name() or sanction.member.username}",
-            obj=sanction, request=request,
+            f"{sanction.member.get_full_name() or sanction.member.username}",
+            obj=sanction,
+            request=request,
         )
         cache.delete(f"dashboard_stats:{sanction.chorale.id}")
         return sanction
@@ -180,44 +216,90 @@ def get_dashboard_stats(chorale_id, timeout=60):
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     # Solde de caisse = somme(entrées) - somme(sorties)
-    cash_in = CashFlow.objects.filter(
-        chorale=chorale, type_cash_flow=CashFlow.TYPE_ENTREE
-    ).aggregate(s=Sum('amount'))['s'] or 0
-    cash_out = CashFlow.objects.filter(
-        chorale=chorale, type_cash_flow=CashFlow.TYPE_SORTIE
-    ).aggregate(s=Sum('amount'))['s'] or 0
+    cash_stats = CashFlow.objects.filter(chorale=chorale).aggregate(
+        cash_in=Sum("amount", filter=Q(type_cash_flow=CashFlow.TYPE_ENTREE)),
+        cash_out=Sum("amount", filter=Q(type_cash_flow=CashFlow.TYPE_SORTIE)),
+    )
+    cash_in = cash_stats["cash_in"] or 0
+    cash_out = cash_stats["cash_out"] or 0
 
-    collected_month = MemberContribution.objects.filter(
-        contribution__chorale=chorale, paid_at__gte=month_start.date()
-    ).aggregate(s=Sum('amount'))['s'] or 0
+    monthly_payments = (
+        MemberContribution.objects.filter(
+            contribution__chorale=OuterRef("pk"), paid_at__gte=month_start.date()
+        )
+        .values("contribution__chorale")
+        .annotate(total=Sum("amount"))
+        .values("total")
+    )
 
-    # Sanctions ouvertes = non levées ET (si amende) non payées.
-    # On reproduit la logique de Sanction.is_active en SQL (la property ne peut pas
-    # être passée à filter()).
-    open_sanctions_count = Sanction.objects.filter(
-        chorale=chorale, lifted_at__isnull=True
-    ).filter(
-        ~Q(sanction_type=Sanction.SANCTION_FINE) | Q(is_paid=False)
-    ).count()
+    open_sanctions = (
+        Sanction.objects.filter(chorale=OuterRef("pk"), lifted_at__isnull=True)
+        .filter(~Q(sanction_type=Sanction.SANCTION_FINE) | Q(is_paid=False))
+        .values("chorale")
+        .annotate(count=Count("id"))
+        .values("count")
+    )
 
-    unjustified_absences_count = Absence.objects.filter(
-        event__chorale=chorale,
-        is_justified=False,
-        recorded_at__gte=month_start,
-    ).count()
+    unjustified_absences = (
+        Absence.objects.filter(
+            event__chorale=OuterRef("pk"),
+            is_justified=False,
+            recorded_at__gte=month_start,
+        )
+        .values("event__chorale")
+        .annotate(count=Count("id"))
+        .values("count")
+    )
+
+    upcoming_events = (
+        ChoraleEvent.objects.filter(chorale=OuterRef("pk"), date__gte=now)
+        .values("chorale")
+        .annotate(count=Count("id"))
+        .values("count")
+    )
+
+    active_contributions = (
+        Contribution.objects.filter(chorale=OuterRef("pk"), is_active=True)
+        .values("chorale")
+        .annotate(count=Count("id"))
+        .values("count")
+    )
+
+    chorale_stats = (
+        Chorale.objects.filter(pk=chorale_id)
+        .annotate(
+            total_members=Count("memberships"),
+            collected_month=Subquery(monthly_payments),
+            open_sanctions_count=Subquery(open_sanctions),
+            unjustified_absences_this_month=Subquery(unjustified_absences),
+            upcoming_event_count=Subquery(upcoming_events),
+            active_contribution_count=Subquery(active_contributions),
+        )
+        .values(
+            "total_members",
+            "collected_month",
+            "open_sanctions_count",
+            "unjustified_absences_this_month",
+            "upcoming_event_count",
+            "active_contribution_count",
+        )
+        .first()
+    )
 
     stats = {
-        "total_members": chorale.members.count(),
-        "upcoming_event_count": ChoraleEvent.objects.filter(
-            chorale=chorale, date__gte=now
-        ).count(),
+        "total_members": chorale_stats["total_members"] or 0,
+        "upcoming_event_count": chorale_stats["upcoming_event_count"] or 0,
         "cash_balance": cash_in - cash_out,
         "cash_in_total": cash_in,
         "cash_out_total": cash_out,
-        "contributions_collected_this_month": collected_month,
-        "active_contribution_count": chorale.contributions.filter(is_active=True).count(),
-        "open_sanctions_count": open_sanctions_count,
-        "unjustified_absences_this_month": unjustified_absences_count,
+        "contributions_collected_this_month": chorale_stats["collected_month"] or 0,
+        "active_contribution_count": chorale_stats["active_contribution_count"] or 0,
+        "open_sanctions_count": chorale_stats["open_sanctions_count"] or 0,
+        "unjustified_absences_this_month": chorale_stats[
+            "unjustified_absences_this_month"
+        ]
+        or 0,
     }
+
     cache.set(cache_key, stats, timeout)
     return stats

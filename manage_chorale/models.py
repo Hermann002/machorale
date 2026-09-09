@@ -42,7 +42,7 @@ class Chorale(models.Model):
     slogan = models.CharField(max_length=255, blank=True)
     meeting_frequency = models.CharField(max_length=20, blank=True, null=True)
     description = models.TextField(blank=True)
-    slug = models.SlugField(max_length=100, blank=True, null=True)
+    slug = models.SlugField(max_length=100, blank=True, null=True, db_index=True)
 
     def __str__(self):
         return self.name
@@ -241,7 +241,7 @@ class ChoraleEvent(models.Model):
     ]
 
     chorale = models.ForeignKey(
-        Chorale, on_delete=models.CASCADE, related_name="chorale_events", db_index=True
+        Chorale, on_delete=models.CASCADE, related_name="chorale_events"
     )
     title = models.CharField(max_length=150)
     description = models.TextField(blank=True)
