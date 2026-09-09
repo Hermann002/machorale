@@ -1,4 +1,5 @@
 """URL configuration for ma_chorale project."""
+
 from django.conf import settings
 from django.contrib import admin
 from django.http import HttpResponseRedirect
@@ -56,16 +57,19 @@ def set_language(request):
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('i18n/setlang/', set_language, name='set_language'),
+    path("admin/", admin.site.urls),
+    path("i18n/setlang/", set_language, name="set_language"),
     # API is locale-agnostic JSON: keep it OUT of i18n_patterns (no /fr//en/ prefix).
-    path('api/', include('api.urls')),
+    path("api/", include("api.urls")),
 ]
 
 urlpatterns += i18n_patterns(
-    path('u/', include('manage_users.urls')),
-    path('', include('notifications.urls')),
-    path('', include('landing.urls')),
-    path('a/', include('manage_chorale.urls')),
+    path("u/", include("manage_users.urls")),
+    path("", include("notifications.urls")),
+    path("", include("landing.urls")),
+    path("a/", include("manage_chorale.urls")),
     prefix_default_language=True,
 )
+
+if settings.DEBUG == True:
+    urlpatterns += [path("silk/", include("silk.urls", namespace="silk"))]
