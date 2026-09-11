@@ -1481,8 +1481,8 @@ msgstr[0] "%(n)s active"
 msgstr[1] "%(n)s active"
 
 #: templates/pages/dashboard.html:42
-msgid "Date de la dernière réunion"
-msgstr "Last meeting date"
+msgid "Date de la prochaine réunion"
+msgstr "Next meeting date"
 
 #: templates/pages/dashboard.html:52
 msgid "Solde actuel"

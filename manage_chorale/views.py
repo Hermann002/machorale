@@ -93,7 +93,7 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
         stats = get_dashboard_stats(self.chorale.id)
         total_members = stats.get("total_members", 0)
         upcoming_event_count = stats.get("upcoming_event_count", 0)
-        last_meeting_date = formats.date_format(timezone.now(), "M d, Y")
+        next_meeting_date = formats.date_format(timezone.now(), "M d, Y")
         # Vraies stats issues du service (anciens mocks supprimés)
         current_balance = stats.get("cash_balance", 0)
         pending_sanctions = stats.get("open_sanctions_count", 0)
@@ -111,22 +111,23 @@ class DashboardView(ChoraleRequireMixin, TemplateView):
         )
         recent_activities = recent_events if recent_events else load_recent_activities()
 
-        upcoming_practices = ChoraleEvent.objects.filter(
-            chorale=self.chorale,
-            date__gte=timezone.now(),
-            event_type=ChoraleEvent.EVENT_TYPE_CHOICES[0][0],
-        ).order_by("date")[:3]
         upcoming_events = ChoraleEvent.objects.filter(
             chorale=self.chorale, date__gte=timezone.now()
         ).order_by("date")[:4]
 
+        upcoming_practices = [
+            ev
+            for ev in upcoming_events
+            if ev.event_type == ChoraleEvent.EVENT_TYPE_CHOICES[0][0]
+        ][:3]
+
         if upcoming_events:
-            last_meeting_date = formats.date_format(upcoming_events[0].date, "M d, Y")
+            next_meeting_date = formats.date_format(upcoming_events[0].date, "M d, Y")
 
         context = {
             "page_title": _("Dashboard"),
             "total_members": total_members,
-            "last_meeting_date": last_meeting_date,
+            "next_meeting_date": next_meeting_date,
             "current_balance": current_balance,
             "pending_sanctions": pending_sanctions,
             "increase_members": increase_members,
@@ -1703,4 +1704,3 @@ def sidebar_toggle(request, slug):
     return render(
         request, "base/navbar.html", {"sidebar_open": sidebar_open, "slug": slug}
     )
-
