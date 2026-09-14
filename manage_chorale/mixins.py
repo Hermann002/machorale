@@ -19,9 +19,9 @@ class RateLimitedMixin:
     Sur dépassement : message d'erreur Django + redirect vers la même URL (GET).
     """
 
-    rl_rate: str = '20/m'
-    rl_key: str = 'user_or_ip'
-    rl_methods: tuple = ('POST',)
+    rl_rate: str = "20/m"
+    rl_key: str = "user_or_ip"
+    rl_methods: tuple = ("POST",)
 
     def dispatch(self, request, *args, **kwargs):
         from django_ratelimit.core import is_ratelimited
@@ -53,7 +53,7 @@ class ChoraleRequireMixin(LoginRequiredMixin):
     parasite).
     """
 
-    chorale_url_kwargs = 'slug'
+    chorale_url_kwargs = "slug"
 
     def _resolve_membership(self, request, **kwargs):
         from manage_chorale.models import Membership
@@ -63,23 +63,21 @@ class ChoraleRequireMixin(LoginRequiredMixin):
             # Toutes les URLs scope-chorale incluent <slug:slug>/. Une absence ici
             # signifie un câblage cassé côté URL conf — préférable d'envoyer vers
             # le sélecteur plutôt que de masquer le bug.
-            return redirect(reverse('select_chorale'))
+            return redirect(reverse("select_chorale"))
 
         try:
-            membership = (
-                Membership.objects
-                .select_related('chorale')
-                .get(chorale__slug=slug, user=request.user)
+            membership = Membership.objects.select_related("chorale").get(
+                chorale__slug=slug, user=request.user
             )
         except Membership.DoesNotExist:
             messages.error(request, "Vous n'êtes pas membre de cette chorale !")
-            return redirect(reverse('select_chorale'))
+            return redirect(reverse("select_chorale"))
 
         self.membership = membership
         self.chorale = membership.chorale
         # Sticky : on garde la chorale active en session pour le switcher
         # et pour la redirection sticky depuis /, /login, etc.
-        request.session['active_chorale_slug'] = membership.chorale.slug
+        request.session["active_chorale_slug"] = membership.chorale.slug
         return None
 
     def _check_role(self, request):
@@ -110,15 +108,18 @@ class RoleRequireMixin(ChoraleRequireMixin):
 
     allowed_chorale_roles: list[str] = []
     permission_denied_message = "Vous n'avez pas la permission d'accéder à cette page."
-    permission_denied_redirect = 'dashboard'
+    permission_denied_redirect = "dashboard"
 
     def _check_role(self, request):
         if self.membership.is_admin:
             return None
         if self.membership.role not in self.allowed_chorale_roles:
             messages.error(request, self.permission_denied_message)
-            return redirect(reverse(self.permission_denied_redirect,
-                                    kwargs={'slug': self.chorale.slug}))
+            return redirect(
+                reverse(
+                    self.permission_denied_redirect, kwargs={"slug": self.chorale.slug}
+                )
+            )
         return None
 
 
@@ -130,15 +131,17 @@ class AdminRequiredMixin(RoleRequireMixin):
 
 
 class TreasurerRequiredMixin(RoleRequireMixin):
-    allowed_chorale_roles = ['treasurer']
+    allowed_chorale_roles = ["treasurer"]
     permission_denied_message = "Accès réservé au trésorier de la chorale."
 
 
 class CensorRequiredMixin(RoleRequireMixin):
-    allowed_chorale_roles = ['censor']
+    allowed_chorale_roles = ["censor"]
     permission_denied_message = "Accès réservé au censeur de la chorale."
 
 
 class SecretaryOrAdminRequiredMixin(RoleRequireMixin):
-    allowed_chorale_roles = ['secretary']
-    permission_denied_message = "Accès réservé au secrétaire ou à l'admin de la chorale."
+    allowed_chorale_roles = ["secretary"]
+    permission_denied_message = (
+        "Accès réservé au secrétaire ou à l'admin de la chorale."
+    )
