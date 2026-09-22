@@ -30,7 +30,6 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost").split(",")
 # Application definition
 
 INSTALLED_APPS = [
-    "daphne",
     "channels",
     "django.contrib.admin",
     "django.contrib.auth",

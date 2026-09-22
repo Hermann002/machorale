@@ -38,8 +38,8 @@ ARG APP_GID=1000
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/opt/venv/bin:$PATH" \
-    DEBIAN_FRONTEND=noninteractive \
-    DJANGO_SETTINGS_MODULE=ma_chorale.settings.prod
+    DEBIAN_FRONTEND=noninteractive 
+
 
 RUN groupadd -g ${APP_GID} ${APP_USER} && \
     useradd -u ${APP_UID} -g ${APP_GID} -m -s /bin/bash -d /app ${APP_USER} && \
@@ -59,8 +59,7 @@ COPY --chown=${APP_UID}:${APP_GID} . .
 RUN chmod +x /app/entrypoint.sh && \
     mkdir -p /app/media /app/logs && \
     chown -R ${APP_UID}:${APP_GID} /app/media /app/logs && \
-    chmod -R 755 /app && \
-    /opt/venv/bin/python -m django compilemessages --settings=ma_chorale.settings.prod || true
+    chmod -R 755 /app
 
 USER ${APP_UID}:${APP_GID}
 
