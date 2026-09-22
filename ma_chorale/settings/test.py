@@ -1,6 +1,6 @@
 from .base import *
 
-DEBUG = True
+DEBUG = False
 
 SESSION_COOKIE_AGE = 3600
 SESSION_COOKIE_HTTPONLY = True
