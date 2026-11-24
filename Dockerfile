@@ -66,4 +66,4 @@ USER ${APP_UID}:${APP_GID}
 EXPOSE 8000
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["gunicorn", "ma_chorale.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["uvicorn", "ma_chorale.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
