@@ -25,7 +25,7 @@ Django web application for managing church choral groups — member management, 
 | Database | PostgreSQL |
 | Cache / Broker | Redis (`django-redis`, Celery) |
 | Task queue | Celery 5.6 |
-| Email | SMTP (dev) / SendGrid (prod) |
+| Email | brevo |
 | Static files | WhiteNoise with compression |
 | Auth | Custom OTP email verification |
 | Rate limiting | `django-ratelimit` |
